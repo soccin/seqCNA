@@ -1,5 +1,5 @@
 #
-# doWGSCNA.R (version 2.2)
+# doWGSCNA.R (version 2.2.1)
 #
 
 library(Rsamtools)
