@@ -1,7 +1,15 @@
 #
-# doWGSCNA.R (version 2.2)
+# doWGSCNA.R (version 2.2.1)
 #
 
+library(Rsamtools)
+library(DNAcopy)
+library(pctGCdata)
+library(Cairo)
+
+source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
+
+################################################################
 fixSampleNames<-function(x) {
 
     x=gsub("indelRealigned_recal_","",x)
@@ -23,16 +31,11 @@ getSDIR <- function(){
         return(SDIR)
     }
 }
-
 ################################################################
-################################################################
-################################################################
-
 
 args=commandArgs(trailing=T)
 normalBam=args[1]
 tumorBam=args[2]
-
 
 tBase=fixSampleNames(basename(tumorBam))
 nBase=fixSampleNames(basename(normalBam))
@@ -47,24 +50,20 @@ if(tBase==nBase){
 sampleId=cc(tBase,"_",nBase)
 print(sampleId)
 
-library(Rsamtools)
-library(DNAcopy)
-library(pctGCdata)
-library(Cairo)
-
-source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
 
 bb=bams2counts(normalBam,tumorBam,X=T)
+
 
 binSize=50000
 bins=bb$chrom + floor(bb$pos/binSize)*binSize/2^28
 nCounts=tapply(bb$normal,bins,sum)
 quantile(nCounts)
 binSize=floor(binSize*100/quantile(nCounts,.25))
-#binSize=floor(binSize*100/median(nCounts))
 cat("adjusted binSize =",binSize,"\n")
 
+
 out=seqsegment(bb,sampleid=sampleId,binSize=binSize)
+
 
 offset=c(0,tapply(bb$pos,bb$chrom,max))
 gPos=cumsum(offset)/1e6
