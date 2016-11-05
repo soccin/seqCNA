@@ -1,3 +1,15 @@
+getSDIR <- function(){
+    args=commandArgs(trailing=F)
+    TAG="--file="
+    path_idx=grep(TAG,args)
+    SDIR=dirname(substr(args[path_idx],nchar(TAG)+1,nchar(args[path_idx])))
+    if(length(SDIR)==0) {
+        return(getwd())
+    } else {
+        return(SDIR)
+    }
+}
+
 args=commandArgs(trailing=T)
 normalBam=args[1]
 tumorBam=args[2]
@@ -19,7 +31,7 @@ library(Rsamtools)
 library(DNAcopy)
 library(pctGCdata)
 
-source("SeqDNACopy/seqDNAcopy.R")
+source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
 
 #There are 2 normals:
 # CL_NL8533-2P  (this one was a "not real" line -- it was called CL_WD8533-2P when we ran it on CGH)
