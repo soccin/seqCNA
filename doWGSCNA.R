@@ -1,3 +1,7 @@
+#
+# doWGSCNA.R (version 2.2)
+#
+
 fixSampleNames<-function(x) {
 
     x=gsub("indelRealigned_recal_","",x)
