@@ -2,6 +2,14 @@
 # doWGSCNA.R (version 2.2)
 #
 
+library(Rsamtools)
+library(DNAcopy)
+library(pctGCdata)
+library(Cairo)
+
+source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
+
+################################################################
 fixSampleNames<-function(x) {
 
     x=gsub("indelRealigned_recal_","",x)
@@ -23,14 +31,6 @@ getSDIR <- function(){
         return(SDIR)
     }
 }
-
-################################################################
-library(Rsamtools)
-library(DNAcopy)
-library(pctGCdata)
-library(Cairo)
-
-source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
 ################################################################
 
 args=commandArgs(trailing=T)
