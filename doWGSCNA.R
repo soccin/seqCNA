@@ -63,7 +63,9 @@ cat("adjusted binSize =",binSize,"\n")
 
 
 out=seqsegment(bb,sampleid=sampleId,binSize=binSize)
-
+out$param=list()
+out$param$binSize=binSize
+out$param$sampleId=sampleId
 
 offset=c(0,tapply(bb$pos,bb$chrom,max))
 gPos=cumsum(offset)/1e6
