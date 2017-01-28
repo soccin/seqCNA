@@ -4,9 +4,25 @@
 
 library(Rcpp)
 
-sourceCpp("frags2counts.cpp")
+##
+# Crazy function to get the path the script is in so we
+# can build an absolute path
 
-load("hg19bl.rda")
+getSDIR <- function(){
+    args=commandArgs(trailing=F)
+    TAG="--file="
+    path_idx=grep(TAG,args)
+    SDIR=dirname(substr(args[path_idx],nchar(TAG)+1,nchar(args[path_idx])))
+    if(length(SDIR)==0) {
+        return(getwd())
+    } else {
+        return(SDIR)
+    }
+}
+
+sourceCpp(file.path(getSDIR(),"SeqDNACopy/frags2counts.cpp"))
+
+load(file.path(getSDIR(),"SeqDNACopy/hg19bl.rda"))
 
 chromRange <- function(i, chr="") {
   eval(parse(text=paste('RangesList("', chr, i,'"=IRanges(start=0, end=268435456L))',sep="")))
