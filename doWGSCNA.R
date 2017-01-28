@@ -7,8 +7,6 @@ library(DNAcopy)
 library(pctGCdata)
 library(Cairo)
 
-source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
-
 ################################################################
 fixSampleNames<-function(x) {
 
@@ -32,6 +30,8 @@ getSDIR <- function(){
     }
 }
 ################################################################
+
+source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
 
 args=commandArgs(trailing=T)
 normalBam=args[1]
@@ -58,12 +58,14 @@ binSize=50000
 bins=bb$chrom + floor(bb$pos/binSize)*binSize/2^28
 nCounts=tapply(bb$normal,bins,sum)
 quantile(nCounts)
-binSize=floor(binSize*100/quantile(nCounts,.25))
+binSize=100*floor(binSize/quantile(nCounts,.25))
 cat("adjusted binSize =",binSize,"\n")
 
 
 out=seqsegment(bb,sampleid=sampleId,binSize=binSize)
-
+out$param=list()
+out$param$binSize=binSize
+out$param$sampleId=sampleId
 
 offset=c(0,tapply(bb$pos,bb$chrom,max))
 gPos=cumsum(offset)/1e6
