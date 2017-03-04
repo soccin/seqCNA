@@ -49,14 +49,31 @@ cArgs=commandArgs(trailing=T)
 #
 
 # Set defaults first
+#   require set to NULL
 
 args=list(
-    BINSIZE="auto"
+    BINSIZE="auto",
+    TUMOR=NULL,
+    NORMAL=NULL
     )
+
 parseArgs=str_match(cArgs,"(.*)=(.*)")
 dummy=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
 
-cat("\n##\n# Version:",VERSION,"\n#\n")
+cat("\n\n###############################################################\n")
+cat("#\n# Version:",VERSION,"\n#\n")
+
+if(any(sapply(args,is.null))) {
+    cat("\nusage: doWGSCNA.R TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto]\n\n")
+    missing=which(sapply(args,is.null))
+    cat("missing require arg(s)\n\n   ")
+    for(ii in missing){
+        cat(names(args)[[ii]],"")
+    }
+    cat("\n\n")
+    quit()
+}
+
 keys=sort(names(args))
 for(key in keys) {
     cat("#",key,"=",args[[key]],"\n")
