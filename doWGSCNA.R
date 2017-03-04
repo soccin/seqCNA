@@ -4,9 +4,8 @@
 
 VERSION="2.3.2"
 
-require(Rsamtools)
-require(DNAcopy)
-require(pctGCdata)
+#require(Rsamtools)
+#require(DNAcopy)
 require(Cairo)
 require(stringr)
 
@@ -35,7 +34,7 @@ getSDIR <- function(){
 
 ################################################################
 
-source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
+library(seqDNAcopy,lib.loc=file.path(getSDIR(),"Rlib"))
 
 cArgs=commandArgs(trailing=T)
 
@@ -54,7 +53,8 @@ cArgs=commandArgs(trailing=T)
 args=list(
     BINSIZE="auto",
     TUMOR=NULL,
-    NORMAL=NULL
+    NORMAL=NULL,
+    MAPLOC="false"
     )
 
 parseArgs=str_match(cArgs,"(.*)=(.*)")
@@ -64,7 +64,7 @@ cat("\n\n###############################################################\n")
 cat("#\n# Version:",VERSION,"\n#\n")
 
 if(any(sapply(args,is.null))) {
-    cat("\nusage: doWGSCNA.R TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto]\n\n")
+    cat("\nusage: doWGSCNA.R TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto] MAPLOC=[false]\n\n")
     missing=which(sapply(args,is.null))
     cat("missing require arg(s)\n\n   ")
     for(ii in missing){
