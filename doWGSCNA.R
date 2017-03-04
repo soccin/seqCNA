@@ -126,33 +126,27 @@ png(file=cc(sampleId,"Bin",binSize,".png"),
         width=1150,height=800,pointsize=20)
 
 
+YLIM=4
 if(args$MAPLOC=="true") {
 
-    plot(out,xmaploc=T,ylim=c(-4,4))
+    plot(out,xmaploc=T,ylim=YLIM*c(-1,1))
     abline(v=gPos,lty=2,col=8)
-    abline(h=c(-1,1),lty=2,col="#DDDDDD",lwd=1)
     text(gPos[-len(gPos)]+offset[-1]/2e6,-1+stagger,chromoLabels,cex=.71)
-    text(0.5,1.5,
-        paste(
-            "BinSize =",
-            formatC(out$param$binSize,format="d",big.mark=","),
-            "NumBins =",
-            formatC(nrow(out$data),format="d",big.mark=",")),
-        pos=4,cex=1.414)
 
 } else {
 
-    plot(out,xmaploc=F,ylim=c(-4,4))
-    abline(h=c(-1,1),lty=2,col="#DDDDDD",lwd=1)
-    text(0.5,1.5,
-        paste(
-            "BinSize =",
-            formatC(out$param$binSize,format="d",big.mark=","),
-            "NumBins =",
-            formatC(nrow(out$data),format="d",big.mark=",")),
-        pos=4,cex=1.414)
+    plot(out,xmaploc=F,ylim=YLIM*c(-1,1))
 
 }
+
+abline(h=c(-1,1),lty=2,col="#DDDDDD",lwd=1)
+text(0.5,3.5,
+    paste(
+        "BinSize =",
+        formatC(out$param$binSize,format="d",big.mark=","),
+        "NumBins =",
+        formatC(nrow(out$data),format="d",big.mark=",")),
+    pos=4,cex=1.414)
 
 dev.off()
 
