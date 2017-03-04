@@ -1,6 +1,28 @@
-# library(Rsamtools)
-# library(pctGCdata)
-# library(DNAcopy)
+#library(Rsamtools)
+#library(pctGCdata)
+#library(DNAcopy)
+
+library(Rcpp)
+
+##
+# Crazy function to get the path the script is in so we
+# can build an absolute path
+
+getSDIR <- function(){
+    args=commandArgs(trailing=F)
+    TAG="--file="
+    path_idx=grep(TAG,args)
+    SDIR=dirname(substr(args[path_idx],nchar(TAG)+1,nchar(args[path_idx])))
+    if(length(SDIR)==0) {
+        return(getwd())
+    } else {
+        return(SDIR)
+    }
+}
+
+sourceCpp(file.path(getSDIR(),"SeqDNACopy/frags2counts.cpp"))
+
+load(file.path(getSDIR(),"SeqDNACopy/hg19bl.rda"))
 
 chromRange <- function(i, chr="") {
   eval(parse(text=paste('RangesList("', chr, i,'"=IRanges(start=0, end=268435456L))',sep="")))
@@ -10,7 +32,7 @@ bam2fragments <- function(bamFile, X=FALSE, mapq=20) {
     # get position, mate position and insert size (fragment length)
     what <- c("pos","mpos","isize")
     # get first mate from properly paired reads which pass QC
-    flag=scanBamFlag(isNotPassingQualityControls=FALSE, isPaired=TRUE, isFirstMateRead=TRUE, isDuplicate=FALSE, isSecondaryAlignment=FALSE)
+    flag=scanBamFlag(isNotPassingQualityControls=FALSE, isPaired=TRUE, isFirstMateRead=TRUE, hasUnmappedMate=FALSE, isDuplicate=FALSE, isSecondaryAlignment=FALSE)
     bam <- list()
     # autosomes
     for(i in 1:22) {
@@ -29,35 +51,22 @@ bam2fragments <- function(bamFile, X=FALSE, mapq=20) {
     bam
 }
 
-# fragments to counts binned into intervals of size 100
-fragments2counts <- function(nfmid, tfmid) {
-    nbin <- floor(nfmid/100)
-    tbin <- floor(tfmid/100)
-    grp <- c(rep(0, length(nbin)), rep(1, length(tbin)))
-    bincounts <- table(c(nbin, tbin), grp)
-    out <- list()
-    out$pos <- as.numeric(rownames(bincounts))*100 + 50
-    out$normal <- bincounts[,1]
-    out$tumor <- bincounts[,2]
-    out
-}
-
 # convert the fragment counts to a data matrix
 fragments2dataframe <- function(nbam, tbam, iSizeLim=c(75,750)) {
     # normal fragment midpoints
     nfmid <- lapply(nbam, function(x, ll, ul) {
         x$isize <- abs(x$isize)
-        (pmin(x$pos, x$mpos) + x$isize/2)[x$isize >= ll & x$isize <= ul]
+        sort((pmin(x$pos, x$mpos) + x$isize/2)[x$isize >= ll & x$isize <= ul])
     }, iSizeLim[1], iSizeLim[2])
     # tumor fragment midpoints
     tfmid <- lapply(tbam, function(x, ll, ul) {
         x$isize <- abs(x$isize)
-        (pmin(x$pos, x$mpos) + x$isize/2)[x$isize >= ll & x$isize <= ul]
+        sort((pmin(x$pos, x$mpos) + x$isize/2)[x$isize >= ll & x$isize <= ul])
     }, iSizeLim[1], iSizeLim[2])
     # bin the mid points into interval of size 100
     binnedcounts <- list()
     nchr <- length(nbam)
-    for(i in 1:nchr) binnedcounts[[i]] <- fragments2counts(nfmid[[i]], tfmid[[i]])
+    for(i in 1:nchr) binnedcounts[[i]] <- frags2counts(nfmid[[i]], tfmid[[i]], hg19bl[[i]][,1], hg19bl[[i]][,2])
     # total number of bins with nonzero count
     nbins <- unlist(lapply(binnedcounts, function(x) {length(x$pos)}))
     # convert to matrix

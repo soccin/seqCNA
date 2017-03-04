@@ -1,5 +1,5 @@
 #
-# doWGSCNA.R (version 2.2.1)
+# doWGSCNA.R (version 3.0.1)
 #
 
 library(Rsamtools)
@@ -29,6 +29,7 @@ getSDIR <- function(){
         return(SDIR)
     }
 }
+
 ################################################################
 
 source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
@@ -73,12 +74,23 @@ gPos=cumsum(offset)/1e6
 chromoLabels=c(seq(22),"X")
 stagger=.1*((seq(chromoLabels) %% 2)-.5)
 
-CairoPDF(file=cc(sampleId,"Bin",binSize,".pdf"),width=11,height=8,bg="white",pointsize=12)
+#CairoPDF(file=cc(sampleId,"Bin",binSize,".pdf"),width=11,height=8,bg="white",pointsize=12)
 
-plot(out,xmaploc=T,ylim=c(-2,2))
+png(file=cc(sampleId,"Bin",binSize,".png"),
+        type="cairo",
+        width=1150,height=800,pointsize=20)
+
+plot(out,xmaploc=T,ylim=c(-3,3))
 abline(v=gPos,lty=2,col=8)
-abline(h=c(-1,1),lty=3,col="#DDDDDD",lwd=2)
+abline(h=c(-1,1),lty=2,col="#DDDDDD",lwd=1)
 text(gPos[-len(gPos)]+offset[-1]/2e6,-1+stagger,chromoLabels,cex=.71)
+text(0.5,1.5,
+    paste(
+        "BinSize =",
+        formatC(out$param$binSize,format="d",big.mark=","),
+        "NumBins =",
+        formatC(nrow(out$data),format="d",big.mark=",")),
+    pos=4,cex=1.414)
 
 dev.off()
 
