@@ -1,8 +1,8 @@
 #
-# doWGSCNA.R (version 2.3.1)
+# doWGSCNA.R
 #
 
-VERSION="2.3.1"
+VERSION="2.3.2"
 
 require(Rsamtools)
 require(DNAcopy)
