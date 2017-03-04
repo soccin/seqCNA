@@ -48,9 +48,16 @@ cArgs=commandArgs(trailing=T)
 
 # Set defaults first
 
-args=list()
+args=list(
+    BINSIZE="auto"
+    )
 parseArgs=str_match(cArgs,"(.*)=(.*)")
-apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
+dummy=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
+
+keys=sort(names(args))
+for(key in keys) {
+    cat("#",key,"=",args[[key]],"\n")
+}
 
 ################################################################
 
@@ -60,27 +67,28 @@ tumorBam=args$TUMOR
 tBase=fixSampleNames(basename(tumorBam))
 nBase=fixSampleNames(basename(normalBam))
 
-print(tBase)
-print(nBase)
-
 if(tBase==nBase){
     stop("tumor==normal")
 }
 
 sampleId=cc(tBase,"_",nBase)
-print(sampleId)
+cat("# sampleId =",sampleId,"\n")
 
 
 bb=bams2counts(normalBam,tumorBam,X=T)
 
 
-binSize=50000
-bins=bb$chrom + floor(bb$pos/binSize)*binSize/2^28
-nCounts=tapply(bb$normal,bins,sum)
-quantile(nCounts)
-binSize=100*floor(binSize/quantile(nCounts,.25))
-cat("adjusted binSize =",binSize,"\n")
-
+if(args$BINSIZE=="auto") {
+    binSize=50000
+    bins=bb$chrom + floor(bb$pos/binSize)*binSize/2^28
+    nCounts=tapply(bb$normal,bins,sum)
+    quantile(nCounts)
+    binSize=100*floor(binSize/quantile(nCounts,.25))
+    cat("# adjusted binSize =",binSize,"\n")
+} else {
+    binSize=as.numeric(args$BINSIZE)
+    cat("# manually set binsize =",binSize,"\n")
+}
 
 out=seqsegment(bb,sampleid=sampleId,binSize=binSize)
 out$param=list()
@@ -92,8 +100,6 @@ gPos=cumsum(offset)/1e6
 
 chromoLabels=c(seq(22),"X")
 stagger=.1*((seq(chromoLabels) %% 2)-.5)
-
-#CairoPDF(file=cc(sampleId,"Bin",binSize,".pdf"),width=11,height=8,bg="white",pointsize=12)
 
 png(file=cc(sampleId,"Bin",binSize,".png"),
         type="cairo",
