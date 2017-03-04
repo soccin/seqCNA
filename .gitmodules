@@ -1,0 +1,3 @@
+[submodule "seqDNAcopy"]
+	path = seqDNAcopy
+	url = git@github.com:veseshan/seqDNAcopy.git
