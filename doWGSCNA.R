@@ -1,6 +1,8 @@
 #
-# doWGSCNA.R (version 3.0.1)
+# doWGSCNA.R (version 2.3.1)
 #
+
+VERSION="2.3.1"
 
 require(Rsamtools)
 require(DNAcopy)
@@ -54,6 +56,7 @@ args=list(
 parseArgs=str_match(cArgs,"(.*)=(.*)")
 dummy=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
 
+cat("\n##\n# Version:",VERSION,"\n#\n")
 keys=sort(names(args))
 for(key in keys) {
     cat("#",key,"=",args[[key]],"\n")
