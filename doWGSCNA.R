@@ -2,10 +2,11 @@
 # doWGSCNA.R (version 3.0.1)
 #
 
-library(Rsamtools)
-library(DNAcopy)
-library(pctGCdata)
-library(Cairo)
+require(Rsamtools)
+require(DNAcopy)
+require(pctGCdata)
+require(Cairo)
+require(stringr)
 
 ################################################################
 fixSampleNames<-function(x) {
@@ -34,9 +35,27 @@ getSDIR <- function(){
 
 source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
 
-args=commandArgs(trailing=T)
-normalBam=args[1]
-tumorBam=args[2]
+cArgs=commandArgs(trailing=T)
+
+
+################################################################
+#
+# This code will parse command line args in the form of
+#    KEY=VAL
+# and sets
+#    args[[KEY]]=VAL
+#
+
+# Set defaults first
+
+args=list()
+parseArgs=str_match(cArgs,"(.*)=(.*)")
+apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
+
+################################################################
+
+normalBam=args$NORMAL
+tumorBam=args$TUMOR
 
 tBase=fixSampleNames(basename(tumorBam))
 nBase=fixSampleNames(basename(normalBam))
