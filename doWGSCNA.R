@@ -2,11 +2,10 @@
 # doWGSCNA.R
 #
 
-VERSION="2.3.2"
+VERSION="3.0.1"
 
-require(Rsamtools)
-require(DNAcopy)
-require(pctGCdata)
+#require(Rsamtools)
+#require(DNAcopy)
 require(Cairo)
 require(stringr)
 
@@ -35,7 +34,7 @@ getSDIR <- function(){
 
 ################################################################
 
-source(file.path(getSDIR(),"SeqDNACopy/seqDNAcopy.R"))
+library(seqDNAcopy,lib.loc=file.path(getSDIR(),"Rlib"))
 
 cArgs=commandArgs(trailing=T)
 
@@ -54,7 +53,8 @@ cArgs=commandArgs(trailing=T)
 args=list(
     BINSIZE="auto",
     TUMOR=NULL,
-    NORMAL=NULL
+    NORMAL=NULL,
+    MAPLOC="false"
     )
 
 parseArgs=str_match(cArgs,"(.*)=(.*)")
@@ -64,7 +64,7 @@ cat("\n\n###############################################################\n")
 cat("#\n# Version:",VERSION,"\n#\n")
 
 if(any(sapply(args,is.null))) {
-    cat("\nusage: doWGSCNA.R TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto]\n\n")
+    cat("\nusage: doWGSCNA.R TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto] MAPLOC=[false]\n\n")
     missing=which(sapply(args,is.null))
     cat("missing require arg(s)\n\n   ")
     for(ii in missing){
@@ -125,11 +125,22 @@ png(file=cc(sampleId,"Bin",binSize,".png"),
         type="cairo",
         width=1150,height=800,pointsize=20)
 
-plot(out,xmaploc=T,ylim=c(-3,3))
-abline(v=gPos,lty=2,col=8)
+
+YLIM=4
+if(args$MAPLOC=="true") {
+
+    plot(out,xmaploc=T,ylim=YLIM*c(-1,1))
+    abline(v=gPos,lty=2,col=8)
+    text(gPos[-len(gPos)]+offset[-1]/2e6,-1+stagger,chromoLabels,cex=.71)
+
+} else {
+
+    plot(out,xmaploc=F,ylim=YLIM*c(-1,1))
+
+}
+
 abline(h=c(-1,1),lty=2,col="#DDDDDD",lwd=1)
-text(gPos[-len(gPos)]+offset[-1]/2e6,-1+stagger,chromoLabels,cex=.71)
-text(0.5,1.5,
+text(0.5,3.5,
     paste(
         "BinSize =",
         formatC(out$param$binSize,format="d",big.mark=","),

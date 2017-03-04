@@ -1,0 +1,12 @@
+seqDNAcopy-package	seqDNAcopy-package
+bam2fragments	seqDNAcopy-internal
+bams2counts	seqDNAcopy-internal
+chromRange	seqDNAcopy-internal
+fragments2counts	seqDNAcopy-internal
+fragments2dataframe	seqDNAcopy-internal
+hg18bl	hgBlacklist
+hg19bl	hgBlacklist
+hg38bl	hgBlacklist
+hgBlacklist	hgBlacklist
+seqDNAcopy	seqDNAcopy-package
+seqsegment	seqDNAcopy-internal
