@@ -4,11 +4,6 @@
 
 VERSION="3.0.1"
 
-#require(Rsamtools)
-#require(DNAcopy)
-require(Cairo)
-require(stringr)
-
 ################################################################
 fixSampleNames<-function(x) {
 
@@ -34,10 +29,9 @@ getSDIR <- function(){
 
 ################################################################
 
-library(seqDNAcopy,lib.loc=file.path(getSDIR(),"Rlib"))
 
 cArgs=commandArgs(trailing=T)
-
+suppressPackageStartupMessages(require(stringr))
 
 ################################################################
 #
@@ -61,10 +55,10 @@ parseArgs=str_match(cArgs,"(.*)=(.*)")
 dummy=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
 
 cat("\n\n###############################################################\n")
-cat("#\n# Version:",VERSION,"\n#\n")
+cat("#\n# Version:",VERSION,"\n")
 
 if(any(sapply(args,is.null))) {
-    cat("\nusage: doWGSCNA.R TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto] MAPLOC=[false]\n\n")
+    cat("\n\nusage: doWGSCNA.R TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto] MAPLOC=[false]\n\n")
     missing=which(sapply(args,is.null))
     cat("missing require arg(s)\n\n   ")
     for(ii in missing){
@@ -73,6 +67,18 @@ if(any(sapply(args,is.null))) {
     cat("\n\n")
     quit()
 }
+
+################################################################
+# Load rest of libraries after args checkout
+#
+
+suppressPackageStartupMessages(library(seqDNAcopy,lib.loc=file.path(getSDIR(),"Rlib")))
+cat("# Version(seqDNAcopy):",sessionInfo()$otherPkgs$seqDNAcopy$Version,"\n")
+#require(Rsamtools)
+#require(DNAcopy)
+suppressPackageStartupMessages(require(Cairo))
+cat("#\n\n")
+quit()
 
 keys=sort(names(args))
 for(key in keys) {
