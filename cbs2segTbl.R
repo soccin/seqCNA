@@ -20,7 +20,7 @@ for(file in files) {
   load(file.path(ddir,file))
   d=out
   d$output[,1]=gsub("___FIXED.*","",d$output[,1])
-  d$output$absZcore=abs(round(computeSegZscore(out),2))
+  d$output$absZscore=abs(round(computeSegZscore(out),2))
   if(is.null(cbs)) {
     cbs=d$output
   } else {
@@ -30,6 +30,9 @@ for(file in files) {
 
 cbs$loc.end=as.integer(1e6*cbs$loc.end)
 cbs$loc.start=as.integer(1e6*cbs$loc.start)
-write.table(cbs[,1:6],
-            file=paste("IGV_",DATE(),".seg",sep=""),
-            sep="\t",eol="\n",quote=F,row.names=F)
+
+library(xlsx)
+
+write.xlsx(cbs,
+            file=paste0("segTable_",DATE(),".xlsx"),
+            row.names=F)
