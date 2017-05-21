@@ -2,12 +2,7 @@
 # doWGSCNA.R
 #
 
-VERSION="3.0.1"
-
-#require(Rsamtools)
-#require(DNAcopy)
-require(Cairo)
-require(stringr)
+VERSION="3.1.1"
 
 ################################################################
 fixSampleNames<-function(x) {
@@ -34,10 +29,9 @@ getSDIR <- function(){
 
 ################################################################
 
-library(seqDNAcopy,lib.loc=file.path(getSDIR(),"Rlib"))
 
 cArgs=commandArgs(trailing=T)
-
+suppressPackageStartupMessages(require(stringr))
 
 ################################################################
 #
@@ -54,17 +48,18 @@ args=list(
     BINSIZE="auto",
     TUMOR=NULL,
     NORMAL=NULL,
-    MAPLOC="false"
+    MAPLOC="false",
+    GENOME="hg19"
     )
 
 parseArgs=str_match(cArgs,"(.*)=(.*)")
 dummy=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
 
 cat("\n\n###############################################################\n")
-cat("#\n# Version:",VERSION,"\n#\n")
+cat("#\n# Version:",VERSION,"\n")
 
 if(any(sapply(args,is.null))) {
-    cat("\nusage: doWGSCNA.R TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto] MAPLOC=[false]\n\n")
+    cat("\n\nusage: doWGSCNA.R TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto] MAPLOC=[false] GENOME=[hg19]\n\n")
     missing=which(sapply(args,is.null))
     cat("missing require arg(s)\n\n   ")
     for(ii in missing){
@@ -73,6 +68,17 @@ if(any(sapply(args,is.null))) {
     cat("\n\n")
     quit()
 }
+
+################################################################
+# Load rest of libraries after args checkout
+#
+
+suppressPackageStartupMessages(library(seqDNAcopy,lib.loc=file.path(getSDIR(),"Rlib")))
+cat("# Version(seqDNAcopy):",sessionInfo()$otherPkgs$seqDNAcopy$Version,"\n")
+#require(Rsamtools)
+#require(DNAcopy)
+suppressPackageStartupMessages(require(Cairo))
+cat("#\n\n")
 
 keys=sort(names(args))
 for(key in keys) {
@@ -94,9 +100,7 @@ if(tBase==nBase){
 sampleId=cc(tBase,"_",nBase)
 cat("# sampleId =",sampleId,"\n")
 
-
-bb=bams2counts(normalBam,tumorBam,X=T)
-
+bb=bams2counts(normalBam,tumorBam,X=T,gbuild=args$GENOME)
 
 if(args$BINSIZE=="auto") {
     binSize=50000
@@ -127,7 +131,7 @@ png(file=cc(sampleId,"Bin",binSize,".png"),
 
 
 YLIM=4
-if(args$MAPLOC=="true") {
+if(args$MAPLOC=="true" & args$GENOME=="hg19") {
 
     plot(out,xmaploc=T,ylim=YLIM*c(-1,1))
     abline(v=gPos,lty=2,col=8)
