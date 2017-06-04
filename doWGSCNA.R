@@ -49,7 +49,8 @@ args=list(
     TUMOR=NULL,
     NORMAL=NULL,
     MAPLOC="false",
-    GENOME="hg19"
+    GENOME="hg19",
+    ODIR="."
     )
 
 parseArgs=str_match(cArgs,"(.*)=(.*)")
@@ -67,6 +68,10 @@ if(any(sapply(args,is.null))) {
     }
     cat("\n\n")
     quit()
+}
+
+if(args$ODIR!="." & !dir.exists(args$ODIR)) {
+    dir.create(args$ODIR,recursive=T)
 }
 
 ################################################################
@@ -125,12 +130,11 @@ gPos=cumsum(offset)/1e6
 chromoLabels=c(seq(22),"X")
 stagger=.1*((seq(chromoLabels) %% 2)-.5)
 
-png(file=cc(sampleId,"Bin",binSize,".png"),
+png(file=file.path(args$ODIR,cc(sampleId,"Bin",binSize,".png")),
         type="cairo",
         width=1150,height=800,pointsize=20)
 
-
-YLIM=4
+YLIM=3
 if(args$MAPLOC=="true" & args$GENOME=="hg19") {
 
     plot(out,xmaploc=T,ylim=YLIM*c(-1,1))
@@ -154,4 +158,4 @@ text(0.5,3.5,
 
 dev.off()
 
-save(bb,out,file=cc(sampleId,"Bin",binSize,".Rdata"),compress=T)
+save(bb,out,file=file.path(args$ODIR,cc(sampleId,"Bin",binSize,".Rdata")),compress=T)
