@@ -2,7 +2,7 @@
 # doWGSCNA.R
 #
 
-VERSION="4.0.1"
+VERSION="5.dev"
 
 ################################################################
 fixSampleNames<-function(x) {
