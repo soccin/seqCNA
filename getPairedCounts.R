@@ -10,12 +10,11 @@ source(file.path(SDIR,"include/parseArgs.R"))
 source(file.path(SDIR,"include/misc.R"))
 
 args=list(
-    BINSIZE="auto",
     TUMOR=NULL,
     NORMAL=NULL,
-    MAPLOC="false",
     GENOME="hg19",
-    ODIR="."
+    ODIR=".",
+    GCNORM=TRUE
     )
 
 args=parseArgs(args)
@@ -24,7 +23,7 @@ cat("###############################################################\n")
 cat("#\n# Version:",VERSION,"\n")
 
 if(is.null(args)) {
-    cat("\n\nusage: getPairCounts TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto] MAPLOC=[false] GENOME=[hg19]\n\n")
+    cat("\n\nusage: getPairCounts TUMOR=/path/tumor.bam NORMAL=/path/normal.bam GENOME=[hg19]\n\n")
     cat("\n\n")
     quit()
 }
@@ -56,7 +55,18 @@ if(tBase==nBase){
     stop("tumor==normal")
 }
 
-sampleId=cc(tBase,"_",nBase)
+sampleId=paste(tBase,"_",nBase,sep="_")
 cat("# sampleId =",sampleId,"\n")
 
-bb=bams2counts(normalBam,tumorBam,X=T,gbuild=args$GENOME)
+bb=bams2counts(normalBam,tumorBam,X=T,gbuild=args$GENOME,GCcorrect=args$GCNORM)
+
+d=list()
+d$sampleId=sampleId
+d$bb=bb
+d$args=args
+dat=list()
+dat[[make.names(sampleId)]]=d
+
+save(dat,file=file.path(args$ODIR,paste0(sampleId,".rda")),compress=T)
+
+
