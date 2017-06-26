@@ -1,0 +1,10 @@
+It is also available here:
+
+/home/shahr2/code/dmp-cnv-svn19/bin/copynumber_tm.batchdiff.R
+
+
+The script has function seg.clus.p (line 408-715) which will be the one to look at
+
+
+Essentially for p-value it takes cumulative probability distribution for a given log ratio, using the mean log ratio of a given segment and the correcting for multiple hypothesis testing
+
