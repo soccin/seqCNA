@@ -21,11 +21,27 @@ parseArgs<-function(args,convertCaseArgs=T) {
 
         parseArgs=str_match(cArgs,"(.*)=(.*)")
 
-        if(convertCaseArgs) {
-            parseArgs[,2]=toupper(parseArgs[,2])
-        }
+        for(ii in seq(nrow(parseArgs))) {
 
-        dummy=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
+            key=str_trim(parseArgs[ii,2])
+            if(convertCaseArgs) {
+                key=toupper(key)
+            }
+            value=str_trim(parseArgs[ii,3])
+
+            if(!is.null(args[[key]])) {
+
+                # If the arg is already set to a default value
+                # preserve that type
+                args[[key]]=do.call(paste0("as.",class(args[[key]])),list(value))
+
+            } else {
+
+                args[[key]]=value
+
+            }
+
+        }
 
     }
 
