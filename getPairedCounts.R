@@ -4,6 +4,7 @@
 
 VERSION="5.dev"
 
+SNAME=Sys.getenv("SNAME")
 SDIR=Sys.getenv("SDIR")
 SDIR=ifelse(SDIR=="",".",SDIR)
 source(file.path(SDIR,"include/parseArgs.R"))
@@ -17,15 +18,18 @@ args=list(
     GCNORM=TRUE
     )
 
-args=parseArgs(args)
 
 cat("###############################################################\n")
 cat("#\n# Version:",VERSION,"\n")
 
+args=parseArgs(args)
+
 if(is.null(args)) {
-    cat("\n\nusage: getPairCounts TUMOR=/path/tumor.bam NORMAL=/path/normal.bam GENOME=[hg19]\n\n")
+
+    cat(readLines(file.path(SDIR,"docs",paste0(SNAME,".doc"))),sep="\n")
     cat("\n\n")
     quit()
+
 }
 
 if(args$ODIR!="." & !dir.exists(args$ODIR)) {
