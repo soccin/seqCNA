@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export SDIR="$( cd "$( dirname "$0" )" && pwd )"
+export R_LIBS=$SDIR/Rlib:$R_LIBS
+exec /opt/common/CentOS_6-dev/R/R-3.2.2/bin/Rscript --vanilla --no-save "$0.R" "$@"
