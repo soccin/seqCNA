@@ -80,6 +80,7 @@ for(ii in seq(nrow(out$output))) {
     probe.seg.values[out$segRows[ii,1]:out$segRows[ii,2]]=out$output$seg.mean[ii]
 }
 global.mad=mad(out$dat[,3]-probe.seg.values)
+numSegments=nrow(output)
 
 
 png(file=file.path(args$ODIR,cc(sampleId,"seqSeg",".png")),
@@ -99,7 +100,8 @@ text(0.5,YLIM+.5-1,
         "NumBins =",
         formatC(nrow(out$data),format="d",big.mark=","),
         "Global.MAD =",
-        formatC(global.mad,format="f")
+        formatC(global.mad,format="f"),
+        "NumSegs =",formatC(numSegments,format="d",big.mark=",")
         ),
     pos=4,cex=1.414)
 
