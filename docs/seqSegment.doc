@@ -1,0 +1,14 @@
+
+USAGE: seqSegment [options] COUNTS=counts.rda
+
+Run the CBS algorithm on binned counts from getPairedCounts.
+
+Options:
+
+COUNTS=File                   Counts file created by getPairedCounts (Rdata file).  Required.
+
+ODIR=Directory                Directory to write output files.  Default value: "."
+
+BINSIZE=(Integer|enum)        Size of bins in base pairs. Default value: "auto". Possible
+                              values: {auto,INTEGER}. If set to "auto" then determine bin
+                              size dynamically
