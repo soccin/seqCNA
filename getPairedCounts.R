@@ -15,7 +15,8 @@ args=list(
     NORMAL=NULL,
     GENOME="hg19",
     ODIR=".",
-    GCNORM=TRUE
+    GCNORM=TRUE,
+    SAMPLEID=""
     )
 
 
@@ -52,14 +53,23 @@ for(key in keys) {
 normalBam=args$NORMAL
 tumorBam=args$TUMOR
 
-tBase=fixSampleNames(basename(tumorBam))
-nBase=fixSampleNames(basename(normalBam))
+if(args$SAMPLEID=="") {
 
-if(tBase==nBase){
-    stop("tumor==normal")
+    tBase=fixSampleNames(basename(tumorBam))
+    nBase=fixSampleNames(basename(normalBam))
+
+    if(tBase==nBase){
+        stop("tumor==normal")
+    }
+
+    sampleId=paste(tBase,"_",nBase,sep="_")
+
+} else {
+
+    sampleId=args$SAMPLEID
+
 }
 
-sampleId=paste(tBase,"_",nBase,sep="_")
 cat("# sampleId =",sampleId,"\n")
 
 bb=bams2counts(normalBam,tumorBam,X=T,gbuild=args$GENOME,GCcorrect=args$GCNORM)

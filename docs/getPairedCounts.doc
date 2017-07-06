@@ -16,3 +16,6 @@ ODIR=Directory      Directory to write output files.  Default: "."
 
 GCNORM=Boolean      Flag controlling whether GC-normalization is done.
                     Default value: TRUE. Possible Values: {FALSE, TRUE}
+
+SAMPLEID=String     Sample Id. If not specified then will form an id from
+                    "cleaned" version of tumor and normal bam filenames
