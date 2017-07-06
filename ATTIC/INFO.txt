@@ -3,8 +3,50 @@ It is also available here:
 /home/shahr2/code/dmp-cnv-svn19/bin/copynumber_tm.batchdiff.R
 
 
-The script has function seg.clus.p (line 408-715) which will be the one to look at
+The script has function seg.clus.p (line 408-715) which will be the
+one to look at
 
 
-Essentially for p-value it takes cumulative probability distribution for a given log ratio, using the mean log ratio of a given segment and the correcting for multiple hypothesis testing
+Essentially for p-value it takes cumulative probability distribution
+for a given log ratio, using the mean log ratio of a given segment
+and the correcting for multiple hypothesis testing
+
+
+============================
+
+This is very encouraging. Couple of points:
+
+1. From the analysis of pooled normal, I think the issues is w.r.t to
+IMPACT bait version for pooled normal not being the same as tumor wherever
+there are those Amplification seen.
+
+2. As its done in DMP can we figure out a way to find best normal to use
+that has the least noise. As you can observe in certain Match cases you
+see the same waterfall effect.
+
+3. We also need to do run this on Normals to see if we see a quiet
+profile. Probably we can start with Normal with Pooled Normal
+
+4. There are couple of stats that we can calculate:
+
+    A. Genes that are Gain, Amplified, Deleted. (we can decide how to assign
+p-value later) I can compare them to original IMPACT calls.
+
+    B. Some kind of qc based on
+(https://link.springer.com/article/10.1186/s12864-016-3074-7) or
+(https://academic.oup.com/bioinformatics/article-lookup/doi/10.1093/bioinformatics/btt479#32650675).
+
+    C. Not to forget we also need to calculate Intragenic
+deletion/amplification based on clustering of exons.
+
+Also It would be great if we have a README of what exactly are we doing.
+
+Let me know what part I can help.
+
+Venkat, this is the same Pancreatic Neuroendocrine data that I had shown
+you having lot of LOH across different Tumors.
+
+Best,
+-RS
+
 
