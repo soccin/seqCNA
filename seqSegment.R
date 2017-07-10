@@ -108,7 +108,9 @@ text(0.5,YLIM+.5-1,
 text(0.5,YLIM+.5-1.25,
     paste(
         "max|segMean| Auto =",
-        formatC(max(abs(out$output$seg.mean)),format="f")
+        formatC(max(abs(out$output$seg.mean)),format="f"),
+        "RMSD(seg.mean) =",
+        formatC(sqrt(mean(out$output$seg.mean^2)),format="f")
         ),
     pos=4,cex=1.2)
 
@@ -181,3 +183,28 @@ wiX=output$num.mark[xII]/sum(output$num.mark[xII])
 X.seg.mean.avg=sum(wiX*output$seg.mean[xII])
 writeVariable("X.seg.mean.avg")
 
+##########################################
+#
+# Cluster segments
+#
+
+# segs=out$output
+# nsegs=nrow(segs)
+
+# cnlr=out$data[is.finite(out$data[,3]),3]
+
+# segid <- rep(rank(segs$seg.mean, ties.method="random"), segs$num.mark)
+# segid <- sort(segid)
+
+# segs=segs[order(segs$seg.mean),]
+
+# ocnclust<-1:nsegs
+# ocnlevels<-segs$seg.mean
+
+#     while ((length(ocnlevels) > 1) && (min(diff(ocnlevels)) < 0.04)) {
+#         j <- which.min(diff(ocnlevels))
+#         ocnlevels <- ocnlevels[-j]
+#         ocnclust[ocnclust>j] <- ocnclust[ocnclust>j] - 1
+#         segid[segid > j] <- segid[segid > j] - 1
+#         ocnlevels[j] <- median(cnlr[segid==j])
+#     }
