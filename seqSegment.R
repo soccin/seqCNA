@@ -80,8 +80,8 @@ for(ii in seq(nrow(out$output))) {
     probe.seg.values[out$segRows[ii,1]:out$segRows[ii,2]]=out$output$seg.mean[ii]
 }
 global.mad=mad(out$dat[,3]-probe.seg.values)
-numSegments=nrow(output)
-
+rms.derivative.noise=sqrt(mean(diff(out$dat[,3])^2))
+numSegments=nrow(out$output)
 
 png(file=file.path(args$ODIR,cc(sampleId,"seqSeg",".png")),
         type="cairo",
@@ -103,7 +103,14 @@ text(0.5,YLIM+.5-1,
         formatC(global.mad,format="f"),
         "NumSegs =",formatC(numSegments,format="d",big.mark=",")
         ),
-    pos=4,cex=1.414)
+    pos=4,cex=1.2)
+
+text(0.5,YLIM+.5-1.25,
+    paste(
+        "max|segMean| Auto =",
+        formatC(max(abs(out$output$seg.mean)),format="f")
+        ),
+    pos=4,cex=1.2)
 
 dev.off()
 
@@ -115,6 +122,10 @@ write.table(output,
             file=file.path(args$ODIR,cc(sampleId,"seqSeg",".seg")),
             sep="\t",eol="\n",quote=F,row.names=F)
 
+
+##################################################################################
+##################################################################################
+
 outFile=file.path(args$ODIR,cc(sampleId,"seqSeg",".out"))
 writeVariable<-function(varName) {
     cat(varName,"=",get(varName),"\n",file=outFile,append=T)
@@ -125,11 +136,48 @@ writeVariable("VERSION")
 writeVariable("sampleId")
 countFile=args$COUNTS
 writeVariable("countFile")
+genome=cArgs$GENOME
+writeVariable("genome")
 arg.binsize=args$BINSIZE
 writeVariable("arg.binsize")
 writeVariable("binSize")
+numBins=nrow(out$data)
+writeVariable("numBins")
 writeVariable("global.mad")
+writeVariable("rms.derivative.noise")
 numSegments=nrow(output)
 writeVariable("numSegments")
 
+XChr=NA
+if(cArgs$GENOME %in% c("hg19","b37"))
+    XChr=23
+if(cArgs$GENOME %in% c("mm10"))
+    XChr=20
+
+RMSD.seg.mean=sqrt(mean(output$seg.mean^2))
+autoII=output$chrom!=XChr
+numSegments.AUTO=length(which(autoII))
+
+RMSD.seg.mean.AUTO=sqrt(mean(output$seg.mean[autoII]^2))
+
+wiAuto=output$num.mark[autoII]/sum(output$num.mark[autoII])
+
+wRMSD.seg.mean.AUTO=sqrt(sum( wiAuto*(output$seg.mean[autoII]^2) ))
+max.abs.seg.mean.AUTO=max(abs(output$seg.mean[autoII]))
+
+writeVariable("numSegments.AUTO")
+writeVariable("RMSD.seg.mean")
+writeVariable("RMSD.seg.mean.AUTO")
+writeVariable("wRMSD.seg.mean.AUTO")
+writeVariable("max.abs.seg.mean.AUTO")
+
+xII=output$chrom==XChr
+X.seg.mean.max=max(output$seg.mean[xII])
+writeVariable("X.seg.mean.max")
+X.seg.mean.min=min(output$seg.mean[xII])
+writeVariable("X.seg.mean.min")
+
+wiX=output$num.mark[xII]/sum(output$num.mark[xII])
+X.seg.mean.avg=sum(wiX*output$seg.mean[xII])
+writeVariable("X.seg.mean.avg")
 
