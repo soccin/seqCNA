@@ -71,6 +71,7 @@ out$param$sampleId=sampleId
 out$param$countFile=args$COUNTS
 out$param$arg.binsize=args$BINSIZE
 out$param$undo=list(undo.splits="sdundo",undo.SD=undo.SD)
+out$param$genome=cArgs$GENOME
 
 #
 # probe.seg.values is the segment means projected
