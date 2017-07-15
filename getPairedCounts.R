@@ -8,6 +8,7 @@ SNAME=Sys.getenv("SNAME")
 SDIR=Sys.getenv("SDIR")
 SDIR=ifelse(SDIR=="",".",SDIR)
 source(file.path(SDIR,"include/parseArgs.R"))
+source(file.path(SDIR,"include/tools.R"))
 source(file.path(SDIR,"include/misc.R"))
 
 args=list(
@@ -77,7 +78,11 @@ includeXChrom=TRUE
 bb=bams2counts(normalBam,tumorBam,X=includeXChrom,gbuild=args$GENOME,GCcorrect=args$GCNORM)
 
 counts=list()
-counts$param=list(sampleId=sampleId,includeXChrom=includeXChrom)
+counts$versions=list(VERSION=VERSION,GITTag=getGITTag(SDIR))
+counts$param=list(
+    sampleId=sampleId,
+    includeXChrom=includeXChrom
+    )
 counts$args=args
 
 OBASE=paste0(sampleId,"_Counts")

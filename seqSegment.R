@@ -150,6 +150,8 @@ writeVariable<-function(varName) {
 cat("##############################################\n",file=outFile)
 
 writeVariable("VERSION")
+GITTag=getGITTag(SDIR)
+writeVariable("GITTag")
 writeVariable("sampleId")
 countFile=args$COUNTS
 writeVariable("countFile")
