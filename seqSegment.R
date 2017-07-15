@@ -48,7 +48,7 @@ for(key in keys) {
 ################################################################
 
 load(args$COUNTS)
-sampleId=counts$sampleId
+sampleId=counts$param$sampleId
 bb=counts$bb
 cArgs=counts$args
 
@@ -83,11 +83,17 @@ probe.seg.values=double(nrow(out$dat))
 for(ii in seq(nrow(out$output))) {
     probe.seg.values[out$segRows[ii,1]:out$segRows[ii,2]]=out$output$seg.mean[ii]
 }
+
+num.probes=nrow(out$dat)
 global.mad=mad(out$dat[,3]-probe.seg.values)
 rms.derivative.noise=sqrt(mean(diff(out$dat[,3])^2))
+sum.logr.sq=sum(out$dat[,3]^2)
+rms.logr=sqrt(mean(out$dat[,3]^2))
+rms.logr.flat=sqrt(mean((out$dat[,3]-probe.seg.values)^2))
+
 numSegments=nrow(out$output)
 
-png(file=file.path(args$ODIR,cc(sampleId,"seqSeg",".png")),
+png(file=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".png")),
         type="cairo",
         height=1150,width=800,pointsize=16)
 
@@ -125,19 +131,19 @@ abline(h=c(-2,2),lty=2,col="#333333",lwd=1)
 
 dev.off()
 
-save(out,file=file.path(args$ODIR,cc(sampleId,"seqSeg",".rda")),compress=T)
+save(out,file=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".rda")),compress=T)
 output=out$output
 output$loc.start=output$loc.start*1.e6
 output$loc.end=output$loc.end*1.e6
 write.table(output,
-            file=file.path(args$ODIR,cc(sampleId,"seqSeg",".seg")),
+            file=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".seg")),
             sep="\t",eol="\n",quote=F,row.names=F)
 
 
 ##################################################################################
 ##################################################################################
 
-outFile=file.path(args$ODIR,cc(sampleId,"seqSeg",".out"))
+outFile=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".out"))
 writeVariable<-function(varName) {
     cat(varName,"=",get(varName),"\n",file=outFile,append=T)
 }
@@ -154,9 +160,14 @@ writeVariable("arg.binsize")
 writeVariable("binSize")
 numBins=nrow(out$data)
 writeVariable("numBins")
+writeVariable("num.probes")
 writeVariable("undo.SD")
 writeVariable("global.mad")
 writeVariable("rms.derivative.noise")
+writeVariable("sum.logr.sq")
+writeVariable("rms.logr")
+writeVariable("rms.logr.flat")
+
 numSegments=nrow(output)
 writeVariable("numSegments")
 
