@@ -37,8 +37,9 @@ if(args$ODIR!="." & !dir.exists(args$ODIR)) {
 # Load rest of libraries after args checkout
 #
 
+library(RJSONIO)
 suppressPackageStartupMessages(library(seqDNAcopy))
-cat("# Version(seqDNAcopy):",sessionInfo()$otherPkgs$seqDNAcopy$Version,"\n")
+cat("# Version(seqDNAcopy):",packageDescription("seqDNAcopy")$Version,"\n")
 keys=sort(names(args))
 for(key in keys) {
     cat("#",key,"=",args[[key]],"\n")
@@ -47,9 +48,9 @@ for(key in keys) {
 ################################################################
 
 load(args$COUNTS)
-sampleId=dat[[1]]$sampleId
-bb=dat[[1]]$bb
-cArgs=dat[[1]]$args
+sampleId=counts$sampleId
+bb=counts$bb
+cArgs=counts$args
 
 if(args$BINSIZE=="auto") {
     binSize=50000
