@@ -40,9 +40,10 @@ if(args$ODIR!="." & !dir.exists(args$ODIR)) {
 ################################################################
 # Load rest of libraries after args checkout
 #
+
 library(RJSONIO)
 suppressPackageStartupMessages(library(seqDNAcopy))
-cat("# Version(seqDNAcopy):",packageVersion("seqDNAcopy"),"\n")
+cat("# Version(seqDNAcopy):",packageDescription("seqDNAcopy")$Version,"\n")
 
 keys=sort(names(args))
 for(key in keys) {
@@ -75,16 +76,16 @@ if(args$SAMPLEID=="") {
 includeXChrom=TRUE
 bb=bams2counts(normalBam,tumorBam,X=includeXChrom,gbuild=args$GENOME,GCcorrect=args$GCNORM)
 
-d=list()
-d$param=list(sampleId=sampleId,includeXChrom=includeXChrom)
-d$args=args
+counts=list()
+counts$param=list(sampleId=sampleId,includeXChrom=includeXChrom)
+counts$args=args
 
 OBASE=paste0(sampleId,"_Counts")
 write(toJSON(d,pretty=T),file.path(args$ODIR,paste0(OBASE,".json")))
 
-d$bb=bb
+counts$bb=bb
 
-save(d,file=file.path(args$ODIR,paste0(OBASE,".rda")),compress=T)
+save(counts,file=file.path(args$ODIR,paste0(OBASE,".rda")),compress=T)
 
 cat("# sampleId =",sampleId,"\n")
 cat("# includeXChrom =",includeXChrom,"\n")
