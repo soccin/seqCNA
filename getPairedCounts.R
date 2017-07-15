@@ -81,7 +81,7 @@ counts$param=list(sampleId=sampleId,includeXChrom=includeXChrom)
 counts$args=args
 
 OBASE=paste0(sampleId,"_Counts")
-write(toJSON(d,pretty=T),file.path(args$ODIR,paste0(OBASE,".json")))
+write(toJSON(counts,pretty=T),file.path(args$ODIR,paste0(OBASE,".json")))
 
 counts$bb=bb
 
