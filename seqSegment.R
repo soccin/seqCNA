@@ -84,7 +84,6 @@ for(ii in seq(nrow(out$output))) {
     probe.seg.values[out$segRows[ii,1]:out$segRows[ii,2]]=out$output$seg.mean[ii]
 }
 
-num.probes=nrow(out$dat)
 global.mad=mad(out$dat[,3]-probe.seg.values)
 rms.derivative.noise=sqrt(mean(diff(out$dat[,3])^2))
 sum.logr.sq=sum(out$dat[,3]^2)
@@ -92,44 +91,6 @@ rms.logr=sqrt(mean(out$dat[,3]^2))
 rms.logr.flat=sqrt(mean((out$dat[,3]-probe.seg.values)^2))
 
 numSegments=nrow(out$output)
-
-png(file=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".png")),
-        type="cairo",
-        height=1150,width=800,pointsize=16)
-
-par(mfrow=c(2,1))
-
-YLIM=3
-plot(out,xmaploc=F,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
-
-abline(h=c(-1,1,log2(1.5)),lty=2,col="#333333",lwd=1)
-abline(h=global.mad*c(-1,1),lty=3,col=1)
-
-text(0.5,YLIM+.5-1,
-    paste(
-        "BinSize =",
-        formatC(out$param$binSize,format="d",big.mark=","),
-        "NumBins =",
-        formatC(nrow(out$data),format="d",big.mark=","),
-        "Global.MAD =",
-        formatC(global.mad,format="f"),
-        "NumSegs =",formatC(numSegments,format="d",big.mark=",")
-        ),
-    pos=4,cex=1.12)
-
-text(0.5,YLIM+.5-1.4,
-    paste(
-        "max|segMean| Auto =",
-        formatC(max(abs(out$output$seg.mean)),format="f"),
-        "RMSD(seg.mean) =",
-        formatC(sqrt(mean(out$output$seg.mean^2)),format="f")
-        ),
-    pos=4,cex=1.12)
-
-plot(out,xmaploc=F,pt.cols=c("#B5D7E4","#BEBEBE"))
-abline(h=c(-2,2),lty=2,col="#333333",lwd=1)
-
-dev.off()
 
 save(out,file=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".rda")),compress=T)
 output=out$output
@@ -162,7 +123,6 @@ writeVariable("arg.binsize")
 writeVariable("binSize")
 numBins=nrow(out$data)
 writeVariable("numBins")
-writeVariable("num.probes")
 writeVariable("undo.SD")
 writeVariable("global.mad")
 writeVariable("rms.derivative.noise")
@@ -238,3 +198,53 @@ writeVariable("X.seg.mean.avg")
 
 # out$output$cluster=ocnclust[rank(out$output$seg.mean,ties.method="random")]
 # out$output$clust.mean=round(ocnlevels[out$output$cluster],4)
+
+
+png(file=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".png")),
+        type="cairo",
+        height=1150,width=800,pointsize=16)
+
+par(mfrow=c(2,1))
+
+YLIM=3
+plot(out,xmaploc=F,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
+
+abline(h=c(-1,1,log2(1.5)),lty=2,col="#333333",lwd=1)
+abline(h=global.mad*c(-1,1),lty=3,col=1)
+
+text(0.5,YLIM+.5-1,
+    paste(
+        "NumBins =",
+        formatC(nrow(out$data),format="d",big.mark=","),
+        "MAD =",
+        formatC(global.mad,format="f"),
+        "nSegs =",formatC(numSegments,format="d",big.mark=","),
+        "RMSD.Segs.noX =",formatC(RMSD.seg.mean.AUTO,format="f")
+        ),
+    pos=4,cex=1.12)
+
+# text(0.5,YLIM+.5-1.4,
+#     paste(
+#         "max|segMean| Auto =",
+#         formatC(max(abs(out$output$seg.mean)),format="f"),
+#         "RMSD(seg.mean) =",
+#         formatC(sqrt(mean(out$output$seg.mean^2)),format="f")
+#         ),
+#     pos=4,cex=1.12)
+
+text(0.5,YLIM+.5-1.4,
+    paste(
+        "sum.logr.sq =",
+        formatC(sum.logr.sq,format="f"),
+        "rms.logr =",
+        formatC(rms.logr,format="f"),
+        "rms.logr.flat =",
+        formatC(rms.logr.flat,format="f")
+        ),
+    pos=4,cex=1.12)
+
+plot(out,xmaploc=F,pt.cols=c("#B5D7E4","#BEBEBE"))
+abline(h=c(-2,2),lty=2,col="#333333",lwd=1)
+
+dev.off()
+
