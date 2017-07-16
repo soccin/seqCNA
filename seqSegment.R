@@ -66,6 +66,10 @@ if(args$BINSIZE=="auto") {
 
 undo.SD=2
 out=seqsegment(bb,sampleid=sampleId,binSize=binSize, undo.splits="sdundo", undo.SD=undo.SD)
+
+stop("Cluster")
+
+
 out$param=list()
 out$param$binSize=binSize
 out$param$sampleId=sampleId
@@ -165,40 +169,6 @@ writeVariable("X.seg.mean.min")
 wiX=output$num.mark[xII]/sum(output$num.mark[xII])
 X.seg.mean.avg=sum(wiX*output$seg.mean[xII])
 writeVariable("X.seg.mean.avg")
-
-##########################################
-#
-# Cluster segments
-#
-
-# segs=out$output
-# nsegs=nrow(segs)
-
-# cnlr=out$data[is.finite(out$data[,3]),3]
-# weights=out$weights[is.finite(out$data[,3])]
-
-# segid <- rep(rank(segs$seg.mean, ties.method="random"), segs$num.mark)
-# segid <- sort(segid)
-
-# segs=segs[order(segs$seg.mean),]
-
-# ocnclust<-1:nsegs
-# ocnlevels<-segs$seg.mean
-
-# # DMP uses threshold=0.1
-#     threshold=0.04
-#     while ((length(ocnlevels) > 1) && (min(diff(ocnlevels)) < threshold)) {
-#         j <- which.min(diff(ocnlevels))
-#         ocnlevels <- ocnlevels[-j]
-#         ocnclust[ocnclust>j] <- ocnclust[ocnclust>j] - 1
-#         segid[segid > j] <- segid[segid > j] - 1
-#         wj=weights[segid==j]/sum(weights[segid==j])
-#         ocnlevels[j] <- mean(wj*cnlr[segid==j])
-#     }
-
-# out$output$cluster=ocnclust[rank(out$output$seg.mean,ties.method="random")]
-# out$output$clust.mean=round(ocnlevels[out$output$cluster],4)
-
 
 png(file=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".png")),
         type="cairo",
