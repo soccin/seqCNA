@@ -12,3 +12,6 @@ ODIR=Directory                Directory to write output files.  Default value: "
 BINSIZE=(Integer|enum)        Size of bins in base pairs. Default value: "auto". Possible
                               values: {auto,INTEGER}. If set to "auto" then determine bin
                               size dynamically
+
+MINBINCOUNT=(Integer)         Minimum number of counts per bin to be used in segmenation.
+                              Default value: 35.

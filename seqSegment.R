@@ -13,7 +13,8 @@ source(file.path(SDIR,"include/tools.R"))
 args=list(
     COUNTS=NULL,
     ODIR=".",
-    BINSIZE="auto"
+    BINSIZE="auto",
+    MINBINCOUNT=35
     )
 
 cat("###############################################################\n")
@@ -65,9 +66,9 @@ if(args$BINSIZE=="auto") {
 }
 
 undo.SD=2
-out=seqsegment(bb,sampleid=sampleId,binSize=binSize, undo.splits="sdundo", undo.SD=undo.SD)
-
-stop("Cluster")
+out=seqsegment(bb,sampleid=sampleId,
+                binSize=binSize,minBinCount=args$MINBINCOUNT,
+                undo.splits="sdundo",undo.SD=undo.SD)
 
 clusterThreshold=0.08
 out=clusterSegs(out,threshold=clusterThreshold)
@@ -77,6 +78,7 @@ out$param$binSize=binSize
 out$param$sampleId=sampleId
 out$param$countFile=args$COUNTS
 out$param$arg.binsize=args$BINSIZE
+out$param$minBinCount=args$MINBINCOUNT
 out$param$undo=list(undo.splits="sdundo",undo.SD=undo.SD)
 out$param$genome=cArgs$GENOME
 out$param$clusterThreshold=clusterThreshold
