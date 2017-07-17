@@ -6,7 +6,7 @@
 # DMP uses threshold=0.08
 # 2^(-2*0.04) ~ 0.95
 
-clustersegs <- function(out,threshold=0.04) {
+clustersegs <- function(out,threshold=0.08) {
 
     segs=out$output
     nsegs=nrow(segs)
@@ -28,16 +28,32 @@ clustersegs <- function(out,threshold=0.04) {
 
     while ((length(ocnlevels) > 1) && (min(diff(ocnlevels)) < threshold)) {
         j <- which.min(diff(ocnlevels))
-        print(j)
-        print(which(ocnlevels==1.0710))
         ocnlevels <- ocnlevels[-j]
         ocnclust[ocnclust>j] <- ocnclust[ocnclust>j] - 1
         segid[segid > j] <- segid[segid > j] - 1
         wj=weights[segid==j]/sum(weights[segid==j])
-        ocnlevels[j] <- mean(wj*cnlr[segid==j])
-
-        print(ocnlevels)
+        ocnlevels[j] <- sum(wj*cnlr[segid==j])
     }
 
-    #out$output$cluster=ocnclust[rank(out$output$seg.mean,ties.method="random")]
-    #out$output$clust.mean=round(ocnlevels[out$output$cluster],4)
+
+    nProbesPerSeg=table(segid)
+    diploidClusterNum=as.numeric(which.min(abs(ocnlevels/sqrt(nProbesPerSeg))))
+
+    out$cluster=list(
+        diploidClusterNum=diploidClusterNum,
+        originalLevels=ocnlevels)
+
+    ocnlevels=ocnlevels - ocnlevels[diploidClusterNum]
+
+    segs$cluster=ocnclust
+    segs$clust.mean=ocnlevels[segs$cluster]
+    segs=segs[order(segs$segNo),]
+
+    deltaDat=rep(segs$clust.mean-segs$seg.mean,segs$num.mark)
+
+    out$output$seg.mean=segs$clust.mean
+    out$output$cluster=segs$cluster
+    out$data[,3]=out$data[,3]+deltaDat
+
+    out
+}
