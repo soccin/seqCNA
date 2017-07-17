@@ -3,7 +3,7 @@
 # Cluster segments
 # taken from facets facets-clustersegs.R (commit: f501272)
 #
-# DMP uses threshold=0.1
+# DMP uses threshold=0.08
 # 2^(-2*0.04) ~ 0.95
 
 clustersegs <- function(out,threshold=0.04) {
