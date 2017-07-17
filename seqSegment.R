@@ -69,6 +69,8 @@ out=seqsegment(bb,sampleid=sampleId,binSize=binSize, undo.splits="sdundo", undo.
 
 stop("Cluster")
 
+clusterThreshold=0.08
+out=clusterSegs(out,threshold=clusterThreshold)
 
 out$param=list()
 out$param$binSize=binSize
@@ -77,6 +79,7 @@ out$param$countFile=args$COUNTS
 out$param$arg.binsize=args$BINSIZE
 out$param$undo=list(undo.splits="sdundo",undo.SD=undo.SD)
 out$param$genome=cArgs$GENOME
+out$param$clusterThreshold=clusterThreshold
 
 #
 # probe.seg.values is the segment means projected
