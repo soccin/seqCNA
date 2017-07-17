@@ -9,6 +9,7 @@ SDIR=Sys.getenv("SDIR")
 SDIR=ifelse(SDIR=="",".",SDIR)
 source(file.path(SDIR,"include/parseArgs.R"))
 source(file.path(SDIR,"include/tools.R"))
+source(file.path(SDIR,"include/clusterSegs.R"))
 
 args=list(
     COUNTS=NULL,
