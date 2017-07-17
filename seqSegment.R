@@ -9,6 +9,7 @@ SDIR=Sys.getenv("SDIR")
 SDIR=ifelse(SDIR=="",".",SDIR)
 source(file.path(SDIR,"include/parseArgs.R"))
 source(file.path(SDIR,"include/tools.R"))
+source(file.path(SDIR,"include/clusterSegs.R"))
 
 args=list(
     COUNTS=NULL,
@@ -71,7 +72,7 @@ out=seqsegment(bb,sampleid=sampleId,
                 undo.splits="sdundo",undo.SD=undo.SD)
 
 clusterThreshold=0.08
-out=clusterSegs(out,threshold=clusterThreshold)
+out=clustersegs(out,threshold=clusterThreshold)
 
 out$param=list()
 out$param$binSize=binSize
