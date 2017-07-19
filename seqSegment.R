@@ -71,7 +71,7 @@ out=seqsegment(bb,sampleid=sampleId,
                 binSize=binSize,minBinCount=args$MINBINCOUNT,
                 undo.splits="sdundo",undo.SD=undo.SD)
 
-clusterThreshold=0.08
+clusterThreshold=0.04
 out=clustersegs(out,threshold=clusterThreshold)
 
 out$param=list()
@@ -99,6 +99,7 @@ rms.derivative.noise=sqrt(mean(diff(out$dat[,3])^2))
 sum.logr.sq=sum(out$dat[,3]^2)
 rms.logr=sqrt(mean(out$dat[,3]^2))
 rms.logr.flat=sqrt(mean((out$dat[,3]-probe.seg.values)^2))
+frac.logR.ltNeg2=mean(out$dat[,3] < -2)
 
 numSegments=nrow(out$output)
 
@@ -139,6 +140,7 @@ writeVariable("rms.derivative.noise")
 writeVariable("sum.logr.sq")
 writeVariable("rms.logr")
 writeVariable("rms.logr.flat")
+writeVariable("frac.logR.ltNeg2")
 
 numSegments=nrow(output)
 writeVariable("numSegments")
