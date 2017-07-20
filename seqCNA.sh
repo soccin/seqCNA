@@ -26,6 +26,6 @@ bsub -m commonHG -o LSF/$scatter -J SEQSEG_$sID -We 59 -R "rusage[iounits=.1]" -
         ODIR=$oDir \
         COUNTS=$oDir/${sID}_Counts.rda
 
-bsub -m commonHG -o LSF/$scatter -J CLEANUP_$sID -We 59 -w "post_done(SEQSEG_$sID)" \
-    rm $oDir/${sID}_Counts.rda $oDir/${sID}_seqSeg.rda
+#bsub -m commonHG -o LSF/$scatter -J CLEANUP_$sID -We 59 -w "post_done(SEQSEG_$sID)" \
+#    rm $oDir/${sID}_Counts.rda $oDir/${sID}_seqSeg.rda
 
