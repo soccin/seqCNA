@@ -1,3 +1,22 @@
+#
+# getGeneCalls.R
+#
+
+VERSION="5.dev"
+
+SNAME=Sys.getenv("SNAME")
+SDIR=Sys.getenv("SDIR")
+SDIR=ifelse(SDIR=="",".",SDIR)
+source(file.path(SDIR,"include/parseArgs.R"))
+
+FIX THIS
+
+GET GENOME FROM OUTPUT FILES NORMALIZE HG19 ==> B37
+
+args=list(
+    ASSAY=NULL,
+
+
 require(data.table)
 require(xlsx)
 require(stringr)
