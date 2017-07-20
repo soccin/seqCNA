@@ -15,6 +15,11 @@ GET GENOME FROM OUTPUT FILES NORMALIZE HG19 ==> B37
 
 args=list(
     ASSAY=NULL,
+    INPUTS=NULL
+    )
+
+
+
 
 
 require(data.table)
