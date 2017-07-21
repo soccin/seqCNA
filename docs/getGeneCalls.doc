@@ -1,0 +1,14 @@
+
+USAGE: getGeneCalls [options] ASSAY=<assayType> INPUTS=FileOfSeqCNAOutputDirs
+
+Compute the gene level calls from a set of seg files.
+
+Options:
+
+ASSAY=String        ASSAY used for sequencing. E.g.; IMPACT410. Required.
+
+INPUTS=File         File containing the paths to the output directories of
+                    seqSeqment. Required.
+
+ODIR=Directory      Directory to write output files.  Default: "."
+

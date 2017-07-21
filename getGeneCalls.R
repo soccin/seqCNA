@@ -8,64 +8,61 @@ SNAME=Sys.getenv("SNAME")
 SDIR=Sys.getenv("SDIR")
 SDIR=ifelse(SDIR=="",".",SDIR)
 source(file.path(SDIR,"include/parseArgs.R"))
+source(file.path(SDIR,"include/tools.R"))
+source(file.path(SDIR,"include/globals.R"))
 
-FIX THIS
-
-GET GENOME FROM OUTPUT FILES NORMALIZE HG19 ==> B37
 
 args=list(
     ASSAY=NULL,
-    INPUTS=NULL
+    INPUTS=NULL,
+    ODIR="."
     )
 
+cat("###############################################################\n")
+cat("#\n# Version:",VERSION,"\n")
 
+args=parseArgs(args)
 
+if(is.null(args)) {
 
+    cat(readLines(file.path(SDIR,"docs",paste0(SNAME,".doc"))),sep="\n")
+    cat("\n\n")
+    quit()
 
-require(data.table)
-require(xlsx)
-require(stringr)
-
-GTF_RDA="gencode.vM13.annotation.sorted.gtf.rda"
-
-if(!file.exists(GTF_RDA)) {
-    MM10_GTF="/ifs/depot/annotation/M.musculus/gencode/vM13/gencode.vM13.annotation.sorted.gtf.gz"
-    gtfCols=c("chrom","db","feature","start","end","score","strand","frame","attribute")
-
-    gtf=fread(paste("zcat",MM10_GTF),col.names=gtfCols)
-    gtf[,chrom:=gsub("chr","",chrom)]
-    gtf[,chrom:=as.numeric(factor(chrom,c(1:19,"X","Y","M")))]
-
-    gtfFlds=c("gene_name","transcript_id","exon_number","gene_type","transcript_type")
-    for(gfld in gtfFlds) {
-        print(gfld)
-        gtf[,(gfld):=gsub('("|;)','',str_match(attribute,paste0(gfld," (.*?) "))[,2])]
-    }
-
-    gtf_attribute=gtf$attribute
-
-    gtf[,attribute:=NULL]
-    gtf[,length:=end-start]
-
-    save(gtf,gtf_attribute,file=GTF_RDA)
-} else {
-    load(GTF_RDA)
 }
 
-gene.gtf=gtf
-gene.gtf=gene.gtf[
-                    gene_type=="protein_coding"
-                    & transcript_type=="protein_coding"
-                    & feature %in% "transcript",]
-gene.gtf=gene.gtf[!duplicated(gene.gtf$gene_name),]
+#############################################################################
+library(data.table)
 
-setkey(gene.gtf,chrom,start,end)
+if(args$ODIR!="." & !dir.exists(args$ODIR)) {
+    dir.create(args$ODIR,recursive=T)
+}
 
-seg=read.xlsx("proj_07593_SegTable.xlsx",sheetIndex=1)
-seg=data.table(seg)
-setkey(seg,chrom,loc.start,loc.end)
 
-ff=foverlaps(gene.gtf,seg)
+outDirs=scan(args$INPUTS,"")
+
+# Get Genome from one outfile
+out1file=dir(outDirs[1],pattern="_seqSeg.out",full.names=T)
+out1=parseSeqCNAOutFile(out1file)
+
+geneAnnoteFile=file.path(
+    SDIR,
+    glb$geneAnnotationsDir,
+    args$ASSAY,
+    normalizeGenomeTag(out1$genome),
+    "gene_annotations.txt")
+
+geneDb=fread(geneAnnoteFile)
+setkey(geneDb,chrom,start,stop)
+
+getSegFileFromOutDir <- function(odir) {
+    segFile=dir(odir,pattern="_seqSeg.seg",full.names=T)
+}
+
+segs=rbindlist(lapply(lapply(outDirs,getSegFileFromOutDir),fread))
+setkey(segs,chrom,loc.start,loc.end)
+
+ff=foverlaps(geneDb,segs)
 
 # Get rid of overlaps that do not intersect segments
 ff=ff[!is.na(ID)]
@@ -77,20 +74,20 @@ ff=ff[!is.na(ID)]
 #
 
 ff=ff[order(ff$seg.mean),]
-ff=ff[!duplicated(ff,by=c("ID","gene_name"))]
+ff=ff[!duplicated(ff,by=c("ID","gene"))]
 
+require(dtplyr)
 require(dplyr)
 require(tidyr)
 require(tibble)
+require(readr)
 
 as_tibble(ff) %>%
-    mutate(Zscore=sign(seg.mean)*absZscore) %>%
-    select(ID,chrom,loc.start,loc.end,gene_name,transcript_id,Zscore) %>%
+    mutate(Zscore=sign(seg.mean)) %>%
+    select(ID,chrom,loc.start,loc.end,gene,transcript,Zscore) %>%
     filter(abs(Zscore)>=1) %>%
     spread(ID,Zscore,fill="") %>%
-    filter(!grepl("Rik\\d*$",gene_name)) %>%
     arrange(chrom,loc.start) -> geneEvents
 
-require(xlsx)
-write.xlsx2(as.data.frame(geneEvents),"proj_07593__GeneEvents.xlsx",row.names=F)
+write_csv(geneEvents,file.path(args$ODIR,paste0(args$INPUTS,"____GeneMatrix.csv")))
 
