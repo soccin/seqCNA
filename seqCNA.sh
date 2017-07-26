@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$#" -lt "2" ]; then
+    echo "usage: seqCNA.sh normal.bam tumor.bam [SampleID]"
+    exit
+fi
+
 normal=$1
 tumor=$2
 
