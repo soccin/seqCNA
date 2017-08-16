@@ -1,17 +1,18 @@
 #!/bin/bash
 
 if [ "$#" -lt "2" ]; then
-    echo "usage: seqCNA.sh normal.bam tumor.bam [SampleID]"
+    echo "usage: seqCNA.sh BINSIZE normal.bam tumor.bam [SampleID]"
     exit
 fi
 
-normal=$1
-tumor=$2
+BINSIZE=$1
+normal=$2
+tumor=$3
 
 tumorId=$(basename $tumor | sed 's/.bam//')
 
-if [ "$#" == "3" ]; then
-    sID=$3
+if [ "$#" == "4" ]; then
+    sID=$4
 else
     sID=${tumorId}__$(basename $normal | sed 's/.bam//')
 fi
@@ -27,7 +28,8 @@ bsub -m commonHG -o LSF/$scatter -J WGSCNA_$sID -We 59 -R "rusage[iounits=.1]" \
         SAMPLEID=$sID
 
 bsub -m commonHG -o LSF/$scatter -J SEQSEG_$sID -We 59 -R "rusage[iounits=.1]" -w "post_done(WGSCNA_$sID)" \
-    ./seqCNA/seqSegment BINSIZE=100 \
+    ./seqCNA/seqSegment \
+        BINSIZE=$BINSIZE \
         ODIR=$oDir \
         COUNTS=$oDir/${sID}_Counts.rda
 
