@@ -1,4 +1,5 @@
 cc <- function(...) {paste(...,sep='_')}
+len <- function(x) {length(x)}
 
 getGITTag <- function(SDIR) {
 
