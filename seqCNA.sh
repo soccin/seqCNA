@@ -5,6 +5,8 @@ if [ "$#" -lt "2" ]; then
     exit
 fi
 
+SDIR="$( cd "$( dirname "$0" )" && pwd )"
+
 BINSIZE=$1
 normal=$2
 tumor=$3
@@ -23,12 +25,12 @@ mkdir -p LSF/$scatter
 oDir=out/$scatter/$tumorId/$sID
 
 bsub -m commonHG -o LSF/$scatter -J WGSCNA_$sID -We 59 -R "rusage[iounits=.1]" \
-    ./seqCNA/getPairedCounts NORMAL=$normal TUMOR=$tumor \
+    $SDIR/getPairedCounts NORMAL=$normal TUMOR=$tumor \
         ODIR=$oDir \
         SAMPLEID=$sID
 
 bsub -m commonHG -o LSF/$scatter -J SEQSEG_$sID -We 59 -R "rusage[iounits=.1]" -w "post_done(WGSCNA_$sID)" \
-    ./seqCNA/seqSegment \
+    $SDIR/seqSegment \
         BINSIZE=$BINSIZE \
         ODIR=$oDir \
         COUNTS=$oDir/${sID}_Counts.rda
