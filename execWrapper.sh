@@ -3,6 +3,7 @@
 export SDIR="$( cd "$( dirname "$0" )" && pwd )"
 export SNAME=$(basename $0)
 export R_LIBS=$SDIR/Rlib:$R_LIBS
+RSCRIPT=/opt/common/CentOS_6-dev/R/R-3.3.1/bin/Rscript
 
 DOCFILE=$SDIR/docs/${SNAME}.doc
 if [ "$#" == "0" ] && [ -e $DOCFILE ]; then
@@ -16,4 +17,4 @@ if [ "$#" == "0" ] && [ -e $DOCFILE ]; then
 
 fi
 
-exec /opt/common/CentOS_6-dev/R/R-3.2.2/bin/Rscript --vanilla --no-save "$0.R" "$@"
+exec $RSCRIPT --vanilla --no-save "$0.R" "$@"
