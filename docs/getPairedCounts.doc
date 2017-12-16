@@ -1,0 +1,21 @@
+
+USAGE: getPairedCounts [options] TUMOR=tumor.bam NORMAL=normal.bam
+
+Compute the binned counts from a sample pair. By default normalize
+for library size and GC variation.
+
+Options:
+
+TUMOR=File          TUMOR sample BAM file.  Required.
+
+NORMAL=File         NORMAL sample BAM file.  Required.
+
+GENOME=String       Genome.  Default value: hg19. Possible values: {hg19, mm10}
+
+ODIR=Directory      Directory to write output files.  Default: "."
+
+GCNORM=Boolean      Flag controlling whether GC-normalization is done.
+                    Default value: TRUE. Possible Values: {FALSE, TRUE}
+
+SAMPLEID=String     Sample Id. If not specified then will form an id from
+                    "cleaned" version of tumor and normal bam filenames

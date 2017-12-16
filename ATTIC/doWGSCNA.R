@@ -2,7 +2,7 @@
 # doWGSCNA.R
 #
 
-VERSION="4.0.1"
+VERSION="5.dev"
 
 ################################################################
 fixSampleNames<-function(x) {
@@ -62,7 +62,7 @@ cat("#\n# Version:",VERSION,"\n")
 if(any(sapply(args,is.null))) {
     cat("\n\nusage: doWGSCNA.R TUMOR=/path/tumor.bam NORMAL=/path/normal.bam BINSIZE=[auto] MAPLOC=[false] GENOME=[hg19]\n\n")
     missing=which(sapply(args,is.null))
-    cat("missing require arg(s)\n\n   ")
+    cat("missing required arg(s)\n\n   ")
     for(ii in missing){
         cat(names(args)[[ii]],"")
     }

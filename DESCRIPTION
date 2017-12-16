@@ -1,10 +1,10 @@
-Package: sWG_CNA
+Package: seqCNA
 Type: Script
-Title: Copy Number Analysis of Shallow Whole Genome Sequencing Data
-Version: 4.0.1
-Date: 2017-05-21
+Title: Copy Number Analysis of Sequencing Data
+Version: 5.dev
+Date: 2017-06-25
 Author: N. D. Socci
 Maintainer: N. D. Socci <soccin@mskcc.org>
-Description: sWGS Copynumber analysis using seqDNAcopy
+Description: sequence Copynumber analysis using seqDNAcopy
 Depends: R (>= 2.10), pctGCdata (>= 0.2.0)
 Imports: Rcpp (>= 0.12.0), IRanges, DNAcopy, Rsamtools
