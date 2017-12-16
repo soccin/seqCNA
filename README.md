@@ -1,6 +1,6 @@
 # CopyNumber analysis from sequence data using seqDNAcopy
 
-## dev/feature/targeted-v4 branch
+## feature/targeted-v5 branch
 
 Copynumber analysis for sequence based assays (shallow Whole Genome sequncing, or targeted assays) using `seqDNAcopy` package from `seshanv@mskcc.org`
 
