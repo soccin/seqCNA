@@ -6,7 +6,7 @@ VERSION="5.dev"
 
 SNAME=Sys.getenv("SNAME")
 SDIR=Sys.getenv("SDIR")
-SDIR=ifelse(SDIR=="",".",SDIR)
+SDIR=ifelse(SDIR=="","seqCNA",SDIR)
 source(file.path(SDIR,"include/parseArgs.R"))
 source(file.path(SDIR,"include/tools.R"))
 source(file.path(SDIR,"include/clusterSegs.R"))

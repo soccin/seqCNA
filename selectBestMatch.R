@@ -6,7 +6,7 @@ library(magrittr)
 
 SNAME=Sys.getenv("SNAME")
 SDIR=Sys.getenv("SDIR")
-SDIR=ifelse(SDIR=="",".",SDIR)
+SDIR=ifelse(SDIR=="","seqCNA",SDIR)
 source(file.path(SDIR,"include/tools.R"))
 
 args=commandArgs(trailing=T)
