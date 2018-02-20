@@ -2,7 +2,7 @@
 
 export SDIR="$( cd "$( dirname "$0" )" && pwd )"
 export SNAME=$(basename $0)
-export R_LIBS=$SDIR/Rlib:$R_LIBS
+export R_LIBS=$SDIR/Rlib:/home/socci/lib/R/3.3.1
 RSCRIPT=/opt/common/CentOS_6-dev/R/R-3.3.1/bin/Rscript
 
 DOCFILE=$SDIR/docs/${SNAME}.doc
