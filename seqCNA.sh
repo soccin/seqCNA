@@ -13,6 +13,27 @@ tumor=$3
 
 tumorId=$(basename $tumor | sed 's/.bam//')
 
+GENOME_TAG=$($SDIR/GenomeData/getGenomeBuildBAM.sh $tumor)
+
+case $GENOME_TAG in
+    mm10-relabel)
+    GENOME="mm10"
+    ;;
+
+    GRC_m38)
+    GENOME="mm10"
+    ;;
+
+    b37)
+    GENOME="hg19"
+    ;;
+
+    *)
+    echo "Unknown or un-usable genome"
+    exit
+    ;;
+esac
+
 if [ "$#" == "4" ]; then
     sID=$4
 else
@@ -25,7 +46,7 @@ mkdir -p LSF/$scatter
 oDir=out/$scatter/$tumorId/$sID
 
 bsub -m commonHG -o LSF/$scatter -J WGSCNA_$sID -We 59 -R "rusage[iounits=.1]" \
-    $SDIR/getPairedCounts NORMAL=$normal TUMOR=$tumor \
+    $SDIR/getPairedCounts GENOME=$GENOME NORMAL=$normal TUMOR=$tumor \
         ODIR=$oDir \
         SAMPLEID=$sID
 
