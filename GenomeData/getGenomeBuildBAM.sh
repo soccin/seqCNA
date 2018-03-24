@@ -61,8 +61,15 @@ case $GENOME_MD5 in
     echo "GRC_m38"
     ;;
 
-    6a3985296926fb48fd65ba5feae4e640)
     # Relabling of mm10 chr1=>1
+
+    # WT MM10
+    5328e9d5744c2ad31c3c442028520510)
+    echo "mm10-relabel"
+    ;;
+
+    # Transgenic cmo_hBRAF_Ex15-18
+    6a3985296926fb48fd65ba5feae4e640)
     echo "mm10-relabel"
     ;;
 
