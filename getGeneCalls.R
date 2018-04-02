@@ -81,11 +81,12 @@ require(dplyr)
 require(tidyr)
 require(tibble)
 require(readr)
+    
 
 as_tibble(ff) %>%
-    mutate(Zscore=sign(seg.mean)) %>%
+    mutate(Zscore=(seg.mean)) %>%
     select(ID,chrom,loc.start,loc.end,gene,transcript,Zscore) %>%
-    filter(abs(Zscore)>=1) %>%
+    filter(abs(Zscore)>=.5) %>%
     spread(ID,Zscore,fill="") %>%
     arrange(chrom,loc.start) -> geneEvents
 
