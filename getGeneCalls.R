@@ -60,6 +60,7 @@ getSegFileFromOutDir <- function(odir) {
 }
 
 segs=rbindlist(lapply(lapply(outDirs,getSegFileFromOutDir),fread))
+segs$chrom=as.character(segs$chrom)
 setkey(segs,chrom,loc.start,loc.end)
 
 ff=foverlaps(geneDb,segs)
@@ -81,7 +82,7 @@ require(dplyr)
 require(tidyr)
 require(tibble)
 require(readr)
-    
+
 
 as_tibble(ff) %>%
     mutate(Zscore=(seg.mean)) %>%
