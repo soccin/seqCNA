@@ -45,12 +45,12 @@ mkdir -p LSF/$scatter
 
 oDir=out/$scatter/$tumorId/$sID
 
-bsub -m commonHG -o LSF/$scatter -J WGSCNA_$sID -We 59 -R "rusage[iounits=.1]" \
+bsub -m commonHG -o LSF/$scatter -J WGSCNA_$sID -We 119 -R "rusage[mem=32]" \
     $SDIR/getPairedCounts GENOME=$GENOME NORMAL=$normal TUMOR=$tumor \
         ODIR=$oDir \
         SAMPLEID=$sID
 
-bsub -m commonHG -o LSF/$scatter -J SEQSEG_$sID -We 59 -R "rusage[iounits=.1]" -w "post_done(WGSCNA_$sID)" \
+bsub -m commonHG -o LSF/$scatter -J SEQSEG_$sID -We 119 -R "rusage[mem=32]" -w "post_done(WGSCNA_$sID)" \
     $SDIR/seqSegment \
         BINSIZE=$BINSIZE \
         ODIR=$oDir \
