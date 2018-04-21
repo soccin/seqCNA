@@ -50,9 +50,9 @@ geneAnnoteFile=file.path(
     glb$geneAnnotationsDir,
     args$ASSAY,
     normalizeGenomeTag(out1$genome),
-    "gene_annotations.txt")
+    "gene_annotations.txt.gz")
 
-geneDb=fread(geneAnnoteFile)
+geneDb=fread(paste0("gzcat ", geneAnnoteFile))
 setkey(geneDb,chrom,start,stop)
 
 getSegFileFromOutDir <- function(odir) {
@@ -91,5 +91,5 @@ as_tibble(ff) %>%
     spread(ID,Zscore,fill="") %>%
     arrange(chrom,loc.start) -> geneEvents
 
-write_csv(geneEvents,file.path(args$ODIR,paste0(args$INPUTS,"____GeneMatrix.csv")))
+write_csv(geneEvents,file.path(args$ODIR,paste0("GeneMatrix.csv")))
 
