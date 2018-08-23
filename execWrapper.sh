@@ -2,8 +2,8 @@
 
 export SDIR="$( cd "$( dirname "$0" )" && pwd )"
 export SNAME=$(basename $0)
-export R_LIBS=$SDIR/Rlib:/home/socci/lib/R/3.3.1
-RSCRIPT=/opt/common/CentOS_6-dev/R/R-3.3.1/bin/Rscript
+export R_LIBS=$SDIR/Rlib:/home/socci/lib/R/3.4.3
+RSCRIPT=/ifs/work/socci/opt/R/3.4.3/bin/Rscript
 
 DOCFILE=$SDIR/docs/${SNAME}.doc
 if [ "$#" == "0" ] && [ -e $DOCFILE ]; then
