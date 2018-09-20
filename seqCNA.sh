@@ -30,6 +30,7 @@ case $GENOME_TAG in
 
     *)
     echo "Unknown or un-usable genome"
+    echo $GENOME_TAG
     exit
     ;;
 esac
