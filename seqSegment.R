@@ -54,7 +54,7 @@ sampleId=counts$param$sampleId
 bb=counts$bb
 cArgs=counts$args
 
-if(args$BINSIZE=="auto") {
+if(tolower(args$BINSIZE)=="auto") {
     binSize=50000
     bins=bb$chrom + floor(bb$pos/binSize)*binSize/2^28
     nCounts=tapply(bb$normal,bins,sum)
