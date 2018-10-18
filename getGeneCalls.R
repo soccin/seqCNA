@@ -91,5 +91,23 @@ as_tibble(ff) %>%
     spread(ID,Zscore,fill="") %>%
     arrange(chrom,loc.start) -> geneEvents
 
-write_csv(geneEvents,file.path(args$ODIR,paste0("GeneMatrix.csv")))
+write_csv(geneEvents,file.path(args$ODIR,paste0("SegmentMatrix.csv")))
+
+robustMin <- function(xx) {
+
+    x1=as.numeric((xx[!is.na(xx) & xx!=""]))
+    ifelse(len(x1)>0,min(x1),0)
+
+}
+
+iso1=read_tsv("/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/isoform_overrides_uniprot")
+iso2=read_tsv("/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/isoform_overrides_at_mskcc")
+canonicalIsoforms=union(iso1[[1]],iso2[[1]])
+
+geneCalls <- geneEvents %>%
+    filter(transcript %in% canonicalIsoforms) %>%
+    group_by(gene,transcript) %>%
+    summarize_at(vars(matches("^s_")),robustMin)
+
+write_csv(geneCalls,file.path(args$ODIR,paste0("GeneMatrix.csv")))
 
