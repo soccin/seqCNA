@@ -11,7 +11,7 @@ BINSIZE=$1
 normal=$2
 tumor=$3
 
-tumorId=$(basename $tumor | sed 's/.bam//')
+tumorId=$($SDIR/getSampleTag.sh $tumor)
 
 GENOME_TAG=$($SDIR/GenomeData/getGenomeBuildBAM.sh $tumor)
 
@@ -38,7 +38,7 @@ esac
 if [ "$#" == "4" ]; then
     sID=$4
 else
-    sID=${tumorId}__$(basename $normal | sed 's/.bam//')
+    sID=${tumorId}__$($SDIR/getSampleTag.sh $normal)
 fi
 
 scatter=$(echo $tumorId | perl -ne 'print substr($_,0,2)')
