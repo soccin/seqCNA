@@ -6,7 +6,7 @@ if [ "$#" -lt "1" ]; then
     echo "usage: postProcess.sh AssayName [ProjectName]"
     echo
     echo "Assays"
-    ls -1 $SDIR/resources/geneAnnotations | awk '{print "   "$1}'
+    ls -1 $SDIR/resources/geneAnnotations | fgrep -v src | awk '{print "   "$1}'
     echo
     exit
 fi
