@@ -19,3 +19,4 @@ ann <- read_tsv(impactIlist,col_names=F,comment="@") %>%
     mutate(chrom=factor(gsub("^chr","",chrom),levels=c(1:99,"X","Y","M","MT"))) %>%
     arrange(chrom,start)
 
+write_tsv(ann,"M-IMPACT_v1_mm10.txt")
