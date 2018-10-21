@@ -178,51 +178,80 @@ wiX=output$num.mark[xII]/sum(output$num.mark[xII])
 X.seg.mean.avg=sum(wiX*output$seg.mean[xII])
 writeVariable("X.seg.mean.avg")
 
-png(file=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".png")),
-        type="cairo",
-        height=1150,width=800,pointsize=16)
+plot2Panels <- function(out) {
+    par(mfrow=c(2,1))
 
-par(mfrow=c(2,1))
+    YLIM=3
+    plot(out,xmaploc=F,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
 
-YLIM=3
-plot(out,xmaploc=F,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
+    abline(h=c(-1,1,log2(1.5)),lty=2,col="#333333",lwd=1)
+    abline(h=global.mad*c(-1,1),lty=3,col=1)
 
-abline(h=c(-1,1,log2(1.5)),lty=2,col="#333333",lwd=1)
-abline(h=global.mad*c(-1,1),lty=3,col=1)
+    text(0.5,YLIM+.5-1,
+        paste(
+            "NumBins =",
+            formatC(nrow(out$data),format="d",big.mark=","),
+            "MAD =",
+            formatC(global.mad,format="f"),
+            "nSegs =",formatC(numSegments,format="d",big.mark=","),
+            "RMSD.Segs.noX =",formatC(RMSD.seg.mean.AUTO,format="f")
+            ),
+        pos=4,cex=1.12)
 
-text(0.5,YLIM+.5-1,
-    paste(
-        "NumBins =",
-        formatC(nrow(out$data),format="d",big.mark=","),
-        "MAD =",
-        formatC(global.mad,format="f"),
-        "nSegs =",formatC(numSegments,format="d",big.mark=","),
-        "RMSD.Segs.noX =",formatC(RMSD.seg.mean.AUTO,format="f")
-        ),
-    pos=4,cex=1.12)
+    text(0.5,YLIM+.5-1.4,
+        paste(
+            "sum.logr.sq =",
+            formatC(sum.logr.sq,format="f"),
+            "rms.logr =",
+            formatC(rms.logr,format="f"),
+            "rms.logr.flat =",
+            formatC(rms.logr.flat,format="f")
+            ),
+        pos=4,cex=1.12)
 
-# text(0.5,YLIM+.5-1.4,
-#     paste(
-#         "max|segMean| Auto =",
-#         formatC(max(abs(out$output$seg.mean)),format="f"),
-#         "RMSD(seg.mean) =",
-#         formatC(sqrt(mean(out$output$seg.mean^2)),format="f")
-#         ),
-#     pos=4,cex=1.12)
+    plot(out,xmaploc=F,pt.cols=c("#B5D7E4","#BEBEBE"))
+    abline(h=c(-2,2),lty=2,col="#333333",lwd=1)
+}
 
-text(0.5,YLIM+.5-1.4,
-    paste(
-        "sum.logr.sq =",
-        formatC(sum.logr.sq,format="f"),
-        "rms.logr =",
-        formatC(rms.logr,format="f"),
-        "rms.logr.flat =",
-        formatC(rms.logr.flat,format="f")
-        ),
-    pos=4,cex=1.12)
+plot1Panels <- function(out) {
 
-plot(out,xmaploc=F,pt.cols=c("#B5D7E4","#BEBEBE"))
-abline(h=c(-2,2),lty=2,col="#333333",lwd=1)
+    YLIM=3
+    plot(out,xmaploc=F,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
+
+    abline(h=c(-1,1,log2(1.5)),lty=2,col="#333333",lwd=1)
+    abline(h=global.mad*c(-1,1),lty=3,col=1)
+
+    text(0.5,YLIM+.5-1,
+        paste(
+            "NumBins =",
+            formatC(nrow(out$data),format="d",big.mark=","),
+            "MAD =",
+            formatC(global.mad,format="f"),
+            "nSegs =",formatC(numSegments,format="d",big.mark=","),
+            "RMSD.Segs.noX =",formatC(RMSD.seg.mean.AUTO,format="f")
+            ),
+        pos=4,cex=1.12)
+
+    text(0.5,YLIM+.5-1.4,
+        paste(
+            "sum.logr.sq =",
+            formatC(sum.logr.sq,format="f"),
+            "rms.logr =",
+            formatC(rms.logr,format="f"),
+            "rms.logr.flat =",
+            formatC(rms.logr.flat,format="f")
+            ),
+        pos=4,cex=1.12)
+
+}
+
+pFile=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".png"))
+
+# png(file=pFile,type="cairo",height=1150,width=800,pointsize=16)
+# plot2Panels(out)
+
+png(file=pFile,type="cairo",width=1150,height=800,pointsize=16)
+plot1Panels(out)
 
 dev.off()
 
