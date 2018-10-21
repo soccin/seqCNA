@@ -100,9 +100,13 @@ robustMin <- function(xx) {
 
 }
 
-iso1=read_tsv("/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/isoform_overrides_uniprot")
-iso2=read_tsv("/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/isoform_overrides_at_mskcc")
-canonicalIsoforms=union(iso1[[1]],iso2[[1]])
+if(args$ASSAY %in% c("Exome")) {
+    iso1=read_tsv("/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/isoform_overrides_uniprot")
+    iso2=read_tsv("/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/isoform_overrides_at_mskcc")
+    canonicalIsoforms=union(iso1[[1]],iso2[[1]])
+} else {
+    canonicalIsoforms=sort(unique(geneEvents$transcript))
+}
 
 geneCalls <- geneEvents %>%
     filter(transcript %in% canonicalIsoforms) %>%
