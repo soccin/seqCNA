@@ -83,12 +83,14 @@ require(tidyr)
 require(tibble)
 require(readr)
 
+chromOrder=c(seq(1:99),"X","Y","M","MT")
 
 as_tibble(ff) %>%
     mutate(Zscore=(seg.mean)) %>%
     select(ID,chrom,loc.start,loc.end,gene,transcript,Zscore) %>%
     filter(abs(Zscore)>=.5) %>%
     spread(ID,Zscore,fill="") %>%
+    mutate(chrom=factor(chrom,levels=chromOrder)) %>%
     arrange(chrom,loc.start) -> geneEvents
 
 write_csv(geneEvents,file.path(args$ODIR,paste0("SegmentMatrix.csv")))
