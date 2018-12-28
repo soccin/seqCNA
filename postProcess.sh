@@ -33,6 +33,10 @@ mkdir $projectName
 find out | fgrep .png | xargs -I % cp % $projectName
 find out | fgrep .seg | head -1  | xargs head -1 | cut -f-6 >$projectName/${projectName}___IGV.seg
 find out | fgrep .seg | xargs cut -f-6 | fgrep -v "loc.start" >>$projectName/${projectName}___IGV.seg
+Rscript --no-save $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
+
+# Try to infer genome and fix X chromosome
+
 
 find out -type f  | fgrep .seg | perl -pe 's|/[^/]+$|\n|' >lodir
 
