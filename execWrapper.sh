@@ -2,8 +2,26 @@
 
 export SDIR="$( cd "$( dirname "$0" )" && pwd )"
 export SNAME=$(basename $0)
-export R_LIBS=$SDIR/Rlib:/home/socci/lib/R/CentOS6/3.4.3
-RSCRIPT=/ifs/work/socci/opt/R/3.4.3/bin/Rscript
+
+if [ -e /etc/system-release ]; then
+    OSSTR=$(cat /etc/system-release)
+    OSVER=$(echo $OSSTR | perl -ne 'm/ ((\d+)\.(\d+)(|.\d+)) /; print $1')
+    OSMAJOR=$(echo $OSVER | perl -ne 'm/(\d+)\./; print $1')
+else
+    echo "MISSING /etc/system-release"
+    exit 1
+fi
+
+case $OSMAJOR in
+    6)
+    export R_LIBS=$SDIR/Rlib:/home/socci/lib/R/CentOS6/3.4.3
+    RSCRIPT=/ifs/work/socci/opt/R/3.4.3/bin/Rscript
+    ;;
+
+    *)
+    echo "Unsupportted OS Version" $OSVER, $OSMAJOR
+    exit 1
+esac
 
 DOCFILE=$SDIR/docs/${SNAME}.doc
 if [ "$#" == "0" ] && [ -e $DOCFILE ]; then
