@@ -25,6 +25,11 @@ case $GENOME_MD5 in
     echo "hg19"
     ;;
 
+    5322924312cb71bfc76e9018d9313676)
+    # Xenograph genome (b37+mm10)
+    echo "hg19+mm10"
+    ;;
+
     3d72c6961689390556ed2d5a33e66e17)
     # Main chromosomes only (used by cfDNA collaboration)
     echo "hg19-mainOnly"

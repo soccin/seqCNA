@@ -24,6 +24,10 @@ case $GENOME_TAG in
     GENOME="mm10"
     ;;
 
+    b37+mm10)
+    GENOME="hg19"
+    ;;
+
     b37)
     GENOME="hg19"
     ;;
