@@ -1,13 +1,22 @@
 #!/bin/bash
 
-ls pipeline/alignments/*.bam | sed 's/.*_recal_s_/s_/' | sed 's/.bam/__/' >samples
-if [ ! -e tumors ]; then
-    echo "Need to define tumor and normal samples"
+#git clone git@github.com:soccin/seqCNA.git
+
+if [ ! -e pipeline/alignments ]; then
+    echo
+    echo "Need to link up pipeline directory"
+    echo "    ln -s /ifs/res/seq/pi/invest/Proj_No/r_00x pipeline"
+    echo
     exit
 fi
-exit
 
-git clone git@github.com:soccin/seqCNA.git
+ls pipeline/alignments/*.bam | sed 's/.*_recal_s_/s_/' | sed 's/.bam/__/' >samples
+if [ ! -e tumors ]; then
+    echo
+    echo "Need to define tumor and normal samples"
+    echo
+    exit
+fi
 
 ls pipeline/alignments/*.bam \
     | xargs -n 1 \
@@ -23,14 +32,17 @@ if [ "$ERR1" != "" ]; then
     exit
 fi
 
-ls bamRelabel/Proj_09693_indelRealigned_recal_s_M*/*bam | fgrep -f tumors >tumorBams
-ls bamRelabel/Proj_09693_indelRealigned_recal_s_M*/*bam | fgrep -f normals >normalBams
+ls bamRelabel/*/*bam | fgrep -f tumors >tumorBams
+ls bamRelabel/*/*bam | fgrep -f normals >normalBams
 
 for tumor in $(cat tumorBams); do
     for normal in $(cat normalBams); do
         ./seqCNA/seqCNA.sh 100 $normal $tumor
     done
 done
+
+bSync "SEQSEG_s.*"
+bSync "WGSCNA_s.*"
 
 ERR2=$(parseLSF.py LSF/*/* | fgrep -v Succ)
 if [ "$ERR1" != "" ]; then
