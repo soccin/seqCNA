@@ -52,6 +52,8 @@ if [ "$ERR1" != "" ]; then
 fi
 
 ./seqCNA/selectBestMatch out
+# Take best match from T/N Pairs
+#cat pipeline/*_sample_pairing.txt | awk '{print $2"__"$1}' | fgrep -v POOL >bestMatches____out
 
 mkdir outAll
 rsync -avP --link-dest=../out out/ outAll
