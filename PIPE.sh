@@ -2,6 +2,34 @@
 
 #git clone git@github.com:soccin/seqCNA.git
 
+function usage {
+    echo
+    echo "   usage: ./seqCNA/PIPE.sh [sWGS|TARGETTED]"
+    echo "       sWGS       Shallow Whole Genome Seq"
+    echo "       TARGETTED   Targeted assays (IMPACT/EXOME/...)"
+    echo
+    exit
+}
+
+if [ "$#" -ne 1 ]; then
+    usage
+fi
+
+ASSAY=$(echo $1 | tr '[a-z]' '[A-Z]')
+if [ "$ASSAY" == "SWGS" ]; then
+    BINSIZE=auto
+    echo
+    echo "Setting BINSIZE=auto"
+elif [ "$ASSAY" == "TARGETTED" ]; then
+    BINSIZE=100
+    echo
+    echo "Setting BINSIZE=100"
+else
+    echo
+    echo "Unknown assay type ["$ASSAY"]"
+    usage
+fi
+
 if [ ! -e pipeline/alignments ]; then
     echo
     echo "Need to link up pipeline directory"
@@ -10,12 +38,26 @@ if [ ! -e pipeline/alignments ]; then
     exit
 fi
 
-ls pipeline/alignments/*.bam | sed 's/.*_recal_s_/s_/' | sed 's/.bam/__/' >samples
+if [ ! -e samples ]; then
+
+    ls pipeline/alignments/*.bam \
+        | xargs -n 1 basename \
+        | sed 's/.*_recal_s_/s_/' \
+        | sed 's/^Proj_.*s_/s_/' \
+        | sed 's/.bam/__/' \
+        >samples
+
+fi
+
 if [ ! -e tumors ]; then
+
     echo
     echo "Need to define tumor and normal samples"
     echo
+    echo "And then run as bsub or nohup"
+    echo
     exit
+
 fi
 
 ls pipeline/alignments/*.bam \
@@ -37,7 +79,7 @@ ls bamRelabel/*/*bam | fgrep -f normals >normalBams
 
 for tumor in $(cat tumorBams); do
     for normal in $(cat normalBams); do
-        ./seqCNA/seqCNA.sh 100 $normal $tumor
+        ./seqCNA/seqCNA.sh $BINSIZE $normal $tumor
     done
 done
 
