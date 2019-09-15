@@ -36,7 +36,7 @@ tbl %<>% select(which(apply(tbl,2,function(x){len(unique(x))})>1))
 tbl %<>% type_convert
 
 bestPairs = tbl %>%
-    mutate(TumorId=gsub("__.*","",sampleId)) %>%
+    mutate(TumorId=gsub("__s_.*","",sampleId)) %>%
     group_by(TumorId) %>% top_n(1,desc(rms.logr)) %>%
     ungroup %>%
     select(sampleId)
