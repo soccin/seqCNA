@@ -85,10 +85,12 @@ require(readr)
 
 chromOrder=c(seq(1:99),"X","Y","M","MT")
 
+ZCUTOFF=0.4
+
 as_tibble(ff) %>%
     mutate(Zscore=(seg.mean)) %>%
     select(ID,chrom,loc.start,loc.end,gene,transcript,Zscore) %>%
-    filter(abs(Zscore)>=.5) %>%
+    filter(abs(Zscore)>=ZCUTOFF) %>%
     spread(ID,Zscore,fill="") %>%
     mutate(chrom=factor(chrom,levels=chromOrder)) %>%
     arrange(chrom,loc.start) -> geneEvents
