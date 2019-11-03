@@ -87,7 +87,7 @@ bSync "SEQSEG_s.*"
 bSync "WGSCNA_s.*"
 
 ERR2=$(parseLSF.py LSF/*/* | fgrep -v Succ)
-if [ "$ERR1" != "" ]; then
+if [ "$ERR2" != "" ]; then
     echo "ERROR @ Stage2"
     parseLSF.py LSF/*/*| fgrep -v Succ
     exit
