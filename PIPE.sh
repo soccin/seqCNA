@@ -60,6 +60,11 @@ if [ ! -e tumors ]; then
 
 fi
 
+echo "=============================================================================="
+echo "Running ./seqCNA/fixChromosomeNames.sh"
+echo
+echo
+
 ls pipeline/alignments/*.bam \
     | xargs -n 1 \
         bsub -o LSF.FIX/ -J FIX -n 2 -R "rusage[mem=8]" ./seqCNA/fixChromosomeNames.sh
@@ -77,6 +82,11 @@ fi
 ls bamRelabel/*/*bam | fgrep -f tumors >tumorBams
 ls bamRelabel/*/*bam | fgrep -f normals >normalBams
 
+echo "=============================================================================="
+echo "Running ./seqCNA/seqCNA.sh"
+echo
+echo
+
 for tumor in $(cat tumorBams); do
     for normal in $(cat normalBams); do
         ./seqCNA/seqCNA.sh $BINSIZE $normal $tumor
@@ -92,6 +102,11 @@ if [ "$ERR2" != "" ]; then
     parseLSF.py LSF/*/*| fgrep -v Succ
     exit
 fi
+
+echo "=============================================================================="
+echo "Running ./seqCNA/selectBestMatch"
+echo
+echo
 
 ./seqCNA/selectBestMatch out
 # Take best match from T/N Pairs
@@ -115,5 +130,9 @@ else
     ASSAY=Exome
 fi
 
+echo "=============================================================================="
+echo "Running ./seqCNA/postProcess.sh"
+echo
+echo
 ./seqCNA/postProcess.sh $ASSAY $PROJNO
 convert $PROJNO/*png $PROJNO/${PROJNO}___seqSeg.pdf
