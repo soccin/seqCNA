@@ -12,4 +12,4 @@ Depends: R (>= 2.10), pctGCdata (>= 0.2.0)
 Imports: Rcpp (>= 0.12.0), IRanges, DNAcopy, Rsamtools
 LinkingTo: Rcpp
 NeedsCompilation: yes
-Built: R 3.5.1; x86_64-pc-linux-gnu; 2019-11-03 20:36:29 UTC; unix
+Built: R 3.5.1; x86_64-pc-linux-gnu; 2019-11-03 22:44:53 UTC; unix
