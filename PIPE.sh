@@ -60,6 +60,11 @@ if [ ! -e tumors ]; then
 
 fi
 
+echo "=============================================================================="
+echo "Running ./seqCNA/fixChromosomeNames.sh"
+echo
+echo
+
 ls pipeline/alignments/*.bam \
     | xargs -n 1 \
         bsub -o LSF.FIX/ -J FIX -n 2 -R "rusage[mem=8]" ./seqCNA/fixChromosomeNames.sh
@@ -77,6 +82,11 @@ fi
 ls bamRelabel/*/*bam | fgrep -f tumors >tumorBams
 ls bamRelabel/*/*bam | fgrep -f normals >normalBams
 
+echo "=============================================================================="
+echo "Running ./seqCNA/seqCNA.sh"
+echo
+echo
+
 for tumor in $(cat tumorBams); do
     for normal in $(cat normalBams); do
         ./seqCNA/seqCNA.sh $BINSIZE $normal $tumor
@@ -87,11 +97,16 @@ bSync "SEQSEG_s.*"
 bSync "WGSCNA_s.*"
 
 ERR2=$(parseLSF.py LSF/*/* | fgrep -v Succ)
-if [ "$ERR1" != "" ]; then
+if [ "$ERR2" != "" ]; then
     echo "ERROR @ Stage2"
     parseLSF.py LSF/*/*| fgrep -v Succ
     exit
 fi
+
+echo "=============================================================================="
+echo "Running ./seqCNA/selectBestMatch"
+echo
+echo
 
 ./seqCNA/selectBestMatch out
 # Take best match from T/N Pairs
@@ -103,14 +118,21 @@ rsync -avP --link-dest=../out out/ outAll
 ls -d out/s_/*/* | fgrep -vf bestMatches____out | xargs -t rm -rf
 
 GENOME=$(./seqCNA/GenomeData/getGenomeBuildBAM.sh $(ls pipeline/alignments/*.bam | head -1))
-PROJNO=$(echo $(ls pipeline/*request.txt) | perl -ne 'm|/(Proj_.*)_request|; print $1')
+if [ -e pipeline/*request.txt ]; then
+    PROJNO=$(echo $(ls pipeline/*request.txt) | perl -ne 'm|/(Proj_.*)_request|; print $1')
+else
+    PROJNO=$(basename $PWD)
+fi
 
 if [ $GENOME == "mm10" ]; then
     ASSAY=M-IMPACT_v1
 else
-    echo "Unknow ASSAY" $GENOME
-    exit
+    ASSAY=Exome
 fi
 
+echo "=============================================================================="
+echo "Running ./seqCNA/postProcess.sh"
+echo
+echo
 ./seqCNA/postProcess.sh $ASSAY $PROJNO
 convert $PROJNO/*png $PROJNO/${PROJNO}___seqSeg.pdf

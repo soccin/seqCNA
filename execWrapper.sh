@@ -18,6 +18,11 @@ case $OSMAJOR in
     RSCRIPT=/ifs/work/socci/opt/R/3.4.3/bin/Rscript
     ;;
 
+    7)
+    export R_LIBS=$SDIR/Rlib:$R_LIBS
+    RSCRIPT=$(which Rscript)
+    ;;
+
     *)
     echo "Unsupportted OS Version" $OSVER, $OSMAJOR
     exit 1

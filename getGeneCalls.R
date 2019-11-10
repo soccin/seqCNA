@@ -52,7 +52,7 @@ geneAnnoteFile=file.path(
     normalizeGenomeTag(out1$genome),
     "gene_annotations.txt.gz")
 
-geneDb=fread(paste0("gzcat ", geneAnnoteFile))
+geneDb=fread(cmd=paste0("zcat ", geneAnnoteFile))
 setkey(geneDb,chrom,start,stop)
 
 getSegFileFromOutDir <- function(odir) {
