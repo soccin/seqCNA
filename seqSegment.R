@@ -216,32 +216,47 @@ plot2Panels <- function(out) {
 plot1Panels <- function(out) {
 
     YLIM=3
-    plot(out,xmaploc=F,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
+    plot(out,xmaploc=T,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
 
     abline(h=c(-1,1,log2(1.5)),lty=2,col="#333333",lwd=1)
     abline(h=global.mad*c(-1,1),lty=3,col=1)
 
-    text(0.5,YLIM+.5-1,
-        paste(
+    chrom.max=tapply(out$data$maploc,out$data$chrom,max)
+    abline(v=c(0,cumsum(chrom.max)),lty=2,lwd=2,col="#666666")
+    text(cumsum(chrom.max)-chrom.max/2,-YLIM,unique(out$data$chrom),cex=0.8)
+
+
+
+    label1=paste(
             "NumBins =",
             formatC(nrow(out$data),format="d",big.mark=","),
             "MAD =",
             formatC(global.mad,format="f"),
             "nSegs =",formatC(numSegments,format="d",big.mark=","),
             "RMSD.Segs.noX =",formatC(RMSD.seg.mean.AUTO,format="f")
-            ),
-        pos=4,cex=1.12)
+            )
 
-    text(0.5,YLIM+.5-1.4,
-        paste(
+    label2=paste(
             "sum.logr.sq =",
             formatC(sum.logr.sq,format="f"),
             "rms.logr =",
             formatC(rms.logr,format="f"),
             "rms.logr.flat =",
             formatC(rms.logr.flat,format="f")
-            ),
-        pos=4,cex=1.12)
+            )
+
+    maxLabelLen=max(strwidth(label1,cex=1.12),strwidth(label2,cex=1.12))
+    THEIGHT=strheight("XXX",cex=1.12)
+
+    rect(-10,YLIM+.5-1+THEIGHT,maxLabelLen+0.5,YLIM+.5-1.4-THEIGHT,col="white",border=NA)
+
+    rect(0,YLIM+.5-1+.1,maxLabelLen+0.5,YLIM+.5-1.4-.1,col="white",border=NA)
+
+    text(0.5,YLIM+.5-1,label1,pos=4,cex=1.12)
+
+    text(0.5,YLIM+.5-1.4,label2,pos=4,cex=1.12)
+
+    box()
 
 }
 
