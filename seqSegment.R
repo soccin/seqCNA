@@ -15,7 +15,8 @@ args=list(
     COUNTS=NULL,
     ODIR=".",
     BINSIZE="auto",
-    MINBINCOUNT=35
+    MINBINCOUNT=35,
+    YLIM=5
     )
 
 cat("###############################################################\n")
@@ -53,6 +54,7 @@ load(args$COUNTS)
 sampleId=counts$param$sampleId
 bb=counts$bb
 cArgs=counts$args
+
 
 if(tolower(args$BINSIZE)=="auto") {
     binSize=50000
@@ -178,10 +180,10 @@ wiX=output$num.mark[xII]/sum(output$num.mark[xII])
 X.seg.mean.avg=sum(wiX*output$seg.mean[xII])
 writeVariable("X.seg.mean.avg")
 
+YLIM=args$YLIM
 plot2Panels <- function(out) {
     par(mfrow=c(2,1))
 
-    YLIM=3
     plot(out,xmaploc=F,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
 
     abline(h=c(-1,1,log2(1.5)),lty=2,col="#333333",lwd=1)
@@ -215,8 +217,7 @@ plot2Panels <- function(out) {
 
 plot1Panels <- function(out) {
 
-    YLIM=3
-    plot(out,xmaploc=T,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
+    YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
 
     abline(h=c(-1,1,log2(1.5)),lty=2,col="#333333",lwd=1)
     abline(h=global.mad*c(-1,1),lty=3,col=1)
