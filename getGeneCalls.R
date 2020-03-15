@@ -53,6 +53,8 @@ geneAnnoteFile=file.path(
     "gene_annotations.txt.gz")
 
 geneDb=fread(cmd=paste0("zcat ", geneAnnoteFile))
+geneDb$chrom=as.character(geneDb$chrom)
+
 setkey(geneDb,chrom,start,stop)
 
 getSegFileFromOutDir <- function(odir) {
@@ -62,6 +64,7 @@ getSegFileFromOutDir <- function(odir) {
 segs=rbindlist(lapply(lapply(outDirs,getSegFileFromOutDir),fread))
 segs$chrom=as.character(segs$chrom)
 setkey(segs,chrom,loc.start,loc.end)
+
 
 ff=foverlaps(geneDb,segs)
 
@@ -83,19 +86,20 @@ require(tidyr)
 require(tibble)
 require(readr)
 
+
 chromOrder=c(seq(1:99),"X","Y","M","MT")
 
-ZCUTOFF=0.4
+QCUT=0.05
+LOGR_CUT=1
 
-as_tibble(ff) %>%
-    mutate(Zscore=(seg.mean)) %>%
-    select(ID,chrom,loc.start,loc.end,gene,transcript,Zscore) %>%
-    filter(abs(Zscore)>=ZCUTOFF) %>%
-    spread(ID,Zscore,fill="") %>%
+geneEvents <- as_tibble(ff) %>%
+    filter(FDR<QCUT & abs(seg.mean)>LOGR_CUT) %>%
+    mutate(seg.mean=round(seg.mean,3)) %>%
+    spread(ID,seg.mean,fill=NA) %>%
     mutate(chrom=factor(chrom,levels=chromOrder)) %>%
-    arrange(chrom,loc.start) -> geneEvents
+    arrange(chrom,loc.start)
 
-write_csv(geneEvents,file.path(args$ODIR,paste0("SegmentMatrix.csv")))
+write_csv(geneEvents,file.path(args$ODIR,paste0("SegmentMatrix.csv")),na="")
 
 robustMin <- function(xx) {
 
@@ -119,3 +123,16 @@ geneCalls <- geneEvents %>%
 
 write_csv(geneCalls,file.path(args$ODIR,paste0("GeneMatrix.csv")))
 
+geneTable <- as_tibble(ff) %>%
+    filter(transcript %in% canonicalIsoforms) %>%
+    filter(FDR<QCUT & abs(seg.mean)>LOGR_CUT) %>%
+    arrange(seg.mean) %>%
+    distinct(ID,gene,transcript,.keep_all=T) %>%
+    select(ID,gene,transcript,chrom,loc.start,loc.end,seg.mean,FDR) %>%
+    mutate(chrom=factor(chrom,levels=chromOrder)) %>%
+    mutate(seg.mean=round(seg.mean,3)) %>%
+    arrange(ID,chrom,loc.start)
+
+require(openxlsx)
+pID=basename(gsub("/$","",args$ODIR))
+write.xlsx(geneTable,file.path(args$ODIR,paste0(pID,"___","GeneTable.xlsx")))
