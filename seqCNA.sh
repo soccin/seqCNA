@@ -32,10 +32,6 @@ case $GENOME_TAG in
     GENOME="hg19"
     ;;
 
-    b37_dmp)
-    GENOME="hg19"
-    ;;
-
     *)
     echo "Unknown or un-usable genome"
     echo $GENOME_TAG
@@ -54,12 +50,12 @@ mkdir -p LSF/$scatter
 
 oDir=out/$scatter/$tumorId/$sID
 
-bsub -o LSF/$scatter -J WGSCNA_$sID -W 59 -R "rusage[mem=32]" \
+bsub -o LSF/$scatter -J WGSCNA_$sID -W 59 -n 2 -R "rusage[mem=16]" \
     $SDIR/getPairedCounts GENOME=$GENOME NORMAL=$normal TUMOR=$tumor \
         ODIR=$oDir \
         SAMPLEID=$sID
 
-bsub -o LSF/$scatter -J SEQSEG_$sID -W 59 -R "rusage[mem=32]" -w "post_done(WGSCNA_$sID)" \
+bsub -o LSF/$scatter -J SEQSEG_$sID -W 59 -n 2 -R "rusage[mem=16]" -w "post_done(WGSCNA_$sID)" \
     $SDIR/seqSegment \
         BINSIZE=$BINSIZE \
         ODIR=$oDir \
