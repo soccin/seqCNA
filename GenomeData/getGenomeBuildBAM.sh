@@ -78,6 +78,12 @@ case $GENOME_MD5 in
     echo "mm10-relabel"
     ;;
 
+    # Transgenic model_MellingI_1911b
+    ec15a0439c7d7d47e079fbb4c4158267)
+    echo "mm10-relabel"
+    ;;
+
+
     *)
     echo "unknown" $GENOME_MD5
     ;;
