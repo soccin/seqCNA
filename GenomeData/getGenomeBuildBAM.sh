@@ -66,6 +66,11 @@ case $GENOME_MD5 in
     echo "GRC_m38"
     ;;
 
+    # Transgenic model_MellingI_1911b
+    6e3786e28e9bb34a0c760142e32f835f)
+    echo "mm10-MellingI_1911b"
+    ;;
+
     # Relabling of mm10 chr1=>1
 
     # WT MM10
