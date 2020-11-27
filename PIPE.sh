@@ -118,21 +118,30 @@ rsync -avP --link-dest=../out out/ outAll
 ls -d out/s_/*/* | fgrep -vf bestMatches____out | xargs -t rm -rf
 
 GENOME=$(./seqCNA/GenomeData/getGenomeBuildBAM.sh $(ls pipeline/alignments/*.bam | head -1))
+find bamRelabel | fgrep .bam | head -1
 if [ -e pipeline/*request.txt ]; then
     PROJNO=$(echo $(ls pipeline/*request.txt) | perl -ne 'm|/(Proj_.*)_request|; print $1')
 else
     PROJNO=$(basename $PWD)
 fi
 
-if [ $GENOME == "mm10" ]; then
+if [[ $GENOME =~ mm10 ]]; then
     ASSAY=M-IMPACT_v1
-else
+elif [[ $GENOME =~ b37|hg19 ]]; then
     ASSAY=Exome
+else
+    echo
+    echo "Unknown geneome"
+    echo "   "$GENOME
+    echo
+    exit -1
 fi
 
 echo "=============================================================================="
 echo "Running ./seqCNA/postProcess.sh"
 echo
 echo
+echo ./seqCNA/postProcess.sh $ASSAY $PROJNO
 ./seqCNA/postProcess.sh $ASSAY $PROJNO
+
 convert $PROJNO/*png $PROJNO/${PROJNO}___seqSeg.pdf
