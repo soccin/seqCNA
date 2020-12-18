@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ "$#" != "1" ]; then
+    echo
+    echo "    usage: delivery.sh /ifs/res/seq/pi/invest/r_###"
+    echo
+    exit
+fi
+
 PDIR=$(realpath $1)
 
 #echo $PDIR
@@ -17,4 +24,4 @@ mkdir $PDIR/seqCNA
 cp $PNAME/*csv $PDIR/seqCNA
 cp $PNAME/*___seqSeg.pdf $PDIR/seqCNA
 cp $PNAME/*___IGV.seg $PDIR/seqCNA
-cp $PNAME/*___GeneTable.xlsx $PDIR/seqCNA
+cp $PNAME/P*___GeneTable.xlsx $PDIR/seqCNA
