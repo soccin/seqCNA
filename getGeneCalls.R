@@ -2,6 +2,29 @@
 # getGeneCalls.R
 #
 
+convertGeneSymbolsMouseToHuman <- function(mgg) {
+
+    human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+    mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+
+    mggu=unique(sort(mgg))
+
+    genesV2 = getLDS(
+        attributes = c("mgi_symbol"),
+        filters = "mgi_symbol",
+        values = mggu,
+        mart = mouse,
+        attributesL = c("hgnc_symbol"),
+        martL = human,
+        uniqueRows=T)
+
+    genesV2=data.table(genesV2)
+    setkey(genesV2,MGI.symbol)
+
+    genesV2
+
+}
+
 VERSION="5.dev"
 
 SNAME=Sys.getenv("SNAME")
@@ -80,6 +103,7 @@ ff=ff[!is.na(ID)]
 ff=ff[order(ff$seg.mean),]
 ff=ff[!duplicated(ff,by=c("ID","gene"))]
 
+suppressPackageStartupMessages(require("biomaRt"))
 require(dtplyr)
 require(dplyr)
 require(tidyr)
@@ -121,6 +145,16 @@ geneCalls <- geneEvents %>%
     group_by(gene,transcript) %>%
     summarize_at(vars(matches("^s_")),robustMin)
 
+if(args$ASSAY=="M-IMPACT_v1") {
+    mm.genes=convertGeneSymbolsMouseToHuman(geneCalls$gene) %>%
+        tibble %>%
+        distinct(MGI.symbol,.keep_all=T)
+
+    geneCalls=geneCalls %>%
+        left_join(mm.genes,by=c(gene="MGI.symbol")) %>%
+        select(gene,HGNC.gene=HGNC.symbol,everything())
+}
+
 write_csv(geneCalls,file.path(args$ODIR,paste0("GeneMatrix.csv")))
 
 geneTable <- as_tibble(ff) %>%
@@ -132,6 +166,13 @@ geneTable <- as_tibble(ff) %>%
     mutate(chrom=factor(chrom,levels=chromOrder)) %>%
     mutate(seg.mean=round(seg.mean,3)) %>%
     arrange(ID,chrom,loc.start)
+
+
+if(args$ASSAY=="M-IMPACT_v1") {
+    geneTable=geneTable %>%
+        left_join(mm.genes,by=c(gene="MGI.symbol")) %>%
+        select(ID,gene,HGNC.gene=HGNC.symbol,everything())
+}
 
 require(openxlsx)
 pID=basename(gsub("/$","",args$ODIR))
