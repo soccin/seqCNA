@@ -123,6 +123,13 @@ geneEvents <- as_tibble(ff) %>%
     mutate(chrom=factor(chrom,levels=chromOrder)) %>%
     arrange(chrom,loc.start)
 
+if(nrow(geneEvents)==0) {
+    cat("No siginificant CopyNumber Changes\n",file="README.txt")
+    cat("\n    No siginificant CopyNumber Changes\n\n",file="README.txt")
+    quit()
+}
+
+
 write_csv(geneEvents,file.path(args$ODIR,paste0("SegmentMatrix.csv")),na="")
 
 robustMin <- function(xx) {
