@@ -1,6 +1,6 @@
 # CopyNumber analysis from sequence data using seqDNAcopy
 
-## juno branch
+## Branch: feature/argos - work with output from roslin/argos pipelines
 
 Copynumber analysis for sequence based assays (shallow Whole Genome sequncing, or targeted assays) using `seqDNAcopy` package from `seshanv@mskcc.org`
 
