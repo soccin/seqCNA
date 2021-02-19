@@ -30,7 +30,9 @@ else
     usage
 fi
 
-if [ ! -e pipeline/alignments ]; then
+BAMDIR=$(ls -d pipeline/* | egrep "alignments|bam")
+
+if [ ! -e "$BAMDIR" ]; then
     echo
     echo "Need to link up pipeline directory"
     echo "    ln -s /ifs/res/seq/pi/invest/Proj_No/r_00x pipeline"
@@ -40,7 +42,7 @@ fi
 
 if [ ! -e samples ]; then
 
-    ls pipeline/alignments/*.bam \
+    ls $BAMDIR/*.bam \
         | xargs -n 1 basename \
         | sed 's/.*_recal_s_/s_/' \
         | sed 's/^Proj_.*s_/s_/' \
@@ -65,7 +67,7 @@ echo "Running ./seqCNA/fixChromosomeNames.sh"
 echo
 echo
 
-ls pipeline/alignments/*.bam \
+ls $BAMDIR/*.bam \
     | xargs -n 1 \
         bsub -o LSF.FIX/ -J FIX -n 2 -R "rusage[mem=8]" ./seqCNA/fixChromosomeNames.sh
 
@@ -117,7 +119,7 @@ rsync -avP --link-dest=../out out/ outAll
 
 ls -d out/s_/*/* | fgrep -vf bestMatches____out | xargs -t rm -rf
 
-GENOME=$(./seqCNA/GenomeData/getGenomeBuildBAM.sh $(ls pipeline/alignments/*.bam | head -1))
+GENOME=$(./seqCNA/GenomeData/getGenomeBuildBAM.sh $(ls $BAMDIR/*.bam | head -1))
 find bamRelabel | fgrep .bam | head -1
 if [ -e pipeline/*request.txt ]; then
     PROJNO=$(echo $(ls pipeline/*request.txt) | perl -ne 'm|/(Proj_.*)_request|; print $1')
