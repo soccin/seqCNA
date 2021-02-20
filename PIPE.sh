@@ -92,8 +92,17 @@ echo
 for tumor in $(cat tumorBams); do
     for normal in $(cat normalBams); do
         ./seqCNA/seqCNA.sh $BINSIZE $normal $tumor
+        EXITCODE=$?
+        if [ "$EXITCODE" != "0" ]; then
+            echo
+            echo "ERROR in "./seqCNA/seqCNA.sh $BINSIZE $normal $tumor
+            echo "CODE = "$EXITCODE
+            echo
+            exit 1
+        fi
     done
 done
+
 
 bSync "SEQSEG_s.*"
 bSync "WGSCNA_s.*"
