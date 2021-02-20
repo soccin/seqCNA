@@ -15,6 +15,10 @@ if [ "$#" -ne 1 ]; then
     usage
 fi
 
+TAG=qSeqCNA
+UUID=$(uuidgen -t | cut -d- -f-4)
+export QTAG=${TAG}_${UUID}
+
 ASSAY=$(echo $1 | tr '[a-z]' '[A-Z]')
 if [ "$ASSAY" == "SWGS" ]; then
     BINSIZE=auto
@@ -67,11 +71,12 @@ echo "Running ./seqCNA/fixChromosomeNames.sh"
 echo
 echo
 
+FIXTAG=${TAG}_FIX_${UUID}
 ls $BAMDIR/*.bam \
     | xargs -n 1 \
-        bsub -o LSF.FIX/ -J FIX -n 2 -R "rusage[mem=8]" ./seqCNA/fixChromosomeNames.sh
+        bsub -o LSF.FIX/ -J $FIXTAG -n 2 -R "rusage[mem=8]" ./seqCNA/fixChromosomeNames.sh
 
-bSync FIX
+bSync $FIXTAG
 
 ERR1=$(parseLSF.py LSF.FIX/* | fgrep -v Succ)
 
@@ -89,6 +94,7 @@ echo "Running ./seqCNA/seqCNA.sh"
 echo
 echo
 
+
 for tumor in $(cat tumorBams); do
     for normal in $(cat normalBams); do
         ./seqCNA/seqCNA.sh $BINSIZE $normal $tumor
@@ -104,8 +110,7 @@ for tumor in $(cat tumorBams); do
 done
 
 
-bSync "SEQSEG_s.*"
-bSync "WGSCNA_s.*"
+bSync "${QTAG}_.*"
 
 ERR2=$(parseLSF.py LSF/*/* | fgrep -v Succ)
 if [ "$ERR2" != "" ]; then

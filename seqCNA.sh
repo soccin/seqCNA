@@ -52,14 +52,18 @@ fi
 scatter=$(echo $tumorId | perl -ne 'print substr($_,0,2)')
 mkdir -p LSF/$scatter
 
+echo
+echo QTAG=$QTAG
+echo
+
 oDir=out/$scatter/$tumorId/$sID
 
-bsub -o LSF/$scatter -J WGSCNA_$sID -W 59 -n 2 -R "rusage[mem=16]" \
+bsub -o LSF/$scatter -J ${QTAG}_WGSCNA_$sID -W 59 -n 2 -R "rusage[mem=16]" \
     $SDIR/getPairedCounts GENOME=$GENOME NORMAL=$normal TUMOR=$tumor \
         ODIR=$oDir \
         SAMPLEID=$sID
 
-bsub -o LSF/$scatter -J SEQSEG_$sID -W 59 -n 2 -R "rusage[mem=16]" -w "post_done(WGSCNA_$sID)" \
+bsub -o LSF/$scatter -J ${QTAG}_SEQSEG_$sID -W 59 -n 2 -R "rusage[mem=16]" -w "post_done(${QTAG}_WGSCNA_$sID)" \
     $SDIR/seqSegment \
         BINSIZE=$BINSIZE \
         ODIR=$oDir \
