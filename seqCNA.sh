@@ -52,10 +52,6 @@ fi
 scatter=$(echo $tumorId | perl -ne 'print substr($_,0,2)')
 mkdir -p LSF/$scatter
 
-echo
-echo QTAG=$QTAG
-echo
-
 oDir=out/$scatter/$tumorId/$sID
 
 bsub -o LSF/$scatter -J ${QTAG}_WGSCNA_$sID -W 59 -n 2 -R "rusage[mem=16]" \
