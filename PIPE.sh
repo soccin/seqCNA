@@ -76,7 +76,7 @@ echo
 FIXTAG=${TAG}_FIX_${UUID}
 ls $BAMDIR/*.bam \
     | xargs -n 1 \
-        bsub -o LSF.FIX/ -J $FIXTAG -n 2 -R "rusage[mem=8]" $SDIR/fixChromosomeNames.sh
+        bsub -o LSF.FIX/ -J $FIXTAG -W 59 $SDIR/fixChromosomeNames.sh
 
 bSync $FIXTAG
 
@@ -90,6 +90,17 @@ fi
 
 ls bamRelabel/*/*bam | fgrep -f tumors >tumorBams
 ls bamRelabel/*/*bam | fgrep -f normals >normalBams
+
+nTumBams=$(wc -l tumorBams | awk '{print $1}')
+nNormBams=$(wc -l normalBams | awk '{print $1}')
+
+if [[ "$nTumBams" == "0" || "$nNormBams" == "0" ]]; then
+    echo
+    echo Something went wrong, No tumor/normal bams found
+    echo
+    exit
+fi
+
 
 echo "=============================================================================="
 echo "Running $SDIR/seqCNA.sh"
