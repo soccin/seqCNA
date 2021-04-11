@@ -14,6 +14,4 @@ if [ -e $ODIR/$OBAM ]; then
     exit
 fi
 
-samtools view -H $IBAM | egrep "^@(SQ|HD|RG|PG)" | sed 's/SN:chr/SN:/' >$ODIR/${BASE}.relabel.dict
-samtools reheader $ODIR/${BASE}.relabel.dict $IBAM >$ODIR/$OBAM
-samtools index $ODIR/$OBAM
+ln -s $(realpath $IBAM) $ODIR
