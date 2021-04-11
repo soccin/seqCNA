@@ -1,6 +1,8 @@
 # CopyNumber analysis from sequence data using seqDNAcopy
 
-## Branch: feature/argos - work with output from roslin/argos pipelines
+## Branch: feature/dWGS - Modifications to work on Deep WGS samples.
+
+- *N.B.* we are not going to do fixChromosomes as that makes copies of huge BAM's and takes too long. The fixChromosome scripts now just makes a link to the original BAM.
 
 Copynumber analysis for sequence based assays (shallow Whole Genome sequncing, or targeted assays) using `seqDNAcopy` package from `seshanv@mskcc.org`
 
