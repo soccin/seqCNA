@@ -15,3 +15,4 @@ if [ -e $ODIR/$OBAM ]; then
 fi
 
 ln -s $(realpath $IBAM) $ODIR
+ln -s $(realpath ${IBAM/.bam/.bai}) $ODIR
