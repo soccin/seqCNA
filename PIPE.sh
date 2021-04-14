@@ -2,9 +2,11 @@
 
 #git clone git@github.com:soccin/seqCNA.git
 
+SDIR="$( cd "$( dirname "$0" )" && pwd )"
+
 function usage {
     echo
-    echo "   usage: ./seqCNA/PIPE.sh [sWGS|TARGETTED]"
+    echo "   usage: $(dirname $SDIR)/PIPE.sh [sWGS|TARGETTED]"
     echo "       sWGS       Shallow Whole Genome Seq"
     echo "       TARGETTED   Targeted assays (IMPACT/EXOME/...)"
     echo
@@ -67,14 +69,14 @@ if [ ! -e tumors ]; then
 fi
 
 echo "=============================================================================="
-echo "Running ./seqCNA/fixChromosomeNames.sh"
+echo "Running $SDIR/fixChromosomeNames.sh"
 echo
 echo
 
 FIXTAG=${TAG}_FIX_${UUID}
 ls $BAMDIR/*.bam \
     | xargs -n 1 \
-        bsub -o LSF.FIX/ -J $FIXTAG -n 2 -R "rusage[mem=8]" ./seqCNA/fixChromosomeNames.sh
+        bsub -o LSF.FIX/ -J $FIXTAG -W 59 $SDIR/fixChromosomeNames.sh
 
 bSync $FIXTAG
 
@@ -89,19 +91,30 @@ fi
 ls bamRelabel/*/*bam | fgrep -f tumors >tumorBams
 ls bamRelabel/*/*bam | fgrep -f normals >normalBams
 
+nTumBams=$(wc -l tumorBams | awk '{print $1}')
+nNormBams=$(wc -l normalBams | awk '{print $1}')
+
+if [[ "$nTumBams" == "0" || "$nNormBams" == "0" ]]; then
+    echo
+    echo Something went wrong, No tumor/normal bams found
+    echo
+    exit
+fi
+
+
 echo "=============================================================================="
-echo "Running ./seqCNA/seqCNA.sh"
+echo "Running $SDIR/seqCNA.sh"
 echo
 echo
 
 
 for tumor in $(cat tumorBams); do
     for normal in $(cat normalBams); do
-        ./seqCNA/seqCNA.sh $BINSIZE $normal $tumor
+        $SDIR/seqCNA.sh $BINSIZE $normal $tumor
         EXITCODE=$?
         if [ "$EXITCODE" != "0" ]; then
             echo
-            echo "ERROR in "./seqCNA/seqCNA.sh $BINSIZE $normal $tumor
+            echo "ERROR in "$SDIR/seqCNA.sh $BINSIZE $normal $tumor
             echo "CODE = "$EXITCODE
             echo
             exit 1
@@ -120,11 +133,11 @@ if [ "$ERR2" != "" ]; then
 fi
 
 echo "=============================================================================="
-echo "Running ./seqCNA/selectBestMatch"
+echo "Running $SDIR/selectBestMatch"
 echo
 echo
 
-./seqCNA/selectBestMatch out
+$SDIR/selectBestMatch out
 # Take best match from T/N Pairs
 #cat pipeline/*_sample_pairing.txt | awk '{print $2"__"$1}' | fgrep -v POOL >bestMatches____out
 
@@ -133,7 +146,7 @@ rsync -avP --link-dest=../out out/ outAll
 
 ls -d out/s_/*/* | fgrep -vf bestMatches____out | xargs -t rm -rf
 
-GENOME=$(./seqCNA/GenomeData/getGenomeBuildBAM.sh $(ls $BAMDIR/*.bam | head -1))
+GENOME=$($SDIR/GenomeData/getGenomeBuildBAM.sh $(ls $BAMDIR/*.bam | head -1))
 find bamRelabel | fgrep .bam | head -1
 if [ -e pipeline/*request.txt ]; then
     PROJNO=$(echo $(ls pipeline/*request.txt) | perl -ne 'm|/(Proj_.*)_request|; print $1')
@@ -154,10 +167,10 @@ else
 fi
 
 echo "=============================================================================="
-echo "Running ./seqCNA/postProcess.sh"
+echo "Running $SDIR/postProcess.sh"
 echo
 echo
-echo ./seqCNA/postProcess.sh $ASSAY $PROJNO
-./seqCNA/postProcess.sh $ASSAY $PROJNO
+echo $SDIR/postProcess.sh $ASSAY $PROJNO
+$SDIR/postProcess.sh $ASSAY $PROJNO
 
 convert $PROJNO/*png $PROJNO/${PROJNO}___seqSeg.pdf
