@@ -1,6 +1,9 @@
 # CopyNumber analysis from sequence data using seqDNAcopy
 
-## Branch: feature/argos - work with output from roslin/argos pipelines
+## Branch: feature/cheapFix
+
+This version does a cheap chromosomeFix which is just to link the files instead of done the bam reheader step. Only works
+if bams have the correct chromosome build convention (b37, 1,2,3,... )
 
 Copynumber analysis for sequence based assays (shallow Whole Genome sequncing, or targeted assays) using `seqDNAcopy` package from `seshanv@mskcc.org`
 
