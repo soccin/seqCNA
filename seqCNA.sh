@@ -54,7 +54,7 @@ mkdir -p LSF/$scatter
 
 oDir=out/$scatter/$tumorId/$sID
 
-bsub -o LSF/$scatter -J ${QTAG}_WGSCNA_$sID -W 59 -n 2 -R "rusage[mem=16]" \
+bsub -o LSF/$scatter -J ${QTAG}_WGSCNA_$sID -W 359 -n 1 -R "rusage[mem=32]" \
     $SDIR/getPairedCounts GENOME=$GENOME NORMAL=$normal TUMOR=$tumor \
         ODIR=$oDir \
         SAMPLEID=$sID
