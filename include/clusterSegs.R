@@ -12,6 +12,13 @@ clustersegs <- function(out,threshold=0.08) {
     nsegs=nrow(segs)
     segs$segNo=seq(nsegs)
 
+    #
+    # MAD of (probes-seg.mean)
+    #
+    # Need to compute MAD here before we sort seg.mean
+    #
+    data.mad=mad(out$data[,3]-rep(segs$seg.mean,segs$num.mark))
+
     cnlr=out$data[is.finite(out$data[,3]),3]
     weights=out$weights[is.finite(out$data[,3])]
 
@@ -73,10 +80,6 @@ clustersegs <- function(out,threshold=0.08) {
     # so we only look at segments that are within one MAD of the scatter of
     # probes to their means
 
-    #
-    # MAD of (probes-seg.mean)
-    #
-    data.mad=mad(out$data[,3]-rep(segs$seg.mean,segs$num.mark))
     ocn.ii=which(abs(ocnlevels)<data.mad)
 
     nProbesPerSeg=table(segid)
