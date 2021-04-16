@@ -35,15 +35,54 @@ clustersegs <- function(out,threshold=0.08) {
         ocnlevels[j] <- sum(wj*cnlr[segid==j])
     }
 
+    #browser()
+    #
+    # This was the old way of finding the shift to try
+    # to set the diploid level. Failed if there was a tiny
+    # segment very close to zero even there was a cluster
+    # of many more segments(points) far enough away.
+    # Ie if one segment of a few points just happend to have a
+    # mean of zero then there would be no shift since
+    #     smallButNonZeroMean/sqrt(VeryLargeNumberOfPoints) > 0
+    #
+    # nProbesPerSeg=table(segid)
+    # diploidClusterNum=as.numeric(which.min(abs(ocnlevels/sqrt(nProbesPerSeg))))
+
+    # out$cluster=list(
+    #     diploidClusterNum=diploidClusterNum,
+    #     originalLevels=ocnlevels)
+
+    # ocnlevels=ocnlevels - ocnlevels[diploidClusterNum]
+    # }
+
+    #
+    # New method minimize
+    # $$
+    #    \sum_i \{(s_i-\Delta)n_i\}^2
+    # $$
+    # for $\delta$. This is:
+    # $$
+    #    \Delta=\frac{\sum_i s_i n^2_i}{\sum_i  n^2_i}
+    # $$
+    #
+    # n_i == nProbesPerSeg
+    # s_i == ocnlevels
+    #
+    # But one more complexity; if we have a genome with a large number of events
+    # more then the number of points that diploid we do not to shift that event to
+    # so we only look at segments that are within one MAD of the scatter of
+    # probes to their means
+
+    #
+    # MAD of (probes-seg.mean)
+    #
+    data.mad=mad(out$data[,3]-rep(segs$seg.mean,segs$num.mark))
+    ocn.ii=which(abs(ocnlevels)<data.mad)
 
     nProbesPerSeg=table(segid)
-    diploidClusterNum=as.numeric(which.min(abs(ocnlevels/sqrt(nProbesPerSeg))))
+    Delta=sum(ocnlevels[ocn.ii]*(nProbesPerSeg[ocn.ii])^2)/sum(nProbesPerSeg[ocn.ii]^2)
 
-    out$cluster=list(
-        diploidClusterNum=diploidClusterNum,
-        originalLevels=ocnlevels)
-
-    ocnlevels=ocnlevels - ocnlevels[diploidClusterNum]
+    ocnlevels=ocnlevels - Delta
 
     segs$cluster=ocnclust
     segs$clust.mean=ocnlevels[segs$cluster]
