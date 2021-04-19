@@ -19,9 +19,9 @@ if [[ ! $BASE =~ r_[0-9]+ ]] || [[ ! $PNAME =~ Proj_ ]]; then
     echo "Invalid propect delivery directory"
 fi
 
-mkdir $PDIR/seqCNA
+mkdir $PDIR/seqcna
 
-cp $PNAME/*csv $PDIR/seqCNA
-cp $PNAME/*___seqSeg.pdf $PDIR/seqCNA
-cp $PNAME/*___IGV.seg $PDIR/seqCNA
-cp $PNAME/P*___GeneTable.xlsx $PDIR/seqCNA
+cp $PNAME/*csv $PDIR/seqcna
+cp $PNAME/*___seqSeg.pdf $PDIR/seqcna
+cp $PNAME/*___IGV.seg $PDIR/seqcna
+cp $PNAME/P*___GeneTable.xlsx $PDIR/seqcna
