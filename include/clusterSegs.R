@@ -82,10 +82,20 @@ clustersegs <- function(out,threshold=0.08) {
 
     ocn.ii=which(abs(ocnlevels)<data.mad)
 
+    if(len(ocn.ii)==0) {
+        cat("\n\n   FATAL ERROR in clusterSets can not find candidate diploid segments\n\n")
+        stop("clusterSegs::clusterSegs01")
+    }
+
     nProbesPerSeg=table(segid)
     Delta=sum(ocnlevels[ocn.ii]*(nProbesPerSeg[ocn.ii])^2)/sum(nProbesPerSeg[ocn.ii]^2)
 
     ocnlevels=ocnlevels - Delta
+
+    out$cluster=list(
+         diploidClusterNum=ocn.ii[which.min(abs(ocnlevels[ocn.ii]))],
+         originalLevels=ocnlevels+Delta
+         )
 
     segs$cluster=ocnclust
     segs$clust.mean=ocnlevels[segs$cluster]
