@@ -16,12 +16,28 @@ PNAME=$(basename $(dirname $PDIR))
 echo $PDIR, $PNAME
 
 if [[ ! $BASE =~ r_[0-9]+ ]] || [[ ! $PNAME =~ Proj_ ]]; then
-    echo "Invalid propect delivery directory"
+    echo "Invalid project delivery directory"
 fi
 
-mkdir $PDIR/seqcna
+ODIR=$(basename $(dirname $(find . | fgrep ___GeneTable.xlsx)))
 
-cp $PNAME/*csv $PDIR/seqcna
-cp $PNAME/*___seqSeg.pdf $PDIR/seqcna
-cp $PNAME/*___IGV.seg $PDIR/seqcna
-cp $PNAME/P*___GeneTable.xlsx $PDIR/seqcna
+if [ "$PNAME" == "$ODIR" ]; then
+
+    mkdir -p $PDIR/seqcna
+
+    cp $ODIR/*csv $PDIR/seqcna
+    cp $ODIR/*___seqSeg.pdf $PDIR/seqcna
+    cp $ODIR/*___IGV.seg $PDIR/seqcna
+    cp $ODIR/P*___GeneTable.xlsx $PDIR/seqcna
+
+else
+
+    mkdir -p $PDIR/seqcna/$ODIR
+
+    cp $ODIR/*csv $PDIR/seqcna/$ODIR
+    cp $ODIR/*___seqSeg.pdf $PDIR/seqcna/$ODIR
+    cp $ODIR/*___IGV.seg $PDIR/seqcna/$ODIR
+    cp $ODIR/P*___GeneTable.xlsx $PDIR/seqcna/$ODIR
+
+fi
+
