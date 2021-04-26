@@ -83,6 +83,12 @@ clustersegs <- function(out,threshold=0.08) {
     ocn.ii=which(abs(ocnlevels)<data.mad)
 
     if(len(ocn.ii)==0) {
+        cat("\n\nWARNING: clusterSegs can not find candidate diploid segments at data.mad\n")
+        cat("         trying 2*data.mad\n\n")
+        ocn.ii=which(abs(ocnlevels)<2*data.mad)
+    }
+
+    if(len(ocn.ii)==0) {
         cat("\n\n   FATAL ERROR in clusterSets can not find candidate diploid segments\n\n")
         stop("clusterSegs::clusterSegs01")
     }
