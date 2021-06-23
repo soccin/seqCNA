@@ -154,10 +154,10 @@ else
     PROJNO=$(basename $PWD)
 fi
 
-if [[ $GENOME =~ mm10 ]]; then
-    ASSAY=M-IMPACT_v1
-elif [[ $GENOME =~ b37|hg19 ]]; then
+if [[ $GENOME =~ b37|hg19 ]]; then
     ASSAY=Exome
+elif [[ $GENOME =~ ^mm10 ]]; then
+    ASSAY=M-IMPACT_v1
 else
     echo
     echo "Unknown geneome"
