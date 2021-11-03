@@ -103,13 +103,14 @@ ff=ff[!is.na(ID)]
 ff=ff[order(ff$seg.mean),]
 ff=ff[!duplicated(ff,by=c("ID","gene"))]
 
-suppressPackageStartupMessages(require("biomaRt"))
-require(dtplyr)
-require(dplyr)
-require(tidyr)
-require(tibble)
-require(readr)
-
+suppressPackageStartupMessages({
+    require("biomaRt")
+    require(dtplyr)
+    require(dplyr)
+    require(tidyr)
+    require(tibble)
+    require(readr)
+})
 
 chromOrder=c(seq(1:99),"X","Y","M","MT")
 
@@ -124,8 +125,9 @@ geneEvents <- as_tibble(ff) %>%
     arrange(chrom,loc.start)
 
 if(nrow(geneEvents)==0) {
-    cat("No siginificant CopyNumber Changes\n",file="README.txt")
-    cat("\n    No siginificant CopyNumber Changes\n\n",file="README.txt")
+    readmeFile=file.path(args$ODIR,"README.txt")
+    cat("\n    No siginificant CopyNumber Changes\n\n",file=readmeFile)
+    cat("\n    No siginificant CopyNumber Changes\n\n")
     quit()
 }
 
