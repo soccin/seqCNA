@@ -16,6 +16,7 @@ unset R_VERSION
 #
 
 module load R/R-3.6.1
+MAJOROS=7
 export R_VERSION=$(R --version | head -1 | awk '{print $3}')
 export R_LIBS=/home/socci/lib/R/CentOS${MAJOROS}/$R_VERSION
 
