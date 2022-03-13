@@ -2,6 +2,25 @@
 
 #git clone git@github.com:soccin/seqCNA.git
 
+#
+# Need to go back to R version 3
+#
+# First remove current R and R env vars
+
+export PATH=$(echo $PATH | tr ':' '\n' | fgrep -v /R/R | tr '\n' ':')
+unset R_LIBS
+unset R_VERSION
+
+#
+# Now load R/3.x
+#
+
+module load R/R-3.6.1
+export R_LIBS=/home/socci/lib/R/CentOS${MAJOROS}/$R_VERSION
+export R_VERSION=$(R --version | head -1 | awk '{print $3}')
+
+R --version
+
 SDIR="$( cd "$( dirname "$0" )" && pwd )"
 
 function usage {
