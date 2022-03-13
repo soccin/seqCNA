@@ -28,6 +28,10 @@ case $OSMAJOR in
     exit 1
 esac
 
+# echo $R_LIBS
+# echo $RSCRIPT
+# exit
+
 DOCFILE=$SDIR/docs/${SNAME}.doc
 if [ "$#" == "0" ] && [ -e $DOCFILE ]; then
     # If no args then just print usage
