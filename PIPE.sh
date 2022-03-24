@@ -175,9 +175,13 @@ else
 fi
 
 if [[ $GENOME =~ b37|hg19 ]]; then
-    ASSAY=Exome
+    ASSAY=IMPACT505
 elif [[ $GENOME =~ ^mm10 ]]; then
-    ASSAY=M-IMPACT_v1
+    echo
+    echo This version is specialized for ARGOS (IMPACT) Runs
+    echo do not use for MOUSE [$GENOME]
+    echo
+    exit -1
 else
     echo
     echo "Unknown geneome"
@@ -194,3 +198,6 @@ echo $SDIR/postProcess.sh $ASSAY $PROJNO
 $SDIR/postProcess.sh $ASSAY $PROJNO
 
 convert $PROJNO/*png $PROJNO/${PROJNO}___seqSeg.pdf
+mkdir $PROJNO/PNG
+mv $PROJNO/*png $PROJNO/PNG
+
