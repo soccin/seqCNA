@@ -178,8 +178,8 @@ if [[ $GENOME =~ b37|hg19 ]]; then
     ASSAY=IMPACT505
 elif [[ $GENOME =~ ^mm10 ]]; then
     echo
-    echo This version is specialized for ARGOS (IMPACT) Runs
-    echo do not use for MOUSE [$GENOME]
+    echo "This version is specialized for ARGOS (IMPACT) Runs"
+    echo "do not use for MOUSE [$GENOME]"
     echo
     exit -1
 else
