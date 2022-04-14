@@ -19,6 +19,12 @@ if [[ ! $BASE =~ r_[0-9]+ ]] || [[ ! $PNAME =~ Proj_ ]]; then
     echo "Invalid propect delivery directory"
 fi
 
+echo
+echo "   Need sudo to change permissions"
+echo
+
+sudo chmod -R g+rwX $PDIR
+
 mkdir $PDIR/seqCNA
 
 cp $PNAME/*csv $PDIR/seqCNA
