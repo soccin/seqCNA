@@ -4,22 +4,13 @@
 
 convertGeneSymbolsMouseToHuman <- function(mgg) {
 
-    human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-    mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+    source(file.path(SDIR,"convert_mouse_to_human.R"))
 
-    mggu=unique(sort(mgg))
-
-    genesV2 = getLDS(
-        attributes = c("mgi_symbol"),
-        filters = "mgi_symbol",
-        values = mggu,
-        mart = mouse,
-        attributesL = c("hgnc_symbol"),
-        martL = human,
-        uniqueRows=T)
-
-    genesV2=data.table(genesV2)
-    setkey(genesV2,MGI.symbol)
+    mgg=tibble(Gene=unique(mgg))
+    genesV2=convert_mouse_to_human(mgg) %>%
+        rename(HGNC.symbol=Gene) %>%
+        bind_cols(mgg) %>%
+        rename(MGI.symbol=Gene)
 
     genesV2
 
