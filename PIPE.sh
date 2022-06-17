@@ -171,7 +171,7 @@ find bamRelabel | fgrep .bam | head -1
 if [ -e pipeline/*request.txt ]; then
     PROJNO=$(echo $(ls pipeline/*request.txt) | perl -ne 'm|/(Proj_.*)_request|; print $1')
 else
-    PROJNO=$(basename $PWD)
+    PROJNO=$($SDIR/extractProjectIDFromPath.py $(pwd -P))
 fi
 
 if [[ $GENOME =~ b37|hg19 ]]; then
