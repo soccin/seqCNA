@@ -89,14 +89,14 @@ if [ ! -e tumors ]; then
 fi
 
 echo "=============================================================================="
-echo "Running $SDIR/fixChromosomeNames.sh"
+echo "Running $SDIR/cram2bam.sh"
 echo
 echo
 
 FIXTAG=${TAG}_FIX_${UUID}
 ls $BAMDIR/*.bam \
     | xargs -n 1 \
-        bsub -o LSF.FIX/ -J $FIXTAG -W 59 $SDIR/fixChromosomeNames.sh
+        bsub -o LSF.FIX/ -J $FIXTAG -W 59 $SDIR/cram2bam.sh
 
 bSync $FIXTAG
 
