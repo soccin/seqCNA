@@ -2,7 +2,7 @@ QSYNC=#
 
 
 ##
-# QRUN ALLOC QTAG <HOLD hold_id> <VMEM size> LONG
+# QRUN NCORES QTAG <HOLD hold_id> <VMEM size> LONG
 #
 # HOLD, VMEM and LONG are optional but if you more than one
 # they must be in this order
@@ -39,7 +39,7 @@ QRUN () {
 
     esac
 
-    ALLOC=$1
+    NCORES=$1
     QTAG=$2
     echo QTAG=$QTAG
     shift 2
@@ -55,7 +55,7 @@ QRUN () {
         if [ "$LSF_VERSION" == "10.1" ]; then
 
             TOTALMEM=$2
-            MEMPERSLOT=$((TOTALMEM / ALLOC))
+            MEMPERSLOT=$((TOTALMEM / NCORES))
             VMEM='-R "rusage[mem='$MEMPERSLOT']"'
 
         else
@@ -73,8 +73,8 @@ QRUN () {
         echo LONG Job
     fi
 
-    RET=$(bsub $TIME $QHOLD $VMEM -n $ALLOC -J $QTAG -o LSF.PEMAP/ $*)
-    echo RET=bsub $QHOLD $VMEM -n $ALLOC -J $QTAG -o LSF.PEMAP/ $*
+    RET=$(bsub $TIME $QHOLD $VMEM -n $NCORES -J $QTAG -o LSF.PEMAP/ $*)
+    echo RET=bsub $QHOLD $VMEM -n $NCORES -J $QTAG -o LSF.PEMAP/ $*
     echo "#QRUN RET=" $RET
     echo
     JOBID=$(echo $RET | perl -ne '/Job <(\d+)> /;print $1')
