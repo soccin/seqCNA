@@ -36,6 +36,10 @@ case $GENOME_TAG in
     GENOME="hg19"
     ;;
 
+    b38)
+    GENOME="hg38"
+    ;;
+
     *)
     echo "Unknown or un-usable genome"
     echo $GENOME_TAG

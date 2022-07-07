@@ -46,6 +46,11 @@ case $GENOME_MD5 in
     echo "b37+mm10"
     ;;
 
+    213e3e9448956f0de53bf8e9b3d6b7c1)
+    # Human b38 (hg38)
+    echo "b38"
+    ;;
+
     d660fd17a979374182d3ba8b6d76cac0)
     # UCSC mm10 /ifs/depot/assemblies/M.musculus/mm10/mm10.dict
     echo "mm10"
