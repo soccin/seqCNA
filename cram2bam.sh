@@ -4,7 +4,7 @@ SDIR="$( cd "$( dirname "$0" )" && pwd )"
 
 ICRAM=$1
 BASE=$(basename $ICRAM | sed 's/.cram//')
-OBAM=${BASE}__CVT.bam
+OBAM=${BASE}
 ODIR=cvtBams/${BASE}
 
 mkdir -p $ODIR
