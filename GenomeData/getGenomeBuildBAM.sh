@@ -5,7 +5,11 @@ if [ "$#" != "1" ]; then
     exit
 fi
 
-SAMTOOLS=/mnt/ceph/users/info/software/samtools-1.10/samtools
+if [ -e /mnt/ceph/users/info/software ]; then
+    SAMTOOLS=/mnt/ceph/users/info/software/samtools-1.10/samtools
+else
+    SAMTOOLS=/opt/common/CentOS_7/samtools/samtools-1.9/bin/samtools
+fi
 
 GENOME_MD5=$($SAMTOOLS view -H $1 | egrep "^@SQ" | cut -f-3 | sort  | md5sum - | awk '{print $1}')
 
