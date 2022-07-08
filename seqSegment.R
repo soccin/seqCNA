@@ -162,7 +162,7 @@ numSegments=nrow(output)
 writeVariable("numSegments")
 
 XChr=NA
-if(cArgs$GENOME %in% c("hg19","b37"))
+if(cArgs$GENOME %in% c("hg19","b37","b38"))
     XChr=23
 if(cArgs$GENOME %in% c("mm10"))
     XChr=20
