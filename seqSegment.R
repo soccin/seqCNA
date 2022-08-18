@@ -68,7 +68,7 @@ if(tolower(args$BINSIZE)=="auto") {
     cat("# manually set binsize =",binSize,"\n")
 }
 
-undo.SD=2
+undo.SD=3
 out=seqsegment(bb,sampleid=sampleId,
                 binSize=binSize,minBinCount=args$MINBINCOUNT,
                 undo.splits="sdundo",undo.SD=undo.SD)
