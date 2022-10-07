@@ -5,7 +5,7 @@ SDIR="$( cd "$( dirname "$0" )" && pwd )"
 IBAM=$1
 BASE=$(basename $IBAM | sed 's/.bam//')
 OBAM=${BASE}__relabel.bam
-ODIR=bamRelabel/${BASE}
+ODIR=$2/${BASE}
 
 mkdir -p $ODIR
 
