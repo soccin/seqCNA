@@ -131,38 +131,42 @@ write.table(output,
 ##################################################################################
 ##################################################################################
 
-outFile=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".out"))
+outFile=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".yaml"))
+# writeVariable<-function(varName) {
+#     cat(paste0(varName,":"),get(varName),"\n",file=outFile,append=T)
+# }
 writeVariable<-function(varName) {
-    cat(varName,"=",get(varName),"\n",file=outFile,append=T)
+    varNameStr=rlang::enexpr(varName)
+    cat(paste0(varNameStr,":"),varName,"\n",file=outFile,append=T)
 }
 cat("##############################################\n",file=outFile)
 
-writeVariable("VERSION")
+writeVariable(VERSION)
 GITTag=getGITTag(SDIR)
-writeVariable("GITTag")
-writeVariable("sampleId")
+writeVariable(GITTag)
+writeVariable(sampleId)
 countFile=args$COUNTS
-writeVariable("countFile")
+writeVariable(countFile)
 genome=cArgs$GENOME
-writeVariable("genome")
+writeVariable(genome)
 arg.binsize=args$BINSIZE
-writeVariable("arg.binsize")
-writeVariable("binSize")
+writeVariable(arg.binsize)
+writeVariable(binSize)
 numBins=nrow(out$data)
-writeVariable("numBins")
-writeVariable("undo.SD")
-writeVariable("global.mad")
-writeVariable("rms.derivative.noise")
-writeVariable("sum.logr.sq")
-writeVariable("rms.logr")
-writeVariable("rms.logr.flat")
-writeVariable("frac.logR.ltNeg2")
+writeVariable(numBins)
+writeVariable(undo.SD)
+writeVariable(global.mad)
+writeVariable(rms.derivative.noise)
+writeVariable(sum.logr.sq)
+writeVariable(rms.logr)
+writeVariable(rms.logr.flat)
+writeVariable(frac.logR.ltNeg2)
 
 numSegments=nrow(output)
-writeVariable("numSegments")
+writeVariable(numSegments)
 
 XChr=NA
-if(cArgs$GENOME %in% c("hg19","b37","b38"))
+if(cArgs$GENOME %in% c("hg19","b37","b38","hg38"))
     XChr=23
 if(cArgs$GENOME %in% c("mm10"))
     XChr=20
@@ -178,21 +182,45 @@ wiAuto=output$num.mark[autoII]/sum(output$num.mark[autoII])
 wRMSD.seg.mean.AUTO=sqrt(sum( wiAuto*(output$seg.mean[autoII]^2) ))
 max.abs.seg.mean.AUTO=max(abs(output$seg.mean[autoII]))
 
-writeVariable("numSegments.AUTO")
-writeVariable("RMSD.seg.mean")
-writeVariable("RMSD.seg.mean.AUTO")
-writeVariable("wRMSD.seg.mean.AUTO")
-writeVariable("max.abs.seg.mean.AUTO")
+writeVariable(numSegments.AUTO)
+writeVariable(RMSD.seg.mean)
+writeVariable(RMSD.seg.mean.AUTO)
+writeVariable(wRMSD.seg.mean.AUTO)
+writeVariable(max.abs.seg.mean.AUTO)
 
 xII=output$chrom==XChr
 X.seg.mean.max=max(output$seg.mean[xII])
-writeVariable("X.seg.mean.max")
+writeVariable(X.seg.mean.max)
 X.seg.mean.min=min(output$seg.mean[xII])
-writeVariable("X.seg.mean.min")
+writeVariable(X.seg.mean.min)
 
 wiX=output$num.mark[xII]/sum(output$num.mark[xII])
 X.seg.mean.avg=sum(wiX*output$seg.mean[xII])
-writeVariable("X.seg.mean.avg")
+writeVariable(X.seg.mean.avg)
+
+writeVariable(cl0.mean)
+writeVariable(cl0.sd)
+
+pct.diploid.bins=sum(output$num.mark[output$cluster==out$cluster$diploidClusterNum])/numBins
+writeVariable(pct.diploid.bins)
+
+num.diploid.segs=sum(output$cluster==out$cluster$diploidClusterNum)
+writeVariable(num.diploid.segs)
+
+nonDiploid=out$output$cluster!=out$cluster$diploidClusterNum
+
+RMSD.non.diploid.segs=sqrt(mean(output$seg.mean[nonDiploid]^2))
+writeVariable(RMSD.non.diploid.segs)
+
+median.tumor.count.on.normal=median(bb$tumor[bb$normal>=args$MINBINCOUNT])
+mad.tumor.count.on.normal=mad(bb$tumor[bb$normal>=args$MINBINCOUNT])
+median.normal.count.on.tumor=median(bb$normal[bb$tumor>=args$MINBINCOUNT])
+mad.normal.count.on.tumor=mad(bb$normal[bb$tumor>=args$MINBINCOUNT])
+
+writeVariable(median.tumor.count.on.normal)
+writeVariable(mad.tumor.count.on.normal)
+writeVariable(median.normal.count.on.tumor)
+writeVariable(mad.normal.count.on.tumor)
 
 YLIM=args$YLIM
 plot2Panels <- function(out) {
