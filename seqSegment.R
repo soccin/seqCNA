@@ -272,20 +272,12 @@ plot1Panels <- function(out) {
 
     label1=paste(
             "NumBins =",
-            formatC(nrow(out$data),format="d",big.mark=","),
-            "MAD =",
-            formatC(global.mad,format="f"),
-            "nSegs =",formatC(numSegments,format="d",big.mark=","),
-            "RMSD.Segs.noX =",formatC(RMSD.seg.mean.AUTO,format="f")
+                formatC(nrow(out$data),format="d",big.mark=","),
             )
 
     label2=paste(
-            "sum.logr.sq =",
-            formatC(sum.logr.sq,format="f"),
-            "rms.logr =",
-            formatC(rms.logr,format="f"),
-            "rms.logr.flat =",
-            formatC(rms.logr.flat,format="f")
+            "rms.logr =", formatC(rms.logr,format="f"),
+            "global.mad =", formatC(global.mad,format="f")
             )
 
     maxLabelLen=max(strwidth(label1,cex=1.12),strwidth(label2,cex=1.12))
