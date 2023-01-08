@@ -14,6 +14,21 @@ if [ -e $ODIR/$OBAM ]; then
     exit
 fi
 
-samtools view -H $IBAM | egrep "^@(SQ|HD|RG|PG)" | sed 's/SN:chr/SN:/' >$ODIR/${BASE}.relabel.dict
-samtools reheader $ODIR/${BASE}.relabel.dict $IBAM >$ODIR/$OBAM
-samtools index $ODIR/$OBAM
+GENOME=$(getGenomeBuildBAM.sh $IBAM)
+
+if [ "$GENOME" != "b37" ]; then
+
+    samtools view -H $IBAM | egrep "^@(SQ|HD|RG|PG)" | sed 's/SN:chr/SN:/' >$ODIR/${BASE}.relabel.dict
+    samtools reheader $ODIR/${BASE}.relabel.dict $IBAM >$ODIR/$OBAM
+    samtools index $ODIR/$OBAM
+
+else
+
+    #
+    # B37 already in the right format just link up
+    #
+
+    ln -s $(realpath $IBAM) $ODIR/$OBAM
+    ln -s $(realpath ${IBAM/.bam/.bai}) $ODIR/${OBAM/.bam/.bai}
+
+fi
