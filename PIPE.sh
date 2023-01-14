@@ -26,14 +26,17 @@ SDIR="$( cd "$( dirname "$0" )" && pwd )"
 
 function usage {
     echo
-    echo "   usage: $(dirname $SDIR)/PIPE.sh [sWGS|TARGETTED]"
-    echo "       sWGS       Shallow Whole Genome Seq"
-    echo "       TARGETTED   Targeted assays (IMPACT/EXOME/...)"
+    echo "   usage: $(dirname $SDIR)/PIPE.sh [sWGS|TARGETTED] DB_OF_NORMALS.csv DB_NORMAL_DECILES.csv TARGET_BAM"
+    echo "       sWGS                Shallow Whole Genome Seq"
+    echo "       TARGETTED           Targeted assays (IMPACT/EXOME/...)"
+    echo "       DB_OF_NORMALS       CSV file or NORMAL BAMS"
+    echo "       DB_NORMAL_DECILES   CSV file of NORMAL DECILES"
+    echo "       TARGET_BAM          BAM File Path of Target (Tumor)"
     echo
     exit
 }
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -ne 4 ]; then
     usage
 fi
 
@@ -56,92 +59,43 @@ else
     usage
 fi
 
-BAMDIR=$(ls -d pipeline/* | egrep "alignments|bam")
+NORMAL_DB=$2
+DECILE_DB=$3
+TUMOR=$4
 
-if [ ! -e "$BAMDIR" ]; then
-    echo
-    echo "Need to link up pipeline directory"
-    echo "    ln -s /ifs/res/seq/pi/invest/Proj_No/r_00x pipeline"
-    echo
-    exit
-fi
+SID=$($SDIR/getSampleTag.sh $TUMOR)
 
-if [ ! -e samples ]; then
-
-    ls $BAMDIR/*.bam \
-        | xargs -n 1 basename \
-        | sed 's/.*_recal_s_/s_/' \
-        | sed 's/^Proj_.*s_/s_/' \
-        | sed 's/.bam/__/' \
-        >samples
-
-fi
-
-if [ ! -e tumors ]; then
-
-    echo
-    echo "Need to define tumor and normal samples"
-    echo
-    echo "And then run as bsub or nohup"
-    echo
-    exit
-
-fi
+DTS=$(date +%Y%m%d%H%M%S)
+WDIR=_scratch/$DTS/$SID
+mkdir -vp $WDIR
 
 echo "=============================================================================="
-echo "Running $SDIR/fixChromosomeNames.sh"
+echo "Finding Best Decile Normals"
 echo
 echo
 
-FIXTAG=${TAG}_FIX_${UUID}
-ls $BAMDIR/*.bam \
-    | xargs -n 1 \
-        bsub -o LSF.FIX/ -J $FIXTAG -W 59 $SDIR/fixChromosomeNames.sh
+$SDIR/getBestDecileNormals $DECILE_DB $TUMOR $WDIR
 
-bSync $FIXTAG
-
-ERR1=$(parseLSF.py LSF.FIX/* | fgrep -v Succ)
-
-if [ "$ERR1" != "" ]; then
-    echo "ERROR @ Stage1"
-    parseLSF.py LSF.FIX/* | fgrep -v Succ
-    exit
-fi
-
-ls bamRelabel/*/*bam | fgrep -f tumors >tumorBams
-ls bamRelabel/*/*bam | fgrep -f normals >normalBams
-
-nTumBams=$(wc -l tumorBams | awk '{print $1}')
-nNormBams=$(wc -l normalBams | awk '{print $1}')
-
-if [[ "$nTumBams" == "0" || "$nNormBams" == "0" ]]; then
-    echo
-    echo Something went wrong, No tumor/normal bams found
-    echo
-    exit
-fi
-
+fgrep -wf <(cat $WDIR/bestNormals___$SID | awk '{print $1","}') $NORMAL_DB | cut -f2 -d, >$WDIR/normalBams
 
 echo "=============================================================================="
 echo "Running $SDIR/seqCNA.sh"
 echo
 echo
 
-
-for tumor in $(cat tumorBams); do
-    for normal in $(cat normalBams); do
-        $SDIR/seqCNA.sh $BINSIZE $normal $tumor
-        EXITCODE=$?
-        if [ "$EXITCODE" != "0" ]; then
-            echo
-            echo "ERROR in "$SDIR/seqCNA.sh $BINSIZE $normal $tumor
-            echo "CODE = "$EXITCODE
-            echo
-            exit 1
-        fi
-    done
+for normal in $(cat $WDIR/normalBams); do
+    $SDIR/seqCNA.sh $BINSIZE $normal $TUMOR
+    EXITCODE=$?
+    if [ "$EXITCODE" != "0" ]; then
+        echo
+        echo "ERROR in "$SDIR/seqCNA.sh $BINSIZE $normal $tumor
+        echo "CODE = "$EXITCODE
+        echo
+        exit 1
+    fi
 done
 
+exit
 
 bSync "${QTAG}_.*"
 
