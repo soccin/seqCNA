@@ -66,6 +66,7 @@ TUMOR=$4
 SID=$($SDIR/getSampleTag.sh $TUMOR)
 
 DTS=$(date +%Y%m%d%H%M%S)
+#DTS=DEBUG
 WDIR=_scratch/$DTS/$SID
 mkdir -vp $WDIR
 
@@ -84,22 +85,23 @@ echo
 echo
 
 for normal in $(cat $WDIR/normalBams); do
-    $SDIR/seqCNA.sh $BINSIZE $normal $TUMOR
+    $SDIR/seqCNA.sh $BINSIZE $normal $TUMOR $WDIR
     EXITCODE=$?
     if [ "$EXITCODE" != "0" ]; then
         echo
-        echo "ERROR in "$SDIR/seqCNA.sh $BINSIZE $normal $tumor
+        echo "ERROR in "$SDIR/seqCNA.sh $BINSIZE $normal $tumor $WDIR
         echo "CODE = "$EXITCODE
         echo
         exit 1
     fi
 done
 
-exit
-
 bSync "${QTAG}_.*"
 
-ERR2=$(parseLSF.py LSF/*/* | fgrep -v Succ)
+scatter=$(echo $SID | md5sum - | perl -ne 'print substr($_,0,2)')
+LSFDIR=LSF/$scatter/$SID
+
+ERR2=$(parseLSF.py $LSFDIR/*.out | fgrep -v Succ)
 if [ "$ERR2" != "" ]; then
     echo "ERROR @ Stage2"
     parseLSF.py LSF/*/*| fgrep -v Succ
@@ -111,17 +113,14 @@ echo "Running $SDIR/selectBestMatch"
 echo
 echo
 
-$SDIR/selectBestMatch out
-# Take best match from T/N Pairs
-#cat pipeline/*_sample_pairing.txt | awk '{print $2"__"$1}' | fgrep -v POOL >bestMatches____out
+$SDIR/selectBestMatch $WDIR/out $WDIR
 
-mkdir outAll
-rsync -avP --link-dest=../out out/ outAll
+mkdir -p $WDIR/outAll
+rsync -avP --link-dest=../out $WDIR/out/ $WDIR/outAll
 
-ls -d out/s_/*/* | fgrep -vf bestMatches____out | xargs -t rm -rf
+ls -d $WDIR/out/s_/*/* | fgrep -vf $WDIR/bestMatches*${SID}*_out | xargs -t rm -rf
 
-GENOME=$($SDIR/GenomeData/getGenomeBuildBAM.sh $(ls $BAMDIR/*.bam | head -1))
-find bamRelabel | fgrep .bam | head -1
+GENOME=$($SDIR/GenomeData/getGenomeBuildBAM.sh $TUMOR)
 if [ -e pipeline/*request.txt ]; then
     PROJNO=$(echo $(ls pipeline/*request.txt) | perl -ne 'm|/(Proj_.*)_request|; print $1')
 else
@@ -129,7 +128,7 @@ else
 fi
 
 if [[ $GENOME =~ b37|hg19 ]]; then
-    ASSAY=Exome
+    ASSAY=IMPACT505
 elif [[ $GENOME =~ ^mm10 ]]; then
     ASSAY=M-IMPACT_v1
 else
@@ -144,7 +143,8 @@ echo "==========================================================================
 echo "Running $SDIR/postProcess.sh"
 echo
 echo
-echo $SDIR/postProcess.sh $ASSAY $PROJNO
-$SDIR/postProcess.sh $ASSAY $PROJNO
+$SDIR/postProcess.sh $ASSAY $PROJNO/$SID $WDIR
 
-convert $PROJNO/*png $PROJNO/${PROJNO}___seqSeg.pdf
+PTAG=$(echo $PROJNO | tr '/' '_')
+
+convert $PROJNO/$SID/*png $PROJNO/${PTAG}___seqSeg.pdf
