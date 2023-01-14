@@ -10,8 +10,8 @@ SDIR=ifelse(SDIR=="","seqCNA",SDIR)
 source(file.path(SDIR,"include/tools.R"))
 
 args=commandArgs(trailing=T)
-if(len(args)!=1) {
-    cat("usage: root of seqCNA output directories\n")
+if(len(args)!=2) {
+    cat("usage: selectBestMatch ROOT WDIR\n   ROOT = root of seqCNA output directories\n")
     quit()
 }
 
@@ -47,4 +47,5 @@ bestMatchDirs = tbl %>%
     select(bestMatchDir) %$%
     as.vector(bestMatchDir)
 
-write(bestMatchDirs,paste0("bestMatches____",gsub("/","___",args[1])))
+WDIR=args[2]
+write(bestMatchDirs,file.path(WDIR,paste0("bestMatches____",gsub("/","___",args[1]))))
