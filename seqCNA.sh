@@ -1,7 +1,8 @@
 #!/bin/bash
 
-if [ "$#" -lt "2" ]; then
-    echo "usage: seqCNA.sh BINSIZE normal.bam tumor.bam [SampleID]"
+if [ "$#" -lt "4" ]; then
+    echo "usage: seqCNA.sh BINSIZE normal.bam tumor.bam WDIR"
+    echo "NUM=" $#
     exit
 fi
 
@@ -10,6 +11,7 @@ SDIR="$( cd "$( dirname "$0" )" && pwd )"
 BINSIZE=$1
 normal=$2
 tumor=$3
+WDIR=$4
 
 tumorId=$($SDIR/getSampleTag.sh $tumor)
 
@@ -43,23 +45,20 @@ case $GENOME_TAG in
     ;;
 esac
 
-if [ "$#" == "4" ]; then
-    sID=$4
-else
-    sID=${tumorId}__$($SDIR/getSampleTag.sh $normal)
-fi
+scatter=$(echo $tumorId | md5sum - | perl -ne 'print substr($_,0,2)')
+LSFDIR=LSF/$scatter/$tumorId
+mkdir -p $LSFDIR
 
-scatter=$(echo $tumorId | perl -ne 'print substr($_,0,2)')
-mkdir -p LSF/$scatter
+sID=${tumorId}__$($SDIR/getSampleTag.sh $normal)
 
-oDir=out/$scatter/$tumorId/$sID
+oDir=$WDIR/out/$scatter/$tumorId/$sID
 
-bsub -o LSF/$scatter -J ${QTAG}_WGSCNA_$sID -W 59 -n 2 -R "rusage[mem=16]" \
+bsub -o $LSFDIR -J ${QTAG}_WGSCNA_$sID -W 59 -n 2 -R "rusage[mem=16]" \
     $SDIR/getPairedCounts GENOME=$GENOME NORMAL=$normal TUMOR=$tumor \
         ODIR=$oDir \
         SAMPLEID=$sID
 
-bsub -o LSF/$scatter -J ${QTAG}_SEQSEG_$sID -W 59 -n 2 -R "rusage[mem=16]" -w "post_done(${QTAG}_WGSCNA_$sID)" \
+bsub -o $LSFDIR -J ${QTAG}_SEQSEG_$sID -W 59 -n 2 -R "rusage[mem=16]" -w "post_done(${QTAG}_WGSCNA_$sID)" \
     $SDIR/seqSegment \
         BINSIZE=$BINSIZE \
         ODIR=$oDir \
