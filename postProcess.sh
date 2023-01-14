@@ -2,8 +2,8 @@
 
 export SDIR="$( cd "$( dirname "$0" )" && pwd )"
 
-if [ "$#" -lt "1" ]; then
-    echo "usage: postProcess.sh AssayName [ProjectName]"
+if [ "$#" -lt "3" ]; then
+    echo "usage: postProcess.sh AssayName ProjectName WDIR"
     echo
     echo "Assays"
     ls -1 $SDIR/resources/geneAnnotations | fgrep -v src | awk '{print "   "$1}'
@@ -12,11 +12,7 @@ if [ "$#" -lt "1" ]; then
 fi
 
 
-if [ "$#" -ge "2" ]; then
-    projectName=$2
-else
-    projectName=$($SDIR/extractProjectIDFromPath.py $(pwd -P))
-fi
+projectName=$2
 echo
 echo projectName=$projectName
 echo
@@ -32,23 +28,28 @@ if [ ! -e "$SDIR/resources/geneAnnotations/$assay" ]; then
     exit
 fi
 
-mkdir $projectName
-find out | fgrep .png | xargs -I % cp % $projectName
-find out | fgrep .seg | head -1  | xargs head -1 | cut -f-6 >$projectName/${projectName}___IGV.seg
-find out | fgrep .seg | xargs cut -f-6 | fgrep -v "loc.start" >>$projectName/${projectName}___IGV.seg
+WDIR=$3
+
+mkdir -p $projectName
+
+PTAG=$(echo $projectName | tr '/' '_')
+
+find $WDIR/out | fgrep .png | xargs -I % cp % $projectName
+find $WDIR/out | fgrep .seg | head -1  | xargs head -1 | cut -f-6 >$projectName/${PTAG}___IGV.seg
+find $WDIR/out | fgrep .seg | xargs cut -f-6 | fgrep -v "loc.start" >>$projectName/${PTAG}___IGV.seg
 
 # Try to infer genome and fix X chromosome
 echo
 echo "fixXChrom"
 echo
 
-Rscript --no-save $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
+Rscript --no-save $SDIR/fixXChrom.R $projectName/${PTAG}___IGV.seg
 
 echo
 echo "getGeneCalls"
 echo
 
-find out -type f  | fgrep .seg | perl -pe 's|/[^/]+$|\n|' >lodir
+find $WDIR/out -type f  | fgrep .seg | perl -pe 's|/[^/]+$|\n|' >$WDIR/lodir
 
-$SDIR/getGeneCalls ASSAY=$assay INPUTS=lodir ODIR=$projectName
+$SDIR/getGeneCalls ASSAY=$assay INPUTS=$WDIR/lodir ODIR=$projectName
 
