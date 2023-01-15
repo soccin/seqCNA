@@ -118,7 +118,7 @@ $SDIR/selectBestMatch $WDIR/out $WDIR
 mkdir -p $WDIR/outAll
 rsync -avP --link-dest=../out $WDIR/out/ $WDIR/outAll
 
-ls -d $WDIR/out/s_/*/* | fgrep -vf $WDIR/bestMatches*${SID}*_out | xargs -t rm -rf
+ls -d $WDIR/out/*/*/* | fgrep -vf $WDIR/bestMatches*${SID}*_out | xargs -t rm -rf
 
 GENOME=$($SDIR/GenomeData/getGenomeBuildBAM.sh $TUMOR)
 if [ -e pipeline/*request.txt ]; then
@@ -145,6 +145,4 @@ echo
 echo
 $SDIR/postProcess.sh $ASSAY $PROJNO/$SID $WDIR
 
-PTAG=$(echo $PROJNO | tr '/' '_')
-
-convert $PROJNO/$SID/*png $PROJNO/${PTAG}___seqSeg.pdf
+convert $PROJNO/$SID/*png $PROJNO/$SID/${PROJNO}_${SID}___seqSeg.pdf

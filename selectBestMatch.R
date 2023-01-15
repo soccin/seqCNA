@@ -48,4 +48,4 @@ bestMatchDirs = tbl %>%
     as.vector(bestMatchDir)
 
 WDIR=args[2]
-write(bestMatchDirs,file.path(WDIR,paste0("bestMatches____",gsub("/","___",args[1]))))
+write(basename(bestMatchDirs),file.path(WDIR,paste0("bestMatches____",gsub("/","___",args[1]))))
