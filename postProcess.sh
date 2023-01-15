@@ -38,6 +38,9 @@ find $WDIR/out | fgrep .png | xargs -I % cp % $projectName
 find $WDIR/out | fgrep .seg | head -1  | xargs head -1 | cut -f-6 >$projectName/${PTAG}___IGV.seg
 find $WDIR/out | fgrep .seg | xargs cut -f-6 | fgrep -v "loc.start" >>$projectName/${PTAG}___IGV.seg
 
+mkdir -p $projectName/out
+cp -al $WDIR/out/*/*/* $projectName/out
+
 # Try to infer genome and fix X chromosome
 echo
 echo "fixXChrom"
