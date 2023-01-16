@@ -1,2 +1,2 @@
-find . | fgrep GeneMatrix | cut -f3 -d/ | awk '{print "/"$1"/"}' | tee badNormals1 
-find . | fgrep -f badNormals1  | fgrep .out | cut -f5 -d/ >badPairs
+find Proj_13375 | fgrep GeneMatrix | cut -f2 -d/ | awk '{print "/"$1"/"}' | tee badNormals1 
+find Proj_13375 | fgrep -f badNormals1  | fgrep .out | cut -f4 -d/ >badPairs
