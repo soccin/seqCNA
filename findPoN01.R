@@ -1,10 +1,16 @@
+args=commandArgs(trailing=T)
+if(len(args)<1) {
+    cat("\n\tusage: findPoN01.R resultsDir\n\n")
+    quit()
+}
+
 require(tidyverse)
 source("seqCNA/include/tools.R")
 
 badPairs=scan("badPairs","")
 badNormals=scan("badNormals1","") %>% gsub("/","",.)
 
-xx=fs::dir_ls(".",recur=T,regex="\\.out$") %>% map(parseSeqCNAOutFile) %>% map(as_tibble) %>% bind_rows %>% type_convert
+xx=fs::dir_ls(args[1],recur=T,regex="\\.out$") %>% map(parseSeqCNAOutFile) %>% map(as_tibble) %>% bind_rows %>% type_convert
 
 qL.MAD=quantile(xx$global.mad,0.025)
 qH.MAD=quantile(xx$global.mad,0.975)
