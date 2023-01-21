@@ -106,10 +106,12 @@ suppressPackageStartupMessages({
 chromOrder=c(seq(1:99),"X","Y","M","MT")
 
 QCUT=0.05
-LOGR_CUT=1
+#LOGR_CUT=1
+LOGR_DEL_CUT=log2(1/2)
+LOGR_AMP_CUT=log2(3/2)
 
 geneEvents <- as_tibble(ff) %>%
-    filter(FDR<QCUT & abs(seg.mean)>LOGR_CUT) %>%
+    filter(FDR < QCUT & ((seg.mean <= LOGR_DEL_CUT) | (seg.mean >= LOGR_AMP_CUT)) ) %>%
     mutate(seg.mean=round(seg.mean,3)) %>%
     spread(ID,seg.mean,fill=NA) %>%
     mutate(chrom=factor(chrom,levels=chromOrder)) %>%
@@ -159,7 +161,7 @@ write_csv(geneCalls,file.path(args$ODIR,paste0("GeneMatrix.csv")))
 
 geneTable <- as_tibble(ff) %>%
     filter(transcript %in% canonicalIsoforms) %>%
-    filter(FDR<QCUT & abs(seg.mean)>LOGR_CUT) %>%
+    filter(FDR < QCUT & ((seg.mean <= LOGR_DEL_CUT) | (seg.mean >= LOGR_AMP_CUT)) ) %>%
     arrange(seg.mean) %>%
     distinct(ID,gene,transcript,.keep_all=T) %>%
     select(ID,gene,transcript,chrom,loc.start,loc.end,seg.mean,FDR) %>%

@@ -145,4 +145,12 @@ echo
 echo
 $SDIR/postProcess.sh $ASSAY $PROJNO/$SID $WDIR
 
+#
+# ReRun Post
+# for WDIR in _scratch/*/*; do
+#     SID=$(basename $WDIR);
+#     bsub -o LSF.POST/ -J POST -n 5 -W 59 $SDIR/postProcess.sh $ASSAY $PROJNO/$SID $WDIR;
+# done
+#
+
 convert $PROJNO/$SID/*png $PROJNO/$SID/${PROJNO}_${SID}___seqSeg.pdf
