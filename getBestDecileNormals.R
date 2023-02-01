@@ -26,5 +26,14 @@ dec=compute_deciles(bam)
 
 dM=deciles %>% filter(Sample!=names(dec)) %>% spread(Decile,Value) %>% data.frame %>% column_to_rownames("Sample") %>% t
 
-bestNormals=names(sort(apply(dM,2,function(x){sum((x-dec[[1]])^2)})) %>% head(20))
+ssd=sort(apply(dM,2,function(x){sum((x-dec[[1]])^2)}))
+
+if(Sys.getenv("NUM_NORMALS")=="") {
+    NUM_NORMALS=20
+} else {
+    NUM_NORMALS=as.numeric(Sys.getenv("NUM_NORMALS"))
+}
+
+bestNormals=names(sort(ssd[ssd!=0])) %>% head(NUM_NORMALS)
+
 write(bestNormals,file.path(WDIR,cc("bestNormals","_",get_sm_tag(bam))))

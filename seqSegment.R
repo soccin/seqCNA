@@ -131,18 +131,17 @@ write.table(output,
 ##################################################################################
 ##################################################################################
 
+stats=list()
 outFile=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".out"))
 writeVariable<-function(varName) {
     cat(varName,"=",get(varName),"\n",file=outFile,append=T)
+    stats[[varName]] <<- get(varName)
 }
-cat("##############################################\n",file=outFile)
 
 writeVariable("VERSION")
 GITTag=getGITTag(SDIR)
 writeVariable("GITTag")
 writeVariable("sampleId")
-countFile=args$COUNTS
-writeVariable("countFile")
 genome=cArgs$GENOME
 writeVariable("genome")
 arg.binsize=args$BINSIZE
@@ -284,4 +283,11 @@ png(file=pFile,type="cairo",width=1150,height=800,pointsize=16)
 plot1Panels(out)
 
 dev.off()
+
+countFile=args$COUNTS
+writeVariable("countFile")
+
+readr::write_csv(as.data.frame(stats),gsub("\\.out$",".csv",outFile))
+
+#save.image("IMAGE.RData")
 
