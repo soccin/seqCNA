@@ -145,7 +145,7 @@ geneCalls <- geneEvents %>%
     group_by(gene,transcript) %>%
     summarize_at(vars(matches("^s_")),robustMin)
 
-if(args$ASSAY=="M-IMPACT_v1") {
+if(args$ASSAY=="M-IMPACT_v2") {
     mm.genes=convertGeneSymbolsMouseToHuman(geneCalls$gene) %>%
         tibble %>%
         distinct(MGI.symbol,.keep_all=T)
@@ -168,7 +168,7 @@ geneTable <- as_tibble(ff) %>%
     arrange(ID,chrom,loc.start)
 
 
-if(args$ASSAY=="M-IMPACT_v1") {
+if(args$ASSAY=="M-IMPACT_v2") {
     geneTable=geneTable %>%
         left_join(mm.genes,by=c(gene="MGI.symbol")) %>%
         select(ID,gene,HGNC.gene=HGNC.symbol,everything())
