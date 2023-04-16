@@ -41,7 +41,7 @@ canonicalAnnote=o1 %>% filter(transcript_id %in% canonicalT)
 annote=gtf %>%
     filter(transcript_id %in% canonicalT) %>%
     mutate(exon_number=paste0("exon",exon_number)) %>%
-    select(chrom=X1,start=X2,end=X3,gene=gene_name,transcript=transcript_id,exon=exon_number) %>%
+    select(chrom=X1,start=X2,stop=X3,gene=gene_name,transcript=transcript_id,exon=exon_number) %>%
     filter(chrom!="X") %>% type_convert %>% arrange(chrom,start)
 
 write_tsv(annote,"gene_annotations.txt.gz")
