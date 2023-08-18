@@ -42,7 +42,8 @@ echo
 echo "fixXChrom"
 echo
 
-Rscript --no-save $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
+Rscript_4x=/juno/res/bic/shared/Multiomyx/Projects/GBM/opt/bin/Rscript
+$Rscript_4x $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
 
 echo
 echo "getGeneCalls"
