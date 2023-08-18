@@ -37,7 +37,10 @@ tbl %<>% type_convert
 
 bestPairs = tbl %>%
     mutate(TumorId=gsub("__s_.*","",sampleId)) %>%
-    group_by(TumorId) %>% top_n(1,desc(rms.logr)) %>%
+    mutate(NormalId=gsub(".*__s_","s_",sampleId)) %>%
+    filter(TumorId!=NormalId) %>%
+    group_by(TumorId) %>%
+    top_n(1,desc(rms.logr)) %>%
     ungroup %>%
     select(sampleId)
 
