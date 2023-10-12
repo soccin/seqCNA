@@ -6,6 +6,10 @@ Copynumber analysis for sequence based assays (shallow Whole Genome sequncing, o
 
 _N.B._ these script use a forked version of `seqDNAcopy` which has been updated to work with both human and mouse.
 
+### Normals
+
+- `IDT_Exome_v2_Normal`: `~/Work/Pipelines/SeqCNV`
+
 ### getPairedCounts
 
 ```
