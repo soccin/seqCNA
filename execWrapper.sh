@@ -1,5 +1,29 @@
 #!/bin/bash
 
+#
+# Need to go back to R version 3
+#
+# First remove current R and R env vars
+#
+# This is done in PIPE.sh
+#
+# export PATH=$(echo $PATH | tr ':' '\n' | fgrep -v /R/R | tr '\n' ':')
+# unset R_LIBS
+# unset R_VERSION
+
+# #
+# # Now load R/3.x
+# #
+
+# module load R/R-3.6.1
+# MAJOROS=7
+# export R_VERSION=$(R --version | head -1 | awk '{print $3}')
+# export R_LIBS=/home/socci/lib/R/CentOS${MAJOROS}/$R_VERSION
+
+# R --version
+
+
+
 export SDIR="$( cd "$( dirname "$0" )" && pwd )"
 export SNAME=$(basename $0)
 
