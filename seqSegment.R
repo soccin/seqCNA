@@ -57,12 +57,25 @@ cArgs=counts$args
 
 
 if(tolower(args$BINSIZE)=="auto") {
+
     binSize=50000
     bins=bb$chrom + floor(bb$pos/binSize)*binSize/2^28
     nCounts=tapply(bb$normal,bins,sum)
-    quantile(nCounts)
+    if(quantile(nCounts,.25)<1) {
+        cat("\n\n\tInitial binSize guess to small, trying again with binSize=500000\n\n")
+        binSize=500000
+        bins=bb$chrom + floor(bb$pos/binSize)*binSize/2^28
+        nCounts=tapply(bb$normal,bins,sum)
+        if(quantile(nCounts,.25)<1) {
+            cat("\n\n\tFATAL ERROR unable to get auto binsize to work\n\n")
+            rlang::abort()
+        }
+    }
+
     binSize=100*floor(binSize/quantile(nCounts,.25))
+
     cat("# adjusted binSize =",binSize,"\n")
+
 } else {
     binSize=as.numeric(args$BINSIZE)
     cat("# manually set binsize =",binSize,"\n")
