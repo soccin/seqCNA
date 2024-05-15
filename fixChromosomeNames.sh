@@ -34,7 +34,7 @@ else
     if [ -e $(realpath ${IBAM/.bam/.bai}) ]; then
         ln -s $(realpath ${IBAM/.bam/.bai}) $ODIR/${OBAM/.bam/.bai}
     elif [ -e $(realpath ${IBAM}.bai) ]; then
-        ln -s $(realpath ${IBAM}.bai) $ODIR
+        ln -s $(realpath ${IBAM}.bai) $ODIR/${OBAM/.bam/.bai}
     else
         echo -e "\n\tFATAL ERROR: No BAM INDEX File Found\n"
         echo -e "\t\t$IBAM\n\n"
