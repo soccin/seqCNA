@@ -16,6 +16,7 @@ unset R_VERSION
 #
 
 module load R/R-3.6.1
+module load samtools
 MAJOROS=7
 export R_VERSION=$(R --version | head -1 | awk '{print $3}')
 export R_LIBS=/home/socci/lib/R/CentOS${MAJOROS}/$R_VERSION
@@ -99,6 +100,10 @@ ls $BAMDIR/*.bam \
         bsub -o LSF.FIX/ -J $FIXTAG -W 59 $SDIR/fixChromosomeNames.sh
 
 bSync $FIXTAG
+
+echo "Done with fixChromosomeNames"
+echo
+
 
 ERR1=$(parseLSF.py LSF.FIX/* | fgrep -v Succ)
 
