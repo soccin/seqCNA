@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 SDIR="$( cd "$( dirname "$0" )" && pwd )"
 
 IBAM=$1
@@ -29,6 +31,14 @@ else
     #
 
     ln -s $(realpath $IBAM) $ODIR/$OBAM
-    ln -s $(realpath ${IBAM/.bam/.bai}) $ODIR/${OBAM/.bam/.bai}
+    if [ -e $(realpath ${IBAM/.bam/.bai}) ]; then
+        ln -s $(realpath ${IBAM/.bam/.bai}) $ODIR/${OBAM/.bam/.bai}
+    elif [ -e $(realpath ${IBAM}.bai) ]; then
+        ln -s $(realpath ${IBAM}.bai) $ODIR
+    else
+        echo -e "\n\tFATAL ERROR: No BAM INDEX File Found\n"
+        echo -e "\t\t$IBAM\n\n"
+        exit 1
+    fi
 
 fi
