@@ -181,8 +181,8 @@ fi
 
 if [[ $GENOME =~ b37|hg19 ]]; then
     ASSAY=Exome
-elif [[ $GENOME =~ ^mm10 ]]; then
-    ASSAY=M-IMPACT_v2
+elif [[ $GENOME =~ ^mm10|GRC_m38 ]]; then
+    ASSAY=Mouse-Twist
 else
     echo
     echo "Unknown geneome"
