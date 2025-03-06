@@ -4,6 +4,8 @@ set -eu
 
 SDIR="$( cd "$( dirname "$0" )" && pwd )"
 
+module load samtools/1.19.2
+
 IBAM=$1
 BASE=$(basename $IBAM | sed 's/.bam//')
 OBAM=${BASE}__relabel.bam
