@@ -1,6 +1,10 @@
 # CopyNumber analysis from sequence data using seqDNAcopy
 
-## Branch: master
+## Branch: feat/circ-dna
+
+Customization to work with circular dna project (15235)
+
+
 
 Copynumber analysis for sequence based assays (shallow Whole Genome sequncing, or targeted assays) using `seqDNAcopy` package from `seshanv@mskcc.org`
 
