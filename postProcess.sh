@@ -42,8 +42,15 @@ echo
 echo "fixXChrom"
 echo
 
-Rscript_4x=/juno/res/bic/shared/Multiomyx/Projects/GBM/opt/bin/Rscript
-$Rscript_4x $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
+#
+# Need version 4 of R but need to clean up env from pipe.sh
+#
+
+module load R/R-4.2.2
+export R_VERSION=$(R --version | head -1 | awk '{print $3}')
+export R_LIBS=/home/socci/lib/R/CentOS7/$R_VERSION
+
+Rscript $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
 
 echo
 echo "getGeneCalls"
