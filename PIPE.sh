@@ -97,7 +97,7 @@ echo
 FIXTAG=${TAG}_FIX_${UUID}
 ls $BAMDIR/*.bam \
     | xargs -n 1 \
-        bsub -o LSF.FIX/ -J $FIXTAG -W 59 $SDIR/fixChromosomeNames.sh
+        bsub -o LSF.FIX/ -J $FIXTAG -W 24:00 $SDIR/fixChromosomeNames.sh
 
 bSync $FIXTAG
 
