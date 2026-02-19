@@ -1,4 +1,8 @@
-In the folder
+The results for the DNA copy number pipeline are now ready. You can access them on the server at:
+
+ https://bicdelivery.mskcc.org/project/${PROJECTNO}/seqcna/r_001
+
+the folder
 
     seqcna
 
@@ -11,11 +15,11 @@ each sample
 algorithm. This file can be loaded for view in IGV
 a genome wide figure from IGV
 
-- GeneMatrix.csv, SegmentMatrix.csv, ${PROJECTNO}___GeneTable.xlsx
+- GeneMatrix.csv, SegmentMatrix.csv, Proj_${PROJECTNO}___GeneTable.xlsx
 This files have gene level and segment level _significant_ calls where
 segments scored to be significant as having an FDR < 0.05 and abs(log2R)>1
 
-  * ${PROJECTNO}___GeneTable.xlsx has significant gene calls with the
+  * Proj_${PROJECTNO}___GeneTable.xlsx has significant gene calls with the
     spanning segments along with their FDR value and log2 Ratios
 
   * SegmentMatrix.csv, GeneMatrix.csv have the gene level significant
