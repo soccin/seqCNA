@@ -256,13 +256,17 @@ plot1Panels <- function(out) {
 
 
     label1=paste(
-            "NumBins =",
+            "Bin Size =",
+            formatC(as.numeric(arg.binsize),format="d",big.mark=","),
+            "Num Bins =",
             formatC(nrow(out$data),format="d",big.mark=","),
-            "MAD =",
-            formatC(global.mad,format="f"),
-            "nSegs =",formatC(numSegments,format="d",big.mark=","),
-            "RMSD.Segs.noX =",formatC(RMSD.seg.mean.AUTO,format="f")
+            # "MAD =",
+            # formatC(global.mad,format="f"),
+            "nSegs =",formatC(numSegments,format="d",big.mark=",")#,
+            #"RMSD.Segs.noX =",formatC(RMSD.seg.mean.AUTO,format="f")
             )
+
+    cat("\n\tlabel1 =",label1,"\n")
 
     label2=paste(
             "sum.logr.sq =",
@@ -272,7 +276,6 @@ plot1Panels <- function(out) {
             "rms.logr.flat =",
             formatC(rms.logr.flat,format="f")
             )
-
     maxLabelLen=max(strwidth(label1,cex=1.12),strwidth(label2,cex=1.12))
     THEIGHT=strheight("XXX",cex=1.12)
 
@@ -282,7 +285,7 @@ plot1Panels <- function(out) {
 
     text(0.5,YLIM+.5-1,label1,pos=4,cex=1.12)
 
-    text(0.5,YLIM+.5-1.4,label2,pos=4,cex=1.12)
+    #text(0.5,YLIM+.5-1.4,label2,pos=4,cex=1.12)
 
     box()
 

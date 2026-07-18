@@ -34,7 +34,7 @@ function usage {
     exit
 }
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -lt 1 ]; then
     usage
 fi
 
@@ -43,18 +43,25 @@ UUID=$(uuidgen -t | cut -d- -f-4)
 export QTAG=${TAG}_${UUID}
 
 ASSAY=$(echo $1 | tr '[a-z]' '[A-Z]')
-if [ "$ASSAY" == "SWGS" ]; then
-    BINSIZE=auto
-    echo
-    echo "Setting BINSIZE=auto"
-elif [ "$ASSAY" == "TARGETTED" ]; then
-    BINSIZE=100
-    echo
-    echo "Setting BINSIZE=100"
+
+BINSIZE=$2
+
+if [ "$BINSIZE" == "" ]; then
+    if [ "$ASSAY" == "SWGS" ]; then
+        BINSIZE="auto"
+        echo
+        echo "Setting BINSIZE=auto"
+    elif [ "$ASSAY" == "TARGETTED" ]; then
+        BINSIZE=100
+        echo
+        echo "Setting BINSIZE=100"
+    else
+        echo
+        echo "Unknown assay type ["$ASSAY"]"
+        usage
+    fi
 else
-    echo
-    echo "Unknown assay type ["$ASSAY"]"
-    usage
+    echo "Setting BINSIZE=${BINSIZE}"
 fi
 
 BAMDIR=$(ls -d pipeline/* | egrep "alignments|bam")
@@ -135,14 +142,16 @@ echo
 
 for tumor in $(cat tumorBams); do
     for normal in $(cat normalBams); do
-        $SDIR/seqCNA.sh $BINSIZE $normal $tumor
-        EXITCODE=$?
-        if [ "$EXITCODE" != "0" ]; then
-            echo
-            echo "ERROR in "$SDIR/seqCNA.sh $BINSIZE $normal $tumor
-            echo "CODE = "$EXITCODE
-            echo
-            exit 1
+        if [ "$tumor" != "$normal" ]; then
+            $SDIR/seqCNA.sh $BINSIZE $normal $tumor
+            EXITCODE=$?
+            if [ "$EXITCODE" != "0" ]; then
+                echo
+                echo "ERROR in "$SDIR/seqCNA.sh $BINSIZE $normal $tumor
+                echo "CODE = "$EXITCODE
+                echo
+                exit 1
+            fi
         fi
     done
 done
