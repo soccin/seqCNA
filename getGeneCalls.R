@@ -117,8 +117,8 @@ geneEvents <- as_tibble(ff) %>%
 
 if(nrow(geneEvents)==0) {
     readmeFile=file.path(args$ODIR,"README.txt")
-    cat("\n    No siginificant CopyNumber Changes\n\n",file=readmeFile)
-    cat("\n    No siginificant CopyNumber Changes\n\n")
+    cat("\n    No significant copy number changes\n\n",file=readmeFile)
+    cat("\n    No significant copy number changes\n\n")
     quit()
 }
 

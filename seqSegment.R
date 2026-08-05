@@ -120,7 +120,7 @@ rms.logr.flat=sqrt(mean((out$dat[,3]-probe.seg.values)^2))
 frac.logR.ltNeg2=mean(out$dat[,3] < -2)
 
 #
-# mean of diploid cluster and sd for dmp-style signifcance
+# mean of diploid cluster and sd for dmp-style significance
 #
 
 cl0.mean <- mean(out$data[probe.cluster.number==out$cluster$diploidClusterNum,3])

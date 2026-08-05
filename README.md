@@ -2,9 +2,9 @@
 
 ## Branch: master
 
-Copynumber analysis for sequence based assays (shallow Whole Genome sequncing, or targeted assays) using `seqDNAcopy` package from `seshanv@mskcc.org`
+Copy number analysis for sequence-based assays (shallow Whole Genome sequencing, or targeted assays) using `seqDNAcopy` package from `seshanv@mskcc.org`
 
-_N.B._ these script use a forked version of `seqDNAcopy` which has been updated to work with both human and mouse.
+_N.B._ these scripts use a forked version of `seqDNAcopy` which has been updated to work with both human and mouse.
 
 ### Normals
 

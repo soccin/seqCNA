@@ -1,9 +1,9 @@
-The results for the DNA copy number pipeline are now ready. You can
-access them on the server at:
+The results for the DNA copy number pipeline are now ready. They are
+attached to this email as a ZIP archive:
 
-    https://bicdelivery.mskcc.org/project/${PROJECTNO}/r_001
+    Proj_${PROJECTNO}_seqcna.zip
 
-in the folder
+which unpacks into the folder
 
     seqcna
 
@@ -28,8 +28,9 @@ You will find the following files:
     includes the data for the spanning segment. GeneMatrix.csv just has
     the gene info
 
-Finally, if you would like the output BAM files for further analysis,
-you can get them in the alignment folder.
+Finally, the output BAM files are too large to send by email. If you
+would like them for further analysis let me know and I will arrange a
+separate transfer.
 
 If you have any questions let me know.
 
