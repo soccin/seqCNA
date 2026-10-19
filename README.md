@@ -1,6 +1,8 @@
 # CopyNumber analysis from sequence data using seqDNAcopy
 
-## Branch: master
+## Branch: JUNO
+
+This is the final version that was run on JUNO.
 
 Copy number analysis for sequence-based assays (shallow Whole Genome sequencing, or targeted assays) using `seqDNAcopy` package from `seshanv@mskcc.org`
 
