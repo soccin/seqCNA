@@ -15,7 +15,8 @@ args=list(
     COUNTS=NULL,
     ODIR=".",
     BINSIZE="auto",
-    MINBINCOUNT=35
+    MINBINCOUNT=35,
+    YLIM=5
     )
 
 cat("###############################################################\n")
@@ -54,13 +55,27 @@ sampleId=counts$param$sampleId
 bb=counts$bb
 cArgs=counts$args
 
+
 if(tolower(args$BINSIZE)=="auto") {
+
     binSize=50000
     bins=bb$chrom + floor(bb$pos/binSize)*binSize/2^28
     nCounts=tapply(bb$normal,bins,sum)
-    quantile(nCounts)
+    if(quantile(nCounts,.25)<1) {
+        cat("\n\n\tInitial binSize guess to small, trying again with binSize=500000\n\n")
+        binSize=500000
+        bins=bb$chrom + floor(bb$pos/binSize)*binSize/2^28
+        nCounts=tapply(bb$normal,bins,sum)
+        if(quantile(nCounts,.25)<1) {
+            cat("\n\n\tFATAL ERROR unable to get auto binsize to work\n\n")
+            rlang::abort()
+        }
+    }
+
     binSize=100*floor(binSize/quantile(nCounts,.25))
+
     cat("# adjusted binSize =",binSize,"\n")
+
 } else {
     binSize=as.numeric(args$BINSIZE)
     cat("# manually set binsize =",binSize,"\n")
@@ -72,6 +87,7 @@ out=seqsegment(bb,sampleid=sampleId,
                 undo.splits="sdundo",undo.SD=undo.SD)
 
 clusterThreshold=0.04
+out.seqseg=out
 out=clustersegs(out,threshold=clusterThreshold)
 
 out$param=list()
@@ -90,8 +106,10 @@ out$param$clusterThreshold=clusterThreshold
 #
 
 probe.seg.values=double(nrow(out$dat))
+probe.cluster.number=integer(nrow(out$dat))
 for(ii in seq(nrow(out$output))) {
     probe.seg.values[out$segRows[ii,1]:out$segRows[ii,2]]=out$output$seg.mean[ii]
+    probe.cluster.number[out$segRows[ii,1]:out$segRows[ii,2]]=out$output$cluster[ii]
 }
 
 global.mad=mad(out$dat[,3]-probe.seg.values)
@@ -101,12 +119,23 @@ rms.logr=sqrt(mean(out$dat[,3]^2))
 rms.logr.flat=sqrt(mean((out$dat[,3]-probe.seg.values)^2))
 frac.logR.ltNeg2=mean(out$dat[,3] < -2)
 
+#
+# mean of diploid cluster and sd for dmp-style significance
+#
+
+cl0.mean <- mean(out$data[probe.cluster.number==out$cluster$diploidClusterNum,3])
+cl0.sd <- sd(out$data[probe.cluster.number==out$cluster$diploidClusterNum,3])
+pVal <- 2*pnorm(abs(out$output$seg.mean-cl0.mean),sd=cl0.sd,lower.tail=F)
+FDR <- p.adjust(pVal,"fdr")
+
 numSegments=nrow(out$output)
 
 save(out,file=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".rda")),compress=T)
 output=out$output
 output$loc.start=output$loc.start*1.e6
 output$loc.end=output$loc.end*1.e6
+output$pValue=pVal
+output$FDR=FDR
 write.table(output,
             file=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".seg")),
             sep="\t",eol="\n",quote=F,row.names=F)
@@ -178,10 +207,10 @@ wiX=output$num.mark[xII]/sum(output$num.mark[xII])
 X.seg.mean.avg=sum(wiX*output$seg.mean[xII])
 writeVariable("X.seg.mean.avg")
 
+YLIM=args$YLIM
 plot2Panels <- function(out) {
     par(mfrow=c(2,1))
 
-    YLIM=3
     plot(out,xmaploc=F,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
 
     abline(h=c(-1,1,log2(1.5)),lty=2,col="#333333",lwd=1)
@@ -215,33 +244,47 @@ plot2Panels <- function(out) {
 
 plot1Panels <- function(out) {
 
-    YLIM=3
-    plot(out,xmaploc=F,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
+    plot(out,xmaploc=T,ylim=YLIM*c(-1,1),pt.cols=c("#B5D7E4","#BEBEBE"))
 
     abline(h=c(-1,1,log2(1.5)),lty=2,col="#333333",lwd=1)
     abline(h=global.mad*c(-1,1),lty=3,col=1)
 
-    text(0.5,YLIM+.5-1,
-        paste(
+    chrom.max=tapply(out$data$maploc,out$data$chrom,max)
+    abline(v=c(0,cumsum(chrom.max)),lty=2,lwd=2,col="#666666")
+    text(cumsum(chrom.max)-chrom.max/2,-YLIM,unique(out$data$chrom),cex=0.8)
+
+
+
+    label1=paste(
             "NumBins =",
             formatC(nrow(out$data),format="d",big.mark=","),
             "MAD =",
             formatC(global.mad,format="f"),
             "nSegs =",formatC(numSegments,format="d",big.mark=","),
             "RMSD.Segs.noX =",formatC(RMSD.seg.mean.AUTO,format="f")
-            ),
-        pos=4,cex=1.12)
+            )
 
-    text(0.5,YLIM+.5-1.4,
-        paste(
+    label2=paste(
             "sum.logr.sq =",
             formatC(sum.logr.sq,format="f"),
             "rms.logr =",
             formatC(rms.logr,format="f"),
             "rms.logr.flat =",
             formatC(rms.logr.flat,format="f")
-            ),
-        pos=4,cex=1.12)
+            )
+
+    maxLabelLen=max(strwidth(label1,cex=1.12),strwidth(label2,cex=1.12))
+    THEIGHT=strheight("XXX",cex=1.12)
+
+    rect(-10,YLIM+.5-1+THEIGHT,maxLabelLen+0.5,YLIM+.5-1.4-THEIGHT,col="white",border=NA)
+
+    rect(0,YLIM+.5-1+.1,maxLabelLen+0.5,YLIM+.5-1.4-.1,col="white",border=NA)
+
+    text(0.5,YLIM+.5-1,label1,pos=4,cex=1.12)
+
+    text(0.5,YLIM+.5-1.4,label2,pos=4,cex=1.12)
+
+    box()
 
 }
 

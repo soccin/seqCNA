@@ -15,8 +15,11 @@ fi
 if [ "$#" -ge "2" ]; then
     projectName=$2
 else
-    projectName=$(basename $PWD)
+    projectName=$($SDIR/extractProjectIDFromPath.py $(pwd -P))
 fi
+echo
+echo projectName=$projectName
+echo
 
 assay=$1
 if [ ! -e "$SDIR/resources/geneAnnotations/$assay" ]; then
@@ -33,10 +36,25 @@ mkdir $projectName
 find out | fgrep .png | xargs -I % cp % $projectName
 find out | fgrep .seg | head -1  | xargs head -1 | cut -f-6 >$projectName/${projectName}___IGV.seg
 find out | fgrep .seg | xargs cut -f-6 | fgrep -v "loc.start" >>$projectName/${projectName}___IGV.seg
-Rscript --no-save $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
 
 # Try to infer genome and fix X chromosome
+echo
+echo "fixXChrom"
+echo
 
+#
+# Need version 4 of R but need to clean up env from pipe.sh
+#
+
+module load R/R-4.2.2
+export R_VERSION=$(R --version | head -1 | awk '{print $3}')
+export R_LIBS=/home/socci/lib/R/CentOS7/$R_VERSION
+
+Rscript $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
+
+echo
+echo "getGeneCalls"
+echo
 
 find out -type f  | fgrep .seg | perl -pe 's|/[^/]+$|\n|' >lodir
 

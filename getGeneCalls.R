@@ -2,6 +2,20 @@
 # getGeneCalls.R
 #
 
+convertGeneSymbolsMouseToHuman <- function(mgg) {
+
+    source(file.path(SDIR,"convert_mouse_to_human.R"))
+
+    mgg=tibble(Gene=unique(mgg))
+    genesV2=convert_mouse_to_human(mgg) %>%
+        rename(HGNC.symbol=Gene) %>%
+        bind_cols(mgg) %>%
+        rename(MGI.symbol=Gene)
+
+    genesV2
+
+}
+
 VERSION="5.dev"
 
 SNAME=Sys.getenv("SNAME")
@@ -53,6 +67,8 @@ geneAnnoteFile=file.path(
     "gene_annotations.txt.gz")
 
 geneDb=fread(cmd=paste0("zcat ", geneAnnoteFile))
+geneDb$chrom=as.character(geneDb$chrom)
+
 setkey(geneDb,chrom,start,stop)
 
 getSegFileFromOutDir <- function(odir) {
@@ -62,6 +78,7 @@ getSegFileFromOutDir <- function(odir) {
 segs=rbindlist(lapply(lapply(outDirs,getSegFileFromOutDir),fread))
 segs$chrom=as.character(segs$chrom)
 setkey(segs,chrom,loc.start,loc.end)
+
 
 ff=foverlaps(geneDb,segs)
 
@@ -77,25 +94,36 @@ ff=ff[!is.na(ID)]
 ff=ff[order(ff$seg.mean),]
 ff=ff[!duplicated(ff,by=c("ID","gene"))]
 
-require(dtplyr)
-require(dplyr)
-require(tidyr)
-require(tibble)
-require(readr)
+suppressPackageStartupMessages({
+    require("biomaRt")
+    require(dtplyr)
+    require(dplyr)
+    require(tidyr)
+    require(tibble)
+    require(readr)
+})
 
 chromOrder=c(seq(1:99),"X","Y","M","MT")
 
-ZCUTOFF=0.4
+QCUT=0.05
+LOGR_CUT=1
 
-as_tibble(ff) %>%
-    mutate(Zscore=(seg.mean)) %>%
-    select(ID,chrom,loc.start,loc.end,gene,transcript,Zscore) %>%
-    filter(abs(Zscore)>=ZCUTOFF) %>%
-    spread(ID,Zscore,fill="") %>%
+geneEvents <- as_tibble(ff) %>%
+    filter(FDR<QCUT & abs(seg.mean)>LOGR_CUT) %>%
+    mutate(seg.mean=round(seg.mean,3)) %>%
+    spread(ID,seg.mean,fill=NA) %>%
     mutate(chrom=factor(chrom,levels=chromOrder)) %>%
-    arrange(chrom,loc.start) -> geneEvents
+    arrange(chrom,loc.start)
 
-write_csv(geneEvents,file.path(args$ODIR,paste0("SegmentMatrix.csv")))
+if(nrow(geneEvents)==0) {
+    readmeFile=file.path(args$ODIR,"README.txt")
+    cat("\n    No significant copy number changes\n\n",file=readmeFile)
+    cat("\n    No significant copy number changes\n\n")
+    quit()
+}
+
+
+write_csv(geneEvents,file.path(args$ODIR,paste0("SegmentMatrix.csv")),na="")
 
 robustMin <- function(xx) {
 
@@ -117,5 +145,35 @@ geneCalls <- geneEvents %>%
     group_by(gene,transcript) %>%
     summarize_at(vars(matches("^s_")),robustMin)
 
+if(args$ASSAY=="M-IMPACT_v2") {
+    mm.genes=convertGeneSymbolsMouseToHuman(geneCalls$gene) %>%
+        tibble %>%
+        distinct(MGI.symbol,.keep_all=T)
+
+    geneCalls=geneCalls %>%
+        left_join(mm.genes,by=c(gene="MGI.symbol")) %>%
+        select(gene,HGNC.gene=HGNC.symbol,everything())
+}
+
 write_csv(geneCalls,file.path(args$ODIR,paste0("GeneMatrix.csv")))
 
+geneTable <- as_tibble(ff) %>%
+    filter(transcript %in% canonicalIsoforms) %>%
+    filter(FDR<QCUT & abs(seg.mean)>LOGR_CUT) %>%
+    arrange(seg.mean) %>%
+    distinct(ID,gene,transcript,.keep_all=T) %>%
+    select(ID,gene,transcript,chrom,loc.start,loc.end,seg.mean,FDR) %>%
+    mutate(chrom=factor(chrom,levels=chromOrder)) %>%
+    mutate(seg.mean=round(seg.mean,3)) %>%
+    arrange(ID,chrom,loc.start)
+
+
+if(args$ASSAY=="M-IMPACT_v2") {
+    geneTable=geneTable %>%
+        left_join(mm.genes,by=c(gene="MGI.symbol")) %>%
+        select(ID,gene,HGNC.gene=HGNC.symbol,everything())
+}
+
+require(openxlsx)
+pID=basename(gsub("/$","",args$ODIR))
+write.xlsx(geneTable,file.path(args$ODIR,paste0(pID,"___","GeneTable.xlsx")))

@@ -66,6 +66,11 @@ case $GENOME_MD5 in
     echo "GRC_m38"
     ;;
 
+    # Transgenic model_MellingI_1911b
+    6e3786e28e9bb34a0c760142e32f835f)
+    echo "mm10-MellingI_1911b"
+    ;;
+
     # Relabling of mm10 chr1=>1
 
     # WT MM10
@@ -77,6 +82,12 @@ case $GENOME_MD5 in
     6a3985296926fb48fd65ba5feae4e640)
     echo "mm10-relabel"
     ;;
+
+    # Transgenic model_MellingI_1911b
+    ec15a0439c7d7d47e079fbb4c4158267)
+    echo "mm10-relabel"
+    ;;
+
 
     *)
     echo "unknown" $GENOME_MD5
