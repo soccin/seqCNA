@@ -1,0 +1,5 @@
+#
+# File names in these pipelines never contain spaces or special
+# characters, so unquoted variables and $(...) are intended.
+#
+disable=SC2086,SC2046
