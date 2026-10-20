@@ -29,7 +29,9 @@
 #
 # One run per project directory. A run started in a directory that
 # already holds one (see checkPreviousRun) stops at once and changes
-# nothing; rerun in a new directory.
+# nothing; rerun in a new directory. The exception is a run that failed
+# in CHECK, before any job was submitted: fix the input and submit again
+# in the same directory.
 #
 # sbatch here is the ~/bin wrapper. Slurm runs a copy of the batch script
 # from its spool directory, so $0 cannot locate this checkout; the wrapper
@@ -338,6 +340,30 @@ fatal() {
 # installed, so the earlier run's records are left as they are; the
 # reason is in this job's log.
 #
+# The exception is a run that failed in CHECK (a typo in tumors, a
+# missing index): it submitted nothing and wrote only $RUNSTATUS and the
+# header of $JOBS, so a new run replaces those records.
+#
+failedInCheck() {
+    local f
+
+    for f in out outAll bamRelabel LSF LSF.FIX; do
+        if [ -e "$f" ]; then
+            return 1
+        fi
+    done
+
+    if [ ! -f "$RUNSTATUS" ] \
+        || ! grep -qx "STATUS=FAILED" $RUNSTATUS \
+        || ! grep -qx "STAGE=CHECK" $RUNSTATUS; then
+        return 1
+    fi
+
+    if [ -e "$JOBS" ] && grep -qv '^#' $JOBS; then
+        return 1
+    fi
+}
+
 checkPreviousRun() {
     local found=""
     local f
@@ -347,6 +373,15 @@ checkPreviousRun() {
             found="$found $f"
         fi
     done
+
+    if [ -n "$found" ] && failedInCheck; then
+        echo
+        echo "    The previous run here failed in CHECK and submitted nothing:"
+        sed -n 's/^MESSAGE=/        /p' $RUNSTATUS
+        echo "    Replacing its records."
+        echo
+        return
+    fi
 
     if [ -n "$found" ]; then
         echo
@@ -771,19 +806,30 @@ writeRunStatus
 # the @RG SM tags (getSampleTag.sh); its directory is
 # out/<first 2 chars of tumorId>/<tumorId>/<pairId>/.
 #
+# A sample may be listed in both tumors and normals (e.g. every sample
+# as a candidate normal for the others). Its self-pair is skipped; the
+# LSF version ran it and selectBestMatch dropped it. Every tumor needs at
+# least one normal other than itself.
+#
 printf 'PAIR\tTUMOR_BAM\tNORMAL_BAM\tODIR\n' >$PAIRS_TSV
 for tumor in $(cat tumorBams); do
     tumorId=$($SDIR/getSampleTag.sh $tumor)
     SAMPLES="$SAMPLES $tumorId"
     scatter=${tumorId:0:2}
+    nTumorPairs=0
     for normal in $(cat normalBams); do
         normalId=$($SDIR/getSampleTag.sh $normal)
         if [ "$tumorId" == "$normalId" ]; then
-            fatal "tumor and normal have the same sample id [$tumorId]: $tumor $normal"
+            echo "    skipping self-pair [$tumorId]: $tumor $normal"
+            continue
         fi
         sID=${tumorId}__${normalId}
         printf '%s\t%s\t%s\t%s\n' "$sID" "$tumor" "$normal" "out/$scatter/$tumorId/$sID" >>$PAIRS_TSV
+        nTumorPairs=$((nTumorPairs + 1))
     done
+    if [ "$nTumorPairs" == "0" ]; then
+        fatal "tumor [$tumorId] has no normal other than itself: $tumor"
+    fi
 done
 SAMPLES=${SAMPLES# }
 NPAIRS=$(awk 'NR > 1' $PAIRS_TSV | wc -l)
@@ -822,7 +868,8 @@ waitStage SEG
 # Stage 4: BEST, in the control job. For each tumor keep the normal with
 # the lowest rms.logr (selectBestMatch writes bestMatches____out). The
 # full set of pairs is hard-linked into outAll/, then the non-best pair
-# directories are removed from out/.
+# directories are removed from out/. The match is on whole lines: as a
+# substring match, the best pair ..._s_N1 would also keep ..._s_N10.
 #
 setStage BEST
 
@@ -838,7 +885,7 @@ fi
 mkdir outAll
 rsync -a --link-dest=../out out/ outAll
 
-PRUNE=$(ls -d out/*/*/* | fgrep -vf bestMatches____out || true)
+PRUNE=$(ls -d out/*/*/* | grep -vxFf bestMatches____out || true)
 if [ -n "$PRUNE" ]; then
     echo "$PRUNE" | xargs -t rm -rf
 fi
