@@ -104,7 +104,8 @@ on `isca006`); stage jobs 1278043-1278056 (FIX), 1278119-1278157
 `cmobic_short`. 72 of 72 `COMPLETED`, 11 min 35 s wall.
 
 The runs below used seven normal BAMs from argos run 18473 as both
-tumors and normals (`docs/SLURM_PORT.md`).
+tumors and normals (`docs/SLURM_PORT.md`). Their directories were
+deleted on 2026-10-20.
 
 **Full run on the test BAMs, 2026-10-20**, `../test01/`, control job 546394 on
 `cmobic_cpu`; stage jobs 546419-546430 (FIX), 546510-546532 (COUNT),
