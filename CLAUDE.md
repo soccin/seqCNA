@@ -14,7 +14,7 @@ the method text used in reports; `docs/seqCNA-vs-FACETS*.md` explains
 when to use this instead of FACETS.
 
 The code is bash and R scripts for the IRIS cluster (RHEL 8, Slurm).
-There is no build step, test suite, or linter. `ATTIC/` holds retired
+There is no build step, test suite, or linter. `attic/` holds retired
 scripts, including the LSF-era `seqCNA.sh`.
 
 Other files to read first:
@@ -22,7 +22,8 @@ Other files to read first:
 - `00.ISSUES.md`: open issues
 - `docs/SLURM_PORT.md`: how the port from JUNO/LSF was done and validated
 - `docs/IRIS_CLUSTER_INFO.md`: cluster facts with job ids
-- `00.SPEC_IRIS_PORT.md`: the port specification and decisions D1-D16
+- `attic/docs/00.SPEC_IRIS_PORT.md`: the port specification and
+  decisions D1-D16
 
 ## Setup, once per checkout
 

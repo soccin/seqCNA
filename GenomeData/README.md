@@ -13,4 +13,4 @@ The tag is mapped to the `GENOME=` argument of `getPairedCounts`
 (hg19 or mm10) and to the gene annotation assay in `PIPE.sh`. Keep the
 three places consistent. The old `genomeInfo_<tag>.sh` files, which held
 `/ifs` paths and were never sourced by the pipeline, are in
-`ATTIC/GenomeData/`.
+`attic/GenomeData/`.

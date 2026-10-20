@@ -10,15 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 To be released as 6.0.0: the port from JUNO/LSF (CentOS 6/7, R 3.6 and
 R 4.2) to IRIS/Slurm (RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R.
 The specification and its decisions (D1 to D16) are in
-`00.SPEC_IRIS_PORT.md`; how the port was done and validated is in
-`docs/SLURM_PORT.md`. The last LSF version is on branch `juno` (3e6c18d).
+`attic/docs/00.SPEC_IRIS_PORT.md`; how the port was done and validated
+is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
+(3e6c18d).
 
 ### Breaking
 - IRIS/Slurm only. Submit with `sbatch seqCNA/PIPE.sh TARGETTED|sWGS`
   from the project directory; LSF support removed (`bsub`, `bSync`,
   `parseLSF.py`, `-w post_done()`). Logs in `SLURM.*/`. One run per
   project directory.
-- `seqCNA.sh` retired to `ATTIC/`. Its two submissions per pair are the
+- `seqCNA.sh` retired to `attic/`. Its two submissions per pair are the
   COUNT and SEG stages of `PIPE.sh`, which fans each stage out with
   `~/bin/bsub` and waits with `bSync`/`bCheck` between stages.
 - One R, 4.5.x from PATH, for every script. `PIPE.sh` no longer strips
@@ -80,7 +81,7 @@ The specification and its decisions (D1 to D16) are in
 ### Removed
 - `testR`, `testR.R`, `misc/INSTALL.RLIB`, `Rlib/INSTALL.md`,
   `GenomeData/genomeInfo_*.sh` (all `/ifs` paths, never sourced), to
-  `ATTIC/`.
+  `attic/`.
 
 ### Not tested
 - The mouse path (`mm10` relabel, `Mouse-Twist` assay) and sWGS

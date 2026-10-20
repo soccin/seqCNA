@@ -1,13 +1,13 @@
 # Porting seqCNA from JUNO/LSF to IRIS/Slurm
 
 Done 2026-10-20 on `feat/iris`, for 6.0.0. The survey, design and
-decisions (D1 to D16) are in `00.SPEC_IRIS_PORT.md`. The model is the
-ChIP-seq port (`docs/SLURM_PORT.md` there, v1.0.0), itself from
-ATAC-seq: a synchronous control job that fans each stage out with
-`~/bin/bsub` and blocks with `bSync`/`bCheck`. The PEMapper pattern
+decisions (D1 to D16) are in `attic/docs/00.SPEC_IRIS_PORT.md`. The
+model is the ChIP-seq port (`docs/SLURM_PORT.md` there, v1.0.0),
+itself from ATAC-seq: a synchronous control job that fans each stage
+out with `~/bin/bsub` and blocks with `bSync`/`bCheck`. The PEMapper pattern
 (the whole DAG submitted at once with `afterok` ids) was considered and
 not used (spec 3.3). JUNO is gone; there is no LSF path left
-(`ATTIC/seqCNA.sh` is reference only).
+(`attic/seqCNA.sh` is reference only).
 
 ## Strategy: keep the pipeline shape, change three things
 
@@ -103,10 +103,10 @@ grep -L "#SEQCNA_EXIT=0" SLURM.0*/*.out
 ## Validation
 
 Done 2026-10-20 on `feat/iris` (uncommitted, so the runs report
-`proj/B-100-635-54-g06971b0-dirty`), against `00.SPEC_IRIS_PORT.md`
-section 4. Inputs: the Proj_12257 BAMs (b37 exome, 5 tumors x 2 normals,
-4.0 to 5.1 GB each, full size; no downsampling was needed at these run
-times). Test directories are beside the checkout in `../test01/`,
+`proj/B-100-635-54-g06971b0-dirty`), against
+`attic/docs/00.SPEC_IRIS_PORT.md` section 4. Inputs: the Proj_12257
+BAMs (b37 exome, 5 tumors x 2 normals, 4.0 to 5.1 GB each, full size;
+no downsampling was needed at these run times). Test directories are beside the checkout in `../test01/`,
 `../test02/`, `../test03/`.
 
 | Item | Test | Result |

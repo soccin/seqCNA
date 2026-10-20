@@ -7,8 +7,8 @@ has the scheduler settings and the `sacct` state tests in full). Job
 ids are kept so a claim can be re-checked with `sacct`.
 
 Design decisions that follow from these facts are in
-`00.SPEC_IRIS_PORT.md`; open work in `00.ISSUES.md`. This file is facts
-only.
+`attic/docs/00.SPEC_IRIS_PORT.md`; open work in `00.ISSUES.md`. This
+file is facts only.
 
 ## Scheduler
 
