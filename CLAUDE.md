@@ -113,29 +113,39 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
    in `SLURM.01.FIX/`.
 3. After FIX: `tumorBams`, `normalBams` from the relabeled BAMs; the
    `GENOME=` argument from the relabeled tumor's tag; the pair list
-   `out/pipeline_info/pairs.tsv` (PAIR, TUMOR_BAM, NORMAL_BAM, ODIR) for
-   every tumor x normal; `out/pipeline_info/cmd.sh.log`. A sample in
-   both `tumors` and `normals` is allowed; its self-pair is skipped, and
-   every tumor needs one normal other than itself.
+   `out/pipeline_info/pairs.tsv` (PAIR, TUMOR_BAM, NORMAL_BAM, ODIR,
+   TUMOR, NORMAL) for every tumor x normal;
+   `out/pipeline_info/cmd.sh.log`. A sample in both `tumors` and
+   `normals` is allowed; its self-pair is skipped, and every tumor needs
+   one normal other than itself.
 4. COUNT, one job per pair: `getPairedCounts`. Class from `runClass`
    on the BAM sizes. Logs in `SLURM.02.COUNT/`.
-5. SEG, one job per pair: `seqSegment` on the `_Counts.rda`. Logs in
-   `SLURM.03.SEG/`.
-6. BEST (control job): `selectBestMatch out` keeps, for each tumor, the
-   normal with the lowest `rms.logr` and writes `bestMatches____out`.
+5. SEG, one job per pair: `seqSegment` on the `_Counts.rda`, with
+   `TUMORID=<tumor>` so that it also writes the plot titled with the
+   tumor ID only (`_seqSeg.redacted.png`). Logs in `SLURM.03.SEG/`.
+6. BEST (control job): `selectBestMatch out` keeps, for each tumor in
+   `pairs.tsv`, the normal with the lowest `rms.logr` (one per tumor; a
+   tie goes to the first pair ID) and writes `bestMatches____out` and
+   `pairing.tsv` (TUMOR, NORMAL, PAIR, rms.logr). `pairing.tsv` names
+   the normals: it stays in the run directory and is not delivered.
    `out/` is hard-linked to `outAll/`, then the non-best pair
    directories are deleted from `out/` (whole-line match against
    `bestMatches____out`).
-7. POST, one job: `postProcess.sh <Assay> <ProjNo>` copies PNGs to
-   `<ProjNo>/`, concatenates the `.seg` files into `<ProjNo>___IGV.seg`,
-   runs `fixXChrom.R` (renames the highest numeric chromosome to X),
-   `getGeneCalls` (`GeneMatrix.csv`, `SegmentMatrix.csv`,
-   `<ProjNo>___GeneTable.xlsx`, or `README.txt` when nothing is
-   significant), and `magick` merges the PNGs into
-   `<ProjNo>___seqSeg.pdf`. Logs in `SLURM.04.POST/`.
+7. POST, one job: `postProcess.sh <Assay> <ProjNo>` copies the PNGs
+   (pair IDs, for checking; not delivered) to `<ProjNo>/`, concatenates
+   the `.seg` files into `<ProjNo>___IGV.seg`, runs `fixXChrom.R`
+   (renames the highest numeric chromosome to X), `getGeneCalls`
+   (`GeneMatrix.csv`, `SegmentMatrix.csv`, `<ProjNo>___GeneTable.xlsx`,
+   or `README.txt` when nothing is significant), then
+   `redactDeliverables.R`, which replaces each pair ID by its tumor ID
+   in the IGV `.seg`, the two CSVs and the xlsx, using `pairing.tsv`.
+   `magick` merges the `_seqSeg.redacted.png` plots into
+   `<ProjNo>___seqSeg.pdf`. So every deliverable except the PNGs names
+   a sample by its tumor ID only. Logs in `SLURM.04.POST/`.
 8. DELIVERABLES and STAGING (control job): every best-pair `.seg`,
-   `.out`, `.png` and every `<ProjNo>/` file must be non-empty;
-   `bCheckAll` sweeps every job of the run; `STATUS=COMPLETED`.
+   `.out`, `.png`, `.redacted.png`, `pairing.tsv` and every `<ProjNo>/`
+   file must be non-empty; `bCheckAll` sweeps every job of the run;
+   `STATUS=COMPLETED`.
 
 Run records: `00.RUNSTATUS.txt` (STATUS, STAGE, RC, MESSAGE,
 RUN_MODE, CTRL_JOBID, HOST, PID, ...), `SLURM.CTRL/jobs.tsv` (job id,
@@ -147,9 +157,6 @@ After the pipeline:
 - `delivery.sh /path/Proj_X/r_00N` copies deliverables into `seqcna/`
   there (not ported; JUNO paths). `DELIVERY.md` and `DELIVERY_ZIP.md`
   are the email templates.
-- `Rscript --no-init-file seqCNA/redactNormals.R` removes `__<normal>`
-  from sample IDs in the four deliverable tables, rewriting them in
-  place. Run it from a directory that contains exactly one copy of each.
 - `Rscript --no-init-file seqCNA/plotSeg.R [-r] SEG.rda` re-plots a
   `_seqSeg.rda`; `-r` removes the normal ID from the title.
 
@@ -170,7 +177,7 @@ directory) and `SNAME` (invoked name), requires R 4.5.x on PATH and
   helpers; `include/tools.R` redefines `cc()` and `len()`.
 - Wrapped scripts source `include/*.R` via `Sys.getenv("SDIR")`, which
   falls back to the relative path `seqCNA`.
-- Standalone scripts (`plotSeg.R`, `redactNormals.R`, `fixXChrom.R`)
+- Standalone scripts (`plotSeg.R`, `redactDeliverables.R`, `fixXChrom.R`)
   run with `Rscript --no-init-file` and must not depend on `~/.Rprofile`.
 
 ### Shell helpers (bin/)
@@ -220,17 +227,23 @@ Chromosome X is numeric in segment output (23 human, 20 mouse).
 ### Sample ID conventions
 
 `getSampleTag.sh` reads `SM:` from the BAM `@RG` lines and adds an `s_`
-prefix if missing. A pair ID is `<tumor>__<normal>`. Several scripts
-parse this format with regexes: `selectBestMatch.R` (`__s_`),
-`getGeneCalls.R` (sample columns match `^s_`), `redactNormals.R`
-(`__.*`), `plotSeg.R` (`__s_.*$`). Changing the naming breaks them.
+prefix if missing. A pair ID is `<tumor>__<normal>`. Internal files
+(everything under `out/` and `outAll/`, `bestMatches____out`, `lodir`)
+use the pair ID; the deliverables in `<ProjNo>/` other than the PNGs
+use the tumor ID. The tumor and normal of a pair are never parsed from
+the pair ID in the pipeline: they are columns of `pairs.tsv`, and
+`pairing.tsv` maps each best pair to its tumor. A sample can be both a
+tumor and a normal, so a regex on sample names is not safe. Pair IDs
+are still matched by pattern in `getGeneCalls.R` and
+`redactDeliverables.R` (sample columns match `^s_`) and in `plotSeg.R
+-r` (`__s_.*$`). Changing the naming breaks them.
 
 ### Per-pair outputs
 
 `out/<first 2 chars of tumor ID>/<tumorId>/<pairId>/` contains:
 - `<pairId>_Counts.rda` and `.json` (getPairedCounts)
 - `<pairId>_seqSeg.rda` (DNAcopy object named `out`), `.seg`, `.png`,
-  `.out` (seqSegment)
+  `.out`, and with `TUMORID=` `.redacted.png` (seqSegment)
 
 `seqsegment()` returns positions in Mb; seqSegment.R multiplies by 1e6
 before writing `.seg`. The `.out` file is `key = value` QC metrics.
