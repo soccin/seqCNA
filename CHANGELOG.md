@@ -84,6 +84,17 @@ and tag `v5-juno` (3e6c18d).
   this file.
 
 ### Changed
+- Segmentation differs from 5.x. DNAcopy 1.75.5 (2023-10-08) fixed
+  `segment()` passing the whole weight vector to each chromosome, so
+  that every chromosome after chr1 was segmented with chr1's weights.
+  `seqsegment()` always passes weights, so every 5.x run, made with an
+  older DNAcopy, carries the bug; 6.0.0 uses DNAcopy 1.84.0. On the 38
+  tumors x 20 normals of `../test20` the JUNO run made 1,817 gene calls
+  and IRIS 1,229 on the same pairs (1,128 shared, none in the opposite
+  direction); the IRIS code with DNAcopy 1.60.0 reproduces all 1,817.
+  Counts, GC correction and `getGeneCalls` match JUNO. Rerun a 5.x
+  project before comparing or merging its calls with 6.x calls. Report:
+  `../test20/seqCNA_JUNO_vs_IRIS_concordance.html`.
 - `PIPE.sh` keeps the LSF first step: run directly with no `tumors`
   or `normals`, it writes `samples` (one line per BAM) and exits 0.
   It now stops before any run record is written, so the run can be
@@ -149,6 +160,4 @@ and tag `v5-juno` (3e6c18d).
 ### Not tested
 - The mouse path (`mm10` relabel, `Mouse-Twist` assay) and sWGS
   (`BINSIZE=auto`) were not run on IRIS; no such project was at hand
-  (`00.ISSUES.md`).
-- Output was not compared with a JUNO run of the same BAMs
   (`00.ISSUES.md`).
