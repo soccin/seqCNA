@@ -130,8 +130,9 @@ The test runs exercise the pipeline, not the calls. Their input is
 normals. test01 to test03 ran on `feat/iris` uncommitted (so they
 report `proj/B-100-635-54-g06971b0-dirty`) with DNAcopy and pctGCdata
 from temporary copies in `Rlib/`; test10 to test14 ran from fresh
-`devs` clones with the personal library. The test directories are
-beside the checkout (`../test01/` and so on).
+`devs` clones with the personal library. The test directories were
+beside the checkout (`../test01/` and so on) and were deleted on
+2026-10-20; the job ids can still be checked with `sacct`.
 
 | Item | Test | Result |
 | --- | --- | --- |
