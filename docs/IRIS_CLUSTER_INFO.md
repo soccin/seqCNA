@@ -51,12 +51,18 @@ The pipeline depends on them, as ATAC-seq and ChIP-seq do.
 - `/tmp`: a 137 GB volume shared by every job on a node. Nothing of
   this pipeline writes there.
 
+## Reference data
+
+| Data | JUNO path | IRIS path |
+|---|---|---|
+| Pooled normals `IDT_Exome_v2_Normal` (README) | `~/Work/Pipelines/SeqCNV` | not yet copied (`00.ISSUES.md` #3) |
+
 ## Toolchain
 
 | Tool | Version | Where |
 |---|---|---|
 | R | 4.5.1 | `/usersoftware/core001/common/RHEL_8/gcc-12.2.0/R/4.5.1`, personal module `R/4.5.1_nds` in `~/.modules`. Sets `R_LIBS_USER=~/R/x86_64-pc-linux-gnu-library/4.5`, which is `/data1/core001/work/bic/socci/opt/lib/R/...`. |
-| R packages in the shared or personal library | tidyverse 2.0.0, Rsamtools 2.26.0, IRanges 2.44.0, data.table 1.18.6.1, openxlsx 4.2.9, jsonlite 2.0.0, Rcpp 1.1.2, RJSONIO 2.0.5 | Missing from both as of 2026-10-20: DNAcopy, pctGCdata (user to install). |
+| R packages in the shared or personal library | tidyverse 2.0.0, Rsamtools 2.26.0, IRanges 2.44.0, data.table 1.18.6.1, openxlsx 4.2.9, jsonlite 2.0.0, Rcpp 1.1.2, RJSONIO 2.0.5, DNAcopy 1.84.0, pctGCdata 0.3.0 | DNAcopy, pctGCdata and RJSONIO are in the personal library only (installed 2026-10-20). |
 | Other R modules | `r/3.6.3`, `R/4.3.0` (empty libraries), `r/4.4.1` (partial) | Not used. |
 | samtools | 1.20 | module `samtools/1.20`, `/admin/software/samtools/samtools-1.20/bin` |
 | ImageMagick | 7.1.2-33 | `/usersoftware/core001/common/RHEL_8/imagemagick/7.1.2-33/bin/magick`; personal module only, so `bin/loadTools.sh` prepends the path. |
@@ -104,3 +110,12 @@ its cgroup with cache up to the cap. No job was OOM-killed.
 **Failure tests, 2026-10-20**: `../test02/` (missing index, no job
 submitted), `../test01/` (rerun refused), `../test03/` (control job
 588179, one COUNT job cancelled by hand).
+
+**After the merge to `devs`, 2026-10-20**, from fresh clones:
+`../test11/` (one tumor, one normal; control job 1236320, 10 jobs,
+5 min 41 s), `../test10/` (seven samples in both `tumors` and
+`normals`, run directly inside interactive job 168961; 42 pairs, 92
+jobs), `../test12/` (direct run, pid 3105705 on `isca006`),
+`../test13/` (direct run sent SIGHUP during COUNT; COUNT job 1265961
+cancelled), `../test14/` (control job 1265859). Results in
+`docs/SLURM_PORT.md`.

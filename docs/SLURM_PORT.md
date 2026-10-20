@@ -116,8 +116,11 @@ Done 2026-10-20 on `feat/iris` (uncommitted, so the runs report
 `proj/B-100-635-54-g06971b0-dirty`), against
 `attic/docs/00.SPEC_IRIS_PORT.md` section 4. Inputs: the Proj_12257
 BAMs (b37 exome, 5 tumors x 2 normals, 4.0 to 5.1 GB each, full size;
-no downsampling was needed at these run times). Test directories are beside the checkout in `../test01/`,
-`../test02/`, `../test03/`.
+no downsampling was needed at these run times). Test directories are
+beside the checkout in `../test01/`, `../test02/`, `../test03/`. These
+runs took DNAcopy and pctGCdata from temporary copies in `Rlib/`; the
+runs after the merge (test10 to test14, below) used fresh `devs`
+clones with every package but seqDNAcopy from the personal library.
 
 | Item | Test | Result |
 | --- | --- | --- |
@@ -128,6 +131,11 @@ no downsampling was needed at these run times). Test directories are beside the 
 | failure: rerun | test01, `PIPE.sh` again | refused before the EXIT trap: "this directory already holds a run: 00.RUNSTATUS.txt SLURM.CTRL/jobs.tsv out outAll bamRelabel"; the first run's records untouched |
 | failure: cancelled stage job | test03, control job 588179, `scancel` of COUNT job 588659 while running | `FAILED` at `STAGE=COUNT`, rc 1, after the other 9 COUNT jobs finished; `MESSAGE=COUNT failed: <pair> job 588659 CANCELLED: ... DUE to SIGNAL Terminated`; no SEG job submitted; `checkRun.sh` 1 with the job listed under cancelled |
 | redactNormals | copy of the test01 deliverables, `Rscript --no-init-file` | rc 0; `__<normal>` removed from the four tables, xlsx rewritten by `openxlsx::write.xlsx` |
+| one tumor, one normal | test11 (`devs` 95deb1c), control job 1236320 | `COMPLETED`, 10 of 10 jobs (7 FIX, 1 COUNT, 1 SEG, 1 POST), `checkRun.sh` 0, 5 min 41 s. `bestMatches____out` holds the one pair, `out/` not pruned; `README.txt` ("No significant copy number changes") instead of the gene tables. The `.seg` is byte-identical to the same pair in test01 |
+| self-pairs skipped | test10 (`devs` 95deb1c), seven samples in both `tumors` and `normals`, run directly inside interactive job 168961 | `COMPLETED`, 92 jobs (7 FIX, 42 COUNT, 42 SEG, 1 POST); no self-pair in `pairs.tsv`, `out/` (7 best) or `outAll/` (42). Run before the `RUN_MODE` fix, so it recorded `CTRL_JOBID=168961` |
+| direct run | test12, `PIPE.sh` run directly, pid 3105705 on `isca006` | `COMPLETED`, 10 of 10 jobs, `RUN_MODE=direct`, `CTRL_JOBID=none`, `checkRun.sh` 0; `___IGV.seg` identical to test11 |
+| failure: SIGHUP | test13, direct run, SIGHUP sent during COUNT | `FAILED` at `STAGE=COUNT`, rc 129, COUNT job 1265961 cancelled; `checkRun.sh` 2 while running, 1 after |
+| sbatch run | test14, control job 1265859 | `COMPLETED`, 10 of 10 jobs, `RUN_MODE=sbatch`, `checkRun.sh` 0; `___IGV.seg` identical to test11 |
 | 4.5 comparison with JUNO | | not done: Proj_12257 has no JUNO run (`00.ISSUES.md` #1) |
 | 4.6 mouse, sWGS | | not done (`00.ISSUES.md` #2) |
 
