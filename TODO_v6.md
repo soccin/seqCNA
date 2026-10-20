@@ -30,6 +30,10 @@ open issues are in `00.ISSUES.md`; the port spec and its decisions
 - [ ] Failure test not yet run: `scancel` the control job itself while
       stage jobs are queued (spec section 4, step 3). Expect `FAILED`
       in `00.RUNSTATUS.txt` and no stray jobs.
+- [ ] Run two small projects end to end; their fixes were tested only
+      on extracted parts of `PIPE.sh` and on copied `.out` files: one
+      tumor with one normal (`selectBestMatch` on a single pair), and a
+      sample listed in both `tumors` and `normals` (self-pair skipped).
 - [ ] Compare with a JUNO run of a previous seqCNA project
       (`00.ISSUES.md` #1, spec D12 and section 4 step 5). Diff
       `_seqSeg.seg`, `_seqSeg.out`, `bestMatches____out`,

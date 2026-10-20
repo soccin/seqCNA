@@ -78,7 +78,9 @@ As ChIP-seq, with `SEQCNA` in place of `CHIP`: `00.RUNSTATUS.txt`
 the failed up-front check, or the first FATAL line of each failed stage
 job. `STATUS=COMPLETED` is written last, after the `sacct` sweep and the
 deliverables check. One run per project directory: `out`, `outAll`,
-`bamRelabel`, `LSF`, `LSF.FIX` or the run records block a new run.
+`bamRelabel`, `LSF`, `LSF.FIX` or the run records block a new run. The
+exception is a run that failed in CHECK: it submitted nothing, and a
+new run replaces its records.
 
 ```bash
 ./seqCNA/bin/checkRun.sh
