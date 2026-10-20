@@ -133,6 +133,13 @@ and tag `v5-juno` (3e6c18d).
   seqDNAcopy 0.0.4).
 
 ### Fixed
+- No gene calls on chrX in any assay. `getGeneCalls.R` keeps the
+  autosomes only, by number, in the segments and the annotation. Before,
+  X was left out only for the annotations that name it `X` (Exome,
+  M-IMPACT_v1) or omit it; IMPACT410 and IMPACT505 name it `23`, as the
+  segments do, and so called X genes (AR, ATRX, ... on a JUNO segment
+  file of `../test20`). X stays in segmentation, `rms.logr`, the IGV
+  `.seg` and the plots. Patch contigs and MT are dropped too.
 - `selectBestMatch.R` failed on a project with a single pair: it drops
   the columns that do not vary between pairs, and with one pair that
   included `sampleId`. Under LSF the error was ignored and `out/` was

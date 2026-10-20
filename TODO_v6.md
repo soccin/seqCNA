@@ -9,7 +9,7 @@ Open issues, including the ones not required for the release, are in
 `00.ISSUES.md` #1 is closed (DNAcopy weights fix). Notes in
 `../test20/NOTES_JUNO_IRIS_COMP.md`.
 
-- [ ] chrX: no chrX gene calls in any assay. `getGeneCalls.R` keeps
+- [x] chrX: no chrX gene calls in any assay. `getGeneCalls.R` keeps
       the autosomes only, by genome, for segments and annotation. X
       stays in segmentation, `rms.logr`, the IGV `.seg` and the plots.
 - [ ] Seed: `seqSegment SEED=` with a fixed default, `set.seed()`

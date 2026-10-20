@@ -224,6 +224,18 @@ mapped in `PIPE.sh` in two places that must stay consistent with it:
 `resources/geneAnnotations/<ASSAY>/<genome>/gene_annotations.txt.gz`.
 Chromosome X is numeric in segment output (23 human, 20 mouse).
 
+### chrX
+
+No chrX copy-number event may be called: that needs a sex-matched
+normal and the known sex of the sample, which we almost never have.
+`getGeneCalls.R` keeps the autosomes only (1-22 for b37, 1-19 for
+mm10), by number, in both the segments and the annotation, so the
+rule does not depend on how an annotation names X (Exome `X`,
+IMPACT410/505 `23`). X is still counted and segmented: it is in
+`rms.logr` (which favors a sex-matched normal in `selectBestMatch`),
+the `X.seg.mean.*` QC values, the IGV `.seg` (renamed to X by
+`fixXChrom.R`) and the plots. Do not add X to the gene calls.
+
 ### Sample ID conventions
 
 `getSampleTag.sh` reads `SM:` from the BAM `@RG` lines and adds an `s_`
@@ -262,6 +274,7 @@ tree is dirty).
   When a gene overlaps several segments, the lowest `seg.mean` is used,
   so deletions take priority over amplifications. For the Exome assay
   the canonical isoforms come from `resources/vcf2maf/v1.6.12/`.
+  Autosomes only (see chrX above).
 - `METHODS.md` states these values; update it if they change.
 
 ## Environment dependencies
