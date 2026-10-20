@@ -74,7 +74,15 @@ As ChIP-seq, with `SEQCNA` in place of `CHIP`: `00.RUNSTATUS.txt`
 (adds `ASSAY_TYPE`, `BINSIZE`, `BAMDIR`, `GENOME_TAG`, `GENOME`, `ASSAY`,
 `PROJNO`, `NPAIRS`, `SAMPLES`), `SLURM.CTRL/jobs.tsv`,
 `#SEQCNA_EXIT=<rc>` trailers, `bin/checkRun.sh` (exit 0 ok, 1 failed,
-2 running, 3 sacct failed). `MESSAGE` holds the reason for a failure:
+2 running, 3 sacct failed). `RUN_MODE` is `sbatch` when `PIPE.sh` is
+the batch script of `$SLURM_JOB_ID` (`$0` is
+`/var/spool/slurmd/job<id>/slurm_script`, checked with job 1264967),
+and `direct` otherwise, including a run started by hand inside an
+interactive job: there `SLURM_JOB_ID` names the session, and the early
+port recorded it as `CTRL_JOBID`, so `checkRun.sh` reported the run as
+RUNNING for as long as the session lasted. A direct run records
+`CTRL_JOBID=none`; `checkRun.sh` checks that `PID` on `HOST` is still
+`PIPE.sh`. `MESSAGE` holds the reason for a failure:
 the failed up-front check, or the first FATAL line of each failed stage
 job. `STATUS=COMPLETED` is written last, after the `sacct` sweep and the
 deliverables check. One run per project directory: `out`, `outAll`,
