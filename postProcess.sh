@@ -1,6 +1,23 @@
 #!/bin/bash
+#
+# postProcess.sh AssayName [ProjectName]
+#
+# Collect the per-pair results under out/ into the project deliverables
+# directory <ProjectName>/: the PNGs, the merged IGV .seg (X chromosome
+# renamed by fixXChrom.R), the gene calls (getGeneCalls: GeneMatrix.csv,
+# SegmentMatrix.csv, <ProjectName>___GeneTable.xlsx) and the PDF of all
+# PNGs (<ProjectName>___seqSeg.pdf). One job in the POST stage of
+# PIPE.sh; can be run by hand after selectBestMatch.
+#
+# Every R script runs under the one R 4.5.x on PATH; bin/loadTools.sh
+# provides samtools and ImageMagick (magick).
+#
+
+set -eu
 
 export SDIR="$( cd "$( dirname "$0" )" && pwd )"
+
+source $SDIR/bin/loadTools.sh
 
 if [ "$#" -lt "1" ]; then
     echo "usage: postProcess.sh AssayName [ProjectName]"
@@ -8,7 +25,7 @@ if [ "$#" -lt "1" ]; then
     echo "Assays"
     ls -1 $SDIR/resources/geneAnnotations | fgrep -v src | awk '{print "   "$1}'
     echo
-    exit
+    exit 1
 fi
 
 
@@ -29,10 +46,10 @@ if [ ! -e "$SDIR/resources/geneAnnotations/$assay" ]; then
     echo
     ls -1 $SDIR/resources/geneAnnotations | fgrep -v src | awk '{print "   "$1}'
     echo
-    exit
+    exit 1
 fi
 
-mkdir $projectName
+mkdir -p $projectName
 find out | fgrep .png | xargs -I % cp % $projectName
 find out | fgrep .seg | head -1  | xargs head -1 | cut -f-6 >$projectName/${projectName}___IGV.seg
 find out | fgrep .seg | xargs cut -f-6 | fgrep -v "loc.start" >>$projectName/${projectName}___IGV.seg
@@ -42,15 +59,7 @@ echo
 echo "fixXChrom"
 echo
 
-#
-# Need version 4 of R but need to clean up env from pipe.sh
-#
-
-module load R/R-4.2.2
-export R_VERSION=$(R --version | head -1 | awk '{print $3}')
-export R_LIBS=/home/socci/lib/R/CentOS7/$R_VERSION
-
-Rscript $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
+Rscript --no-init-file $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
 
 echo
 echo "getGeneCalls"
@@ -60,3 +69,8 @@ find out -type f  | fgrep .seg | perl -pe 's|/[^/]+$|\n|' >lodir
 
 $SDIR/getGeneCalls ASSAY=$assay INPUTS=lodir ODIR=$projectName
 
+echo
+echo "seqSeg.pdf"
+echo
+
+magick $projectName/*.png $projectName/${projectName}___seqSeg.pdf

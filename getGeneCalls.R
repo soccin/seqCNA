@@ -95,7 +95,6 @@ ff=ff[order(ff$seg.mean),]
 ff=ff[!duplicated(ff,by=c("ID","gene"))]
 
 suppressPackageStartupMessages({
-    require("biomaRt")
     require(dtplyr)
     require(dplyr)
     require(tidyr)
@@ -132,9 +131,15 @@ robustMin <- function(xx) {
 
 }
 
+#
+# Canonical isoforms for Exome: the vcf2maf v1.6.12 override lists,
+# vendored in resources/vcf2maf/v1.6.12/ (they were read from
+# /opt/common on the LSF clusters).
+#
 if(args$ASSAY %in% c("Exome")) {
-    iso1=read_tsv("/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/isoform_overrides_uniprot")
-    iso2=read_tsv("/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/isoform_overrides_at_mskcc")
+    isoDir=file.path(SDIR,"resources/vcf2maf/v1.6.12")
+    iso1=read_tsv(file.path(isoDir,"isoform_overrides_uniprot"),show_col_types=FALSE)
+    iso2=read_tsv(file.path(isoDir,"isoform_overrides_at_mskcc"),show_col_types=FALSE)
     canonicalIsoforms=union(iso1[[1]],iso2[[1]])
 } else {
     canonicalIsoforms=sort(unique(geneEvents$transcript))

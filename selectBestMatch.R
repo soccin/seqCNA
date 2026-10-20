@@ -1,4 +1,3 @@
-library(readxl)
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -32,7 +31,11 @@ for(outfile in outFiles) {
 }
 
 tbl=bind_rows(zz)
-tbl %<>% select(which(apply(tbl,2,function(x){len(unique(x))})>1))
+#
+# Keep the columns that differ between pairs, and always the three used
+# below: with a single pair every column is constant.
+#
+tbl %<>% select(sampleId, countFile, rms.logr, where(~ len(unique(.x)) > 1))
 tbl %<>% type_convert
 
 bestPairs = tbl %>%
