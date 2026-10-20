@@ -46,7 +46,14 @@ Required inputs in the project directory:
 - `pipeline/` containing a subdirectory matching `alignments|bam` with
   the BAMs, each with a `.bai`
 - `tumors`, `normals`: one pattern per line, matched with `fgrep -f`
-  against BAM paths
+  against the relabeled BAM paths `bamRelabel/<base>/<base>__relabel.bam`
+
+Without `tumors` or `normals`, `PIPE.sh` writes `samples` (one line per
+BAM, the base name minus any `Proj_..._s_` prefix plus `__`) and exits
+0 before any run record is written. That is the first step of a new
+project: run `seqCNA/PIPE.sh TARGETTED` directly, copy the lines of
+`samples` into `tumors` and `normals`, then submit. The trailing `__`
+matches the `__relabel` suffix, so `s_X__` does not select `s_X1`.
 
 ```bash
 sbatch seqCNA/PIPE.sh TARGETTED   # BINSIZE=100 (IMPACT, exome)
@@ -82,8 +89,10 @@ fanned out with `seqSub` (`bin/slurmTools.sh`) through `bin/runStage.sh`
 and waited on with `waitStage` = `bSync` + `bCheck` (sacct State must
 be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
 
+0. First step, before any run record: write `samples` if absent; stop
+   with exit 0 if `tumors` or `normals` is missing or empty.
 1. CHECK (control job): BAM directory, BAMs and indexes, `tumors` and
-   `normals`, one genome across BAMs via `GenomeData/getGenomeBuildBAM.sh`
+   `normals` each match a relabeled BAM path, one genome across BAMs via `GenomeData/getGenomeBuildBAM.sh`
    and the assay from it, project id from `pipeline/*request.txt` or
    `extractProjectIDFromPath.py`. Nothing is submitted until all pass.
 2. FIX, one job per BAM: `fixChromosomeNames.sh` writes

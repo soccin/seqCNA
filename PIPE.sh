@@ -9,6 +9,13 @@
 # --qos=priority. Flags given to sbatch on the command line override
 # them.
 #
+# First, with no tumors or normals file yet, run it directly:
+#
+#    ./seqCNA/PIPE.sh TARGETTED
+#
+# It writes samples, one line per BAM, and stops (see "First step"
+# below). Make tumors and normals from those lines, then:
+#
 # CMD:
 #    sbatch ./seqCNA/PIPE.sh TARGETTED      # IMPACT, exome: BINSIZE=100
 #    sbatch ./seqCNA/PIPE.sh sWGS           # shallow WGS:   BINSIZE=auto
@@ -93,7 +100,12 @@ function usage {
 
 	    pipeline/<alignments|bam>/*.bam   the BAMs, each with its index
 	    tumors, normals                   one pattern per line, matched
-	                                      against the BAM paths (fgrep -f)
+	                                      (fgrep -f) against the relabeled
+	                                      BAM paths, bamRelabel/<base>/
+	                                      <base>__relabel.bam
+
+	Without tumors or normals it writes samples, one line per BAM, and
+	stops; copy those lines into tumors and normals.
 
 	The genome is read from the BAM headers (b37 or mm10 families) and
 	picks the gene annotation assay: Exome or Mouse-Twist. For other
@@ -127,6 +139,81 @@ case $ASSAY_TYPE in
         usage
         ;;
 esac
+
+#
+# findBams
+#
+# Set BAMDIR to pipeline/<alignments|bam> and BAMS to its BAMs; either is
+# empty if not found.
+#
+findBams() {
+    BAMDIR=$(ls -d pipeline/* 2>/dev/null | egrep "alignments|bam" | head -1) || true
+    BAMS=""
+    if [ -n "$BAMDIR" ] && [ -d "$BAMDIR" ]; then
+        BAMS=$(ls $BAMDIR/*.bam 2>/dev/null) || true
+    fi
+}
+
+#
+# relabeledBam BAM
+#
+# Path of the relabeled copy of BAM written by the FIX stage; the base
+# name is derived as in fixChromosomeNames.sh. tumors and normals are
+# matched against these paths.
+#
+relabeledBam() {
+    local base
+    base=$(basename $1 | sed 's/.bam//')
+    echo bamRelabel/$base/${base}__relabel.bam
+}
+
+##############################################################################
+# First step: samples
+#
+# samples has one line per BAM, as the LSF version wrote it: the BAM base
+# name with any Proj_..._s_ prefix removed and __ appended. The trailing
+# __ matches the __relabel suffix of the relabeled BAM, so s_X__ does not
+# also select s_X1. Copy the lines into tumors and normals.
+#
+# With no tumors or normals file, stop here after writing samples. No run
+# record is written, so the run can then be submitted in this directory.
+##############################################################################
+
+findBams
+
+if [ -n "$BAMS" ] && [ ! -e samples ]; then
+    echo "$BAMS" \
+        | xargs -n 1 basename \
+        | sed 's/.*_recal_s_/s_/' \
+        | sed 's/^Proj_.*s_/s_/' \
+        | sed 's/.bam/__/' \
+        >samples
+    echo "Wrote samples ($(wc -l <samples) BAMs in $BAMDIR)"
+fi
+
+if [ ! -s tumors ] || [ ! -s normals ]; then
+    if [ -z "$BAMS" ]; then
+        cat <<-END_NOBAMS
+
+		    FATAL ERROR: no BAMs found: need pipeline/<alignments|bam>/*.bam
+		    Link the pipeline output directory as pipeline/
+
+		END_NOBAMS
+        exit 1
+    fi
+    cat <<-END_SAMPLES
+
+	    Need to define the tumor and normal samples.
+
+	    samples lists the BAMs in $BAMDIR, one per line. Put the
+	    tumor lines in tumors and the normal lines in normals, then
+	    submit the run:
+
+	        sbatch seqCNA/PIPE.sh $1
+
+	END_SAMPLES
+    exit 0
+fi
 
 TAG=q$PIPENAME
 
@@ -327,12 +414,11 @@ setStage CHECK
 #
 # BAMs: pipeline/<alignments|bam>/*.bam, each with an index.
 #
-BAMDIR=$(ls -d pipeline/* 2>/dev/null | egrep "alignments|bam" | head -1) || true
+findBams
 if [ -z "$BAMDIR" ] || [ ! -d "$BAMDIR" ]; then
     fatal "no pipeline/alignments or pipeline/bam directory; link the pipeline output as pipeline/"
 fi
 
-BAMS=$(ls $BAMDIR/*.bam 2>/dev/null) || true
 if [ -z "$BAMS" ]; then
     fatal "no BAM files in $BAMDIR"
 fi
@@ -347,28 +433,17 @@ for BAM in $BAMS; do
 done
 
 #
-# tumors and normals: one pattern per line, matched against the BAM paths.
+# tumors and normals (present, see First step): one pattern per line,
+# matched against the relabeled BAM paths, as tumorBams and normalBams
+# are chosen after FIX. Lines copied from samples end in __ and match
+# only those paths, not the original BAM paths.
 #
+RELABELED=$(for BAM in $BAMS; do relabeledBam $BAM; done)
 for F in tumors normals; do
-    if [ ! -s "$F" ]; then
-        fatal "no $F file; one pattern per line, matched with fgrep -f against the BAM paths"
-    fi
-    if [ -z "$(echo "$BAMS" | fgrep -f $F)" ]; then
+    if [ -z "$(echo "$RELABELED" | fgrep -f $F)" ]; then
         fatal "no BAM in $BAMDIR matches any pattern in $F"
     fi
 done
-
-#
-# samples, as the LSF version wrote it, for the record.
-#
-if [ ! -e samples ]; then
-    echo "$BAMS" \
-        | xargs -n 1 basename \
-        | sed 's/.*_recal_s_/s_/' \
-        | sed 's/^Proj_.*s_/s_/' \
-        | sed 's/.bam/__/' \
-        >samples
-fi
 
 #
 # Genome. Every BAM is identified by GenomeData/getGenomeBuildBAM.sh and

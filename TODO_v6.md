@@ -24,7 +24,9 @@ open issues are in `00.ISSUES.md`; the port spec and its decisions
 
 - [ ] Rerun the full Proj_12257 test (as `../test01`) from a clean
       `devs` checkout with the personal library only. The 2026-10-20
-      runs used a dirty tree and the temporary Rlib copies.
+      runs used a dirty tree and the temporary Rlib copies. Start
+      without `tumors`/`normals` (`seqCNA/PIPE.sh TARGETTED` writes
+      `samples`), build them from the `samples` lines, then submit.
 - [ ] Failure test not yet run: `scancel` the control job itself while
       stage jobs are queued (spec section 4, step 3). Expect `FAILED`
       in `00.RUNSTATUS.txt` and no stray jobs.
@@ -85,7 +87,7 @@ open issues are in `00.ISSUES.md`; the port spec and its decisions
 ## After 6.0.0
 
 Not required for the release; tracked in `00.ISSUES.md`:
-`delivery.sh` for IRIS (#4), one genome table (#5), the unused
-`samples` file (#6), status file on usage errors (#8). Superseded
+`delivery.sh` for IRIS (#4), one genome table (#5), status file on
+usage errors (#8). Superseded
 tidyverse calls (`top_n`, `summarize_at`, `spread`) and the undefined
 `first_UP()` in `convert_mouse_to_human.R` (spec section 2.3).

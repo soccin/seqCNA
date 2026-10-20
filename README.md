@@ -26,8 +26,16 @@ install commands if any is missing.
 ## Running
 
 From a project directory holding `pipeline/<alignments|bam>/*.bam`
-(with `.bai`), `tumors` and `normals` (one pattern per line, matched
-against the BAM paths):
+(with `.bai`), first run it directly, without `tumors` or `normals`:
+
+```bash
+seqCNA/PIPE.sh TARGETTED           # writes samples and stops
+```
+
+`samples` has one line per BAM (`s_<id>__`). Put the tumor lines in
+`tumors` and the normal lines in `normals` (one pattern per line,
+matched against the relabeled BAM paths
+`bamRelabel/<base>/<base>__relabel.bam`), then submit:
 
 ```bash
 sbatch seqCNA/PIPE.sh TARGETTED    # IMPACT, exome: BINSIZE=100
