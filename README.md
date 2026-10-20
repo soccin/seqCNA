@@ -7,8 +7,8 @@ sequencing, or targeted assays) using the `seqDNAcopy` package from
 _N.B._ these scripts use a forked version of `seqDNAcopy` which has
 been updated to work with both human and mouse.
 
-Runs on IRIS (RHEL 8, Slurm) since 6.0.0. The last JUNO/LSF version is
-tagged `v5-juno`. See `CHANGELOG.md`, `docs/SLURM_PORT.md`,
+Runs on IRIS (RHEL 8, Slurm) since 6.0.0. The last JUNO/LSF version is on
+branch `juno` (3e6c18d). See `CHANGELOG.md`, `docs/SLURM_PORT.md`,
 `00.ISSUES.md`.
 
 ## Setup, once per checkout

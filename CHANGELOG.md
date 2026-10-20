@@ -11,7 +11,7 @@ To be released as 6.0.0: the port from JUNO/LSF (CentOS 6/7, R 3.6 and
 R 4.2) to IRIS/Slurm (RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R.
 The specification and its decisions (D1 to D16) are in
 `00.SPEC_IRIS_PORT.md`; how the port was done and validated is in
-`docs/SLURM_PORT.md`. The last LSF version is tagged `v5-juno`.
+`docs/SLURM_PORT.md`. The last LSF version is on branch `juno` (3e6c18d).
 
 ### Breaking
 - IRIS/Slurm only. Submit with `sbatch seqCNA/PIPE.sh TARGETTED|sWGS`
