@@ -24,26 +24,34 @@ and tag `v5-juno` (3e6c18d).
 - `seqCNA.sh` retired to `attic/`. Its two submissions per pair are the
   COUNT and SEG stages of `PIPE.sh`, which fans each stage out with
   `~/bin/bsub` and waits with `bSync`/`bCheck` between stages.
-- One R, 4.5.x from PATH, for every script. `PIPE.sh` no longer strips
+- One R, 4.5.1 from PATH, for every script. `PIPE.sh` no longer strips
   R from PATH and loads R 3.6.1; `postProcess.sh` no longer loads
-  R 4.2.2. The R packages the pipeline needs beyond the shared install
-  (DNAcopy, pctGCdata, RJSONIO) come from the user's library;
-  `seqDNAcopy` is built once per checkout into `Rlib/` (gitignored) by
-  `00.SETUP.sh`. The committed R 3.5.1 build of `Rlib/seqDNAcopy` is
+  R 4.2.2. The committed R 3.5.1 build of `Rlib/seqDNAcopy` is
   removed.
+- Pinned R packages. `Rlib.lock.tsv` lists R 4.5.1 and the 60 packages
+  the scripts load, with their dependencies, at exact versions
+  (Bioconductor 3.22: DNAcopy 1.84.0, Rsamtools 2.26.0, IRanges 2.44.0;
+  pctGCdata 0.3.0 from GitHub; tarball md5s). `00.SETUP.sh` builds them
+  from source into `Rlib/` (gitignored), then `seqDNAcopy` from the
+  submodule; the user's and the site library are no longer used. Every
+  R script runs through `bin/rscript.sh`, which checks R and `Rlib/`
+  against the lock and stops on a mismatch; `PIPE.sh` checks once in
+  CHECK. Versions change only at a planned scan (`bin/mkRlibLock.R`).
+  The locked versions are the ones test20 and the Proj_12257 run used.
 - `seqDNAcopy` 0.0.4 (submodule): `NAMESPACE` imports `IRangesList`
   instead of `RangesList`, removed from IRanges 2.x; takes the
   upstream `hg38` addition to `HUMAN.BUILDS`.
-- `execWrapper.sh` no longer reads `/etc/system-release`; it requires
-  R 4.5.x and `Rlib/seqDNAcopy`.
+- `execWrapper.sh` no longer reads `/etc/system-release`; it runs the
+  script through `bin/rscript.sh`.
+- Standalone R scripts (`fixXChrom.R`, `redactDeliverables.R`,
+  `plotSeg.R`) run through `bin/rscript.sh`, not plain `Rscript`.
 - The deliverables name each sample by its tumor ID, not by the pair
   ID `<tumor>__<normal>`, so they do not show which normal was used:
   `<ProjNo>___IGV.seg`, `GeneMatrix.csv`, `SegmentMatrix.csv`,
   `<ProjNo>___GeneTable.xlsx` and `<ProjNo>___seqSeg.pdf`. The file
   names are unchanged. The PNGs in `<ProjNo>/` keep the pair ID and are
   not for delivery. This replaces the manual `redactNormals.R` step,
-  which stripped `__.*` by regex and missed the PDF. Standalone R
-  scripts run with `Rscript --no-init-file`.
+  which stripped `__.*` by regex and missed the PDF.
 
 ### Added
 - Run records, from the ChIP-seq port: `00.RUNSTATUS.txt`,
@@ -52,7 +60,8 @@ and tag `v5-juno` (3e6c18d).
   2 running, 3 sacct failed). `COMPLETED` is written only after every
   job is `COMPLETED` in `sacct` and every deliverable is present. A
   failed or cancelled control job marks the run `FAILED` and cancels its
-  queued jobs.
+  queued jobs. `00.RUNSTATUS.txt` records `R_VERSION`,
+  `RLIB_LOCK_MD5`, `SAMTOOLS_VERSION` and `MAGICK_VERSION`.
 - Up-front checks before anything is submitted: BAM directory, every
   BAM readable with an index, `tumors` and `normals` matching the
   relabeled BAM paths, one genome across all BAMs and a supported one,
@@ -133,7 +142,9 @@ and tag `v5-juno` (3e6c18d).
   `top_n` kept every tied pair). `PIPE.sh` requires one best pair per
   tumor, not at least as many as there are tumors.
 - `selectBestMatch.R` no longer loads `readxl`; `getGeneCalls.R` no
-  longer loads `biomaRt` (neither was used).
+  longer loads `biomaRt` (neither was used). `fixXChrom.R` and
+  `redactDeliverables.R` load the packages they use instead of
+  `tidyverse`, which keeps the pinned set small.
 - `README.md`, `CLAUDE.md` describe the Slurm pipeline.
 - `METHODS.md` states the software versions (R 4.5.1, DNAcopy 1.84.0,
   seqDNAcopy 0.0.4).

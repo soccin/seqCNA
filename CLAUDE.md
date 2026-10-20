@@ -29,12 +29,13 @@ Other files to read first:
 
 ```bash
 git submodule update --init     # seqDNAcopy source
-seqCNA/00.SETUP.sh              # builds Rlib/seqDNAcopy (gitignored)
+seqCNA/00.SETUP.sh              # builds Rlib/ (gitignored), ~30 min
 ```
 
-R 4.5.x must be on PATH (`module load R/4.5.1_nds`). `00.SETUP.sh`
-checks that DNAcopy, pctGCdata and RJSONIO load from the user's R
-library and stops with install hints otherwise.
+R 4.5.1 must be on PATH (`module load R/4.5.1_nds`). `00.SETUP.sh`
+installs every R package the pipeline uses, at the versions in
+`Rlib.lock.tsv`, from source tarballs into `Rlib/`, then seqDNAcopy
+from the submodule (see "Pinned versions").
 
 ## Running
 
@@ -157,7 +158,7 @@ After the pipeline:
 - `delivery.sh /path/Proj_X/r_00N` copies deliverables into `seqcna/`
   there (not ported; JUNO paths). `DELIVERY.md` and `DELIVERY_ZIP.md`
   are the email templates.
-- `Rscript --no-init-file seqCNA/plotSeg.R [-r] SEG.rda` re-plots a
+- `seqCNA/bin/rscript.sh seqCNA/plotSeg.R [-r] SEG.rda` re-plots a
   `_seqSeg.rda`; `-r` removes the normal ID from the title.
 
 ## Architecture
@@ -166,25 +167,31 @@ After the pipeline:
 
 `getPairedCounts`, `seqSegment`, `getGeneCalls`, and `selectBestMatch`
 are symlinks to `execWrapper.sh`. The wrapper exports `SDIR` (repo
-directory) and `SNAME` (invoked name), requires R 4.5.x on PATH and
-`Rlib/seqDNAcopy`, prepends `$SDIR/Rlib` to `R_LIBS`, and runs
-`Rscript --vanilla $0.R "$@"`. To add a tool: write `foo.R`, symlink
+directory) and `SNAME` (invoked name) and runs
+`bin/rscript.sh $0.R "$@"`. To add a tool: write `foo.R`, symlink
 `foo -> execWrapper.sh`, add `docs/foo.doc`.
 
-- `--vanilla` skips `~/.Rprofile` and `~/.Renviron` but still honors
-  the `R_LIBS` and `R_LIBS_USER` environment variables, which is how
-  the user's library is found. Wrapped scripts cannot use `~/.Rprofile`
-  helpers; `include/tools.R` redefines `cc()` and `len()`.
+- `bin/rscript.sh` runs every R script: the wrapped tools, the
+  standalone scripts (`fixXChrom.R`, `redactDeliverables.R` from
+  `postProcess.sh`; `plotSeg.R` by hand). It sets `R_LIBS`,
+  `R_LIBS_USER` and `R_LIBS_SITE` to `Rlib/`, so R sees `Rlib/` and its
+  own library only, runs `bin/checkRlib.R` against `Rlib.lock.tsv`
+  (exit 1 on any mismatch), then `Rscript --vanilla`. Scripts cannot
+  use `~/.Rprofile` helpers; `include/tools.R` redefines `cc()` and
+  `len()`.
 - Wrapped scripts source `include/*.R` via `Sys.getenv("SDIR")`, which
   falls back to the relative path `seqCNA`.
-- Standalone scripts (`plotSeg.R`, `redactDeliverables.R`, `fixXChrom.R`)
-  run with `Rscript --no-init-file` and must not depend on `~/.Rprofile`.
+- A script may load only packages in `Rlib.lock.tsv`. A new package
+  means adding it to `TOP` in `bin/mkRlibLock.R` and a new lock (see
+  "Pinned versions").
 
 ### Shell helpers (bin/)
 
 - `loadTools.sh`: sourced by `PIPE.sh`, `fixChromosomeNames.sh`,
   `postProcess.sh`. Loads `samtools/1.20`, prepends ImageMagick 7,
   checks R 4.5.x, sets `TMPDIR` under `/localscratch/$USER`.
+- `rscript.sh`, `checkRlib.R`, `installRlib.R`, `mkRlibLock.R`,
+  `rlibTools.R`: the pinned R library (see "Pinned versions").
 - `slurmTools.sh`: `bSync`, `bCheck`, `bCheckAll`, `bKill`,
   `failedJobsMessage`. ChIP-seq's file with `CHIP_` -> `SEQCNA_`; keep
   them in step.
@@ -201,13 +208,34 @@ file.
 
 ### R and seqDNAcopy
 
-- One R, 4.5.x, for every script. `seqDNAcopy/` is a git submodule with
+- One R, 4.5.1, for every script. `seqDNAcopy/` is a git submodule with
   the fork's source (`git submodule update --init`). `00.SETUP.sh`
-  builds it into `Rlib/` (gitignored) and records versions in
-  `Rlib/VERSIONS.txt`. The fork's NAMESPACE imports `IRangesList`
-  (0.0.4); `RangesList` is gone from IRanges 2.x.
-- DNAcopy, pctGCdata and RJSONIO are not in the shared R install; they
-  live in the user's library.
+  builds it into `Rlib/` (gitignored) after the locked packages and
+  records versions in `Rlib/VERSIONS.txt`. The fork's NAMESPACE imports
+  `IRangesList` (0.0.4); `RangesList` is gone from IRanges 2.x.
+- pctGCdata 0.3.0 is not on CRAN; the lock takes it from GitHub
+  (`veseshan/pctGCdata`, tag v0.3.0, commit d2d4faf).
+
+### Pinned versions
+
+A sysadmin or user library update must never change seqCNA output.
+`Rlib.lock.tsv` (package, version, source, md5 of the source tarball)
+lists R itself, every package the scripts load with its whole
+Depends/Imports/LinkingTo closure except R's base packages, in install
+order, and seqDNAcopy. `00.SETUP.sh` builds exactly that set into
+`Rlib.new/` (`bin/installRlib.R`: download, md5 check, install from
+source; nothing from the user or site library), checks it and only
+then replaces `Rlib/`. `bin/rscript.sh` checks R and `Rlib/` against
+the lock before every R script, and `PIPE.sh` CHECK does once
+(`rscript.sh --check`); a mismatch stops the run. `00.RUNSTATUS.txt`
+records `R_VERSION`, `RLIB_LOCK_MD5`, `SAMTOOLS_VERSION` and
+`MAGICK_VERSION`; samtools and ImageMagick are recorded, not checked.
+
+Versions change only at a planned version scan: install the new
+versions in a scratch library, `bin/mkRlibLock.R LIBDIR CACHEDIR >
+Rlib.lock.tsv`, `00.SETUP.sh`, rerun a reference project, compare with
+the previous run, record it in `CHANGELOG.md` and `METHODS.md`. Never
+install into `Rlib/` by hand.
 
 ### Genome handling
 

@@ -11,9 +11,12 @@ not used (spec 3.3). JUNO is gone; there is no LSF path left
 
 ## Strategy: keep the pipeline shape, change three things
 
-1. How R is found: one R 4.5.x from PATH for every script, `seqDNAcopy`
-   built per checkout into `Rlib/` (`00.SETUP.sh`), the common packages
-   from the user's library. No `module load R/...`, no `/etc/system-release`.
+1. How R is found: one R 4.5.1 from PATH for every script, and every
+   package from `Rlib/`, built per checkout by `00.SETUP.sh` at the
+   versions in `Rlib.lock.tsv` and checked before every R script
+   (`bin/rscript.sh`). No `module load R/...`, no `/etc/system-release`.
+   (Until the JUNO comparison the common packages came from the user's
+   library and only `seqDNAcopy` was in `Rlib/`.)
 2. How jobs are submitted and waited on: the ChIP-seq control-job
    primitives, with `CHIP_` renamed `SEQCNA_`.
 3. Where tools and resources live: `bin/loadTools.sh`, `resources/vcf2maf/`.
@@ -99,10 +102,10 @@ grep -L "#SEQCNA_EXIT=0" SLURM.0*/*.out
 
 | What | Was | Now |
 | --- | --- | --- |
-| R for counting, segmentation, best match | `module load R/R-3.6.1`, `R_LIBS=/home/socci/lib/R/CentOS7/3.6.1`, R stripped from PATH first | R 4.5.1 from PATH (`module load R/4.5.1_nds`), `Rscript --vanilla` with `R_LIBS=$SDIR/Rlib:...` |
-| R for `fixXChrom.R`, `getGeneCalls` | `module load R/R-4.2.2` in `postProcess.sh` | the same R 4.5.1; `Rscript --no-init-file` |
+| R for counting, segmentation, best match | `module load R/R-3.6.1`, `R_LIBS=/home/socci/lib/R/CentOS7/3.6.1`, R stripped from PATH first | R 4.5.1 from PATH (`module load R/4.5.1_nds`), `bin/rscript.sh`: `Rscript --vanilla` with only `Rlib/` and R's own library, checked against `Rlib.lock.tsv` |
+| R for `fixXChrom.R`, `getGeneCalls` | `module load R/R-4.2.2` in `postProcess.sh` | the same R 4.5.1 through `bin/rscript.sh` |
 | `seqDNAcopy` | committed `Rlib/seqDNAcopy` built with R 3.5.1 | built by `00.SETUP.sh` from the submodule (0.0.4, NAMESPACE fix) into gitignored `Rlib/` |
-| DNAcopy, pctGCdata, RJSONIO | `/home/socci/lib/R/...` | user's R library (`~/R/x86_64-pc-linux-gnu-library/4.5`); `00.SETUP.sh` checks them |
+| DNAcopy, pctGCdata, RJSONIO and the rest | `/home/socci/lib/R/...` | `Rlib/`, built by `00.SETUP.sh` from source at the versions in `Rlib.lock.tsv` (60 packages) |
 | samtools | `module load samtools/1.19.2`; `/opt/common/.../samtools-1.9` hard-coded | `module load samtools/1.20` in `bin/loadTools.sh` |
 | ImageMagick | `convert` on PATH | `magick` from the core001 shared tree (`bin/loadTools.sh`) |
 | vcf2maf isoform overrides | `/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/` | `resources/vcf2maf/v1.6.12/` |
@@ -151,6 +154,7 @@ beside the checkout (`../test01/` and so on) and were deleted on
 | sbatch run | test14, control job 1265859 | `COMPLETED`, 10 of 10 jobs, `RUN_MODE=sbatch`, `checkRun.sh` 0; `___IGV.seg` identical to test11 |
 | 4.5 comparison with JUNO | `../test20` (`devs` f231abf), a JUNO project rerun: 38 tumors x 20 normals, 760 pairs, run directly, pid 3122405 on `isca006` | `COMPLETED`, 1,579 of 1,579 jobs (58 FIX, 760 COUNT, 760 SEG, 1 POST), 19 min 50 s wall. Counts, bin grid and `getGeneCalls` match JUNO exactly; segmentation does not (gene calls on the same pairs: 1,817 JUNO, 1,229 IRIS, 1,128 shared, none opposite), because DNAcopy 1.75.5 fixed the weights in weighted segmentation; DNAcopy 1.60.0 reproduces every JUNO call. Closed as explained (`00.ISSUES.md` #1); report `../test20/seqCNA_JUNO_vs_IRIS_concordance.html` |
 | 4.6 mouse, sWGS | | not done (`00.ISSUES.md` #2) |
+| pinned library, seed | `00.SETUP.sh` (60 packages from source, about 23 min on `isca006`), then test31 and test32 (`feat/pin-versions` uncommitted on 2ce47ac, test30's inputs: 5 tumors x 3 normals), control jobs 1325450 and 1325451 | `COMPLETED`, 36 of 36 jobs each, `checkRun.sh` 0; `00.RUNSTATUS.txt` records `R_VERSION=4.5.1`, `RLIB_LOCK_MD5`, `SAMTOOLS_VERSION=1.20`, `MAGICK_VERSION=7.1.2-33`. Every file under `outAll/` (counts, `.rda`, `.seg`, `.out`, PNGs), `pairing.tsv`, `GeneMatrix.csv`, `SegmentMatrix.csv`, xlsx and PDF identical between the two runs; `___IGV.seg` has the same rows in a different order (`find` order in `postProcess.sh`). `bin/checkRlib.R` stops on a wrong R or package version and on a package loaded from another library |
 
 sacct for Proj_12257 (`MaxRSS` is the cgroup watermark and includes
 page cache, see `docs/IRIS_CLUSTER_INFO.md`; a direct run has no
