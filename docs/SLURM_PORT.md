@@ -149,7 +149,7 @@ beside the checkout (`../test01/` and so on) and were deleted on
 | direct run | test12, `PIPE.sh` run directly, pid 3105705 on `isca006` | `COMPLETED`, 10 of 10 jobs, `RUN_MODE=direct`, `CTRL_JOBID=none`, `checkRun.sh` 0; `___IGV.seg` identical to test11 |
 | failure: SIGHUP | test13, direct run, SIGHUP sent during COUNT | `FAILED` at `STAGE=COUNT`, rc 129, COUNT job 1265961 cancelled; `checkRun.sh` 2 while running, 1 after |
 | sbatch run | test14, control job 1265859 | `COMPLETED`, 10 of 10 jobs, `RUN_MODE=sbatch`, `checkRun.sh` 0; `___IGV.seg` identical to test11 |
-| 4.5 comparison with JUNO | | not done: Proj_12257 has no JUNO run (`00.ISSUES.md` #1) |
+| 4.5 comparison with JUNO | `../test20` (`devs` f231abf), a JUNO project rerun: 38 tumors x 20 normals, 760 pairs, run directly, pid 3122405 on `isca006` | `COMPLETED`, 1,579 of 1,579 jobs (58 FIX, 760 COUNT, 760 SEG, 1 POST), 19 min 50 s wall. Counts, bin grid and `getGeneCalls` match JUNO exactly; segmentation does not (gene calls on the same pairs: 1,817 JUNO, 1,229 IRIS, 1,128 shared, none opposite), because DNAcopy 1.75.5 fixed the weights in weighted segmentation; DNAcopy 1.60.0 reproduces every JUNO call. Closed as explained (`00.ISSUES.md` #1); report `../test20/seqCNA_JUNO_vs_IRIS_concordance.html` |
 | 4.6 mouse, sWGS | | not done (`00.ISSUES.md` #2) |
 
 sacct for Proj_12257 (`MaxRSS` is the cgroup watermark and includes
@@ -162,6 +162,16 @@ control job):
 | COUNT | 1278119 to 1278157 | 4:39 to 9:15 | 1.8 to 8.4 GB (22 of 30 at the cap; cache-inflated) | 8G |
 | SEG | 1280450 to 1280491 | 0:44 to 1:08 | 1.9 to 2.9 GB | 8G |
 | POST | 1280960 | 5 s | 359 MB | 8G |
+
+sacct for test20 (BAMs 0.5 to 2.3 GB; the genome tag `b37+mm10` is
+not `b37`, so FIX reheaders instead of linking):
+
+| Stage | Jobs | Elapsed | MaxRSS | ReqMem |
+| --- | --- | --- | --- | --- |
+| FIX | 1269562 to 1269675 | 0:15 to 1:06 | 1.0 to 4.0 GB (4 of 58 at the cap; cache-inflated) | 4G |
+| COUNT | 1270334 to 1272829 | 0:41 to 1:49 | 1.3 to 5.3 GB | 8G |
+| SEG | 1273218 to 1275214 | 0:18 to 1:12 | 0.8 to 2.7 GB | 8G |
+| POST | 1275364 | 10 s | 1.3 GB | 8G |
 
 sacct for test01:
 

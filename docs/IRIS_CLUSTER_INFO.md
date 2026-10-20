@@ -103,6 +103,12 @@ on `isca006`); stage jobs 1278043-1278056 (FIX), 1278119-1278157
 (COUNT), 1280450-1280491 (SEG), 1280960 (POST), all on
 `cmobic_short`. 72 of 72 `COMPLETED`, 11 min 35 s wall.
 
+**JUNO comparison, 2026-10-20**, `../test20/`: run directly (pid
+3122405 on `isca006`); stage jobs 1269562-1269675 (FIX),
+1270334-1272829 (COUNT), 1273218-1275214 (SEG), 1275364 (POST), all
+on `cmobic_short`. 1,579 of 1,579 `COMPLETED`, 19 min 50 s wall.
+Per-stage Elapsed and MaxRSS in `docs/SLURM_PORT.md`.
+
 The runs below used seven normal BAMs from argos run 18473 as both
 tumors and normals (`docs/SLURM_PORT.md`). Their directories were
 deleted on 2026-10-20.
