@@ -18,7 +18,8 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
 - IRIS/Slurm only. Submit with `sbatch seqCNA/PIPE.sh TARGETTED|sWGS`
   from the project directory; LSF support removed (`bsub`, `bSync`,
   `parseLSF.py`, `-w post_done()`). Logs in `SLURM.*/`. One run per
-  project directory.
+  project directory; only a run that failed in CHECK can be submitted
+  again in the same directory.
 - `seqCNA.sh` retired to `attic/`. Its two submissions per pair are the
   COUNT and SEG stages of `PIPE.sh`, which fans each stage out with
   `~/bin/bsub` and waits with `bSync`/`bCheck` between stages.
@@ -71,6 +72,12 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
 - `tumors` and `normals` are checked against the relabeled BAM paths,
   as they are applied after FIX. The early port checked the original
   paths, which rejected lines copied from `samples` (`s_<id>__`).
+- A sample may be listed in both `tumors` and `normals`; its self-pair
+  is skipped. The LSF version ran it and `selectBestMatch` dropped it;
+  the early port stopped the run.
+- A run that failed in CHECK submitted nothing and no longer blocks the
+  directory; a new run replaces its records. The early port refused
+  any rerun, so a typo in `tumors` needed a new directory.
 - `fixChromosomeNames.sh`: samtools from `bin/loadTools.sh` instead of
   `module load samtools/1.19.2`; calls `$SDIR/GenomeData/getGenomeBuildBAM.sh`
   instead of relying on PATH.
@@ -86,6 +93,15 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
 - `selectBestMatch.R` no longer loads `readxl`; `getGeneCalls.R` no
   longer loads `biomaRt` (neither was used).
 - `README.md`, `CLAUDE.md` describe the Slurm pipeline.
+
+### Fixed
+- `selectBestMatch.R` failed on a project with a single pair: it drops
+  the columns that do not vary between pairs, and with one pair that
+  included `sampleId`. Under LSF the error was ignored and `out/` was
+  not pruned; the port stopped the run at BEST.
+- Pruning `out/` after BEST matches `bestMatches____out` on whole lines
+  (`grep -vxFf`). The substring match (`fgrep -vf`, also in the LSF
+  version) kept the pair `..._s_N10` when the best was `..._s_N1`.
 
 ### Removed
 - `testR`, `testR.R`, `misc/INSTALL.RLIB`, `Rlib/INSTALL.md`,

@@ -40,7 +40,9 @@ library and stops with install hints otherwise.
 
 The pipeline runs from a project directory with this repo checked out
 (or linked) as `seqCNA/` inside it. All outputs go to the current
-directory. One run per project directory.
+directory. One run per project directory, except that a run that
+failed in CHECK (nothing submitted) can be fixed and submitted again
+there.
 
 Required inputs in the project directory:
 - `pipeline/` containing a subdirectory matching `alignments|bam` with
@@ -102,7 +104,9 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
 3. After FIX: `tumorBams`, `normalBams` from the relabeled BAMs; the
    `GENOME=` argument from the relabeled tumor's tag; the pair list
    `out/pipeline_info/pairs.tsv` (PAIR, TUMOR_BAM, NORMAL_BAM, ODIR) for
-   every tumor x normal; `out/pipeline_info/cmd.sh.log`.
+   every tumor x normal; `out/pipeline_info/cmd.sh.log`. A sample in
+   both `tumors` and `normals` is allowed; its self-pair is skipped, and
+   every tumor needs one normal other than itself.
 4. COUNT, one job per pair: `getPairedCounts`. Class from `runClass`
    on the BAM sizes. Logs in `SLURM.02.COUNT/`.
 5. SEG, one job per pair: `seqSegment` on the `_Counts.rda`. Logs in
@@ -110,7 +114,8 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
 6. BEST (control job): `selectBestMatch out` keeps, for each tumor, the
    normal with the lowest `rms.logr` and writes `bestMatches____out`.
    `out/` is hard-linked to `outAll/`, then the non-best pair
-   directories are deleted from `out/`.
+   directories are deleted from `out/` (whole-line match against
+   `bestMatches____out`).
 7. POST, one job: `postProcess.sh <Assay> <ProjNo>` copies PNGs to
    `<ProjNo>/`, concatenates the `.seg` files into `<ProjNo>___IGV.seg`,
    runs `fixXChrom.R` (renames the highest numeric chromosome to X),
