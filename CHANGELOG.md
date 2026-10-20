@@ -5,13 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [6.0.0]
 
-To be released as 6.0.0: the port from JUNO/LSF (CentOS 6/7, R 3.6 and
+The port from JUNO/LSF (CentOS 6/7, R 3.6 and
 R 4.2) to IRIS/Slurm (RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R.
 The specification and its decisions (D1 to D16) are in
 `attic/docs/00.SPEC_IRIS_PORT.md`; how the port was done and validated
-is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
+is in `docs/SLURM_PORT.md`, with the Proj_12257 run (b37 exome,
+6 tumors x 5 normals) it was validated on. The last LSF version is on branch `juno`
 and tag `v5-juno` (3e6c18d).
 
 ### Breaking
