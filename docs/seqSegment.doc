@@ -18,3 +18,8 @@ MINBINCOUNT=(Integer)         Minimum number of counts per bin to be used in seg
 
 YLIM=(Number)                 The plots show log2 ratios from -YLIM to YLIM.
                               Default value: 5.
+
+TUMORID=String                If set, also write <sampleId>_seqSeg.redacted.png: the same
+                              plot titled with this id instead of the pair id, so it does
+                              not show the normal. PIPE.sh sets it to the tumor id; the
+                              deliverable PDF is built from these plots. Default value: "".

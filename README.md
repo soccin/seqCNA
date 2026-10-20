@@ -47,10 +47,15 @@ Or run it directly, without `sbatch`, in a shell that stays up for the
 whole run (an interactive job, tmux, nohup):
 `seqCNA/PIPE.sh TARGETTED`. Run `checkRun.sh` on the same host.
 
-Deliverables land in `<Proj_No>/`: the per-pair PNGs,
-`<Proj_No>___IGV.seg`, `GeneMatrix.csv`, `SegmentMatrix.csv`,
-`<Proj_No>___GeneTable.xlsx`, `<Proj_No>___seqSeg.pdf`. The best
-tumor-normal pairs are in `out/`, all pairs in `outAll/`.
+Deliverables land in `<Proj_No>/`: `<Proj_No>___IGV.seg`,
+`GeneMatrix.csv`, `SegmentMatrix.csv`, `<Proj_No>___GeneTable.xlsx`
+(or `README.txt` when no gene is significant) and
+`<Proj_No>___seqSeg.pdf`. They name each sample by its tumor ID only,
+so they do not show which normal was used. `<Proj_No>/` also holds the
+per-pair PNGs, titled with the pair ID `<tumor>__<normal>`; they are
+for checking, not for delivery. The normal chosen for each tumor is in
+`pairing.tsv` in the run directory. The best tumor-normal pairs are in
+`out/`, all pairs in `outAll/`.
 
 ### Normals
 
@@ -105,4 +110,9 @@ MINBINCOUNT=(Integer)         Minimum number of counts per bin to be used in seg
 
 YLIM=(Number)                 The plots show log2 ratios from -YLIM to YLIM.
                               Default value: 5.
+
+TUMORID=String                If set, also write <sampleId>_seqSeg.redacted.png: the same
+                              plot titled with this id instead of the pair id, so it does
+                              not show the normal. PIPE.sh sets it to the tumor id; the
+                              deliverable PDF is built from these plots. Default value: "".
 ```
