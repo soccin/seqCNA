@@ -1,60 +1,41 @@
 #!/bin/bash
-
 #
-# Need to go back to R version 3
+# execWrapper.sh -- run the R script that shares the invoking name
 #
-# First remove current R and R env vars
+# getPairedCounts, seqSegment, getGeneCalls and selectBestMatch are
+# symlinks to this file. It exports SDIR (this checkout) and SNAME (the
+# invoked name), puts the repo-local Rlib/ (built by 00.SETUP.sh) first
+# on R_LIBS, and runs Rscript --vanilla $0.R. With no arguments it
+# prints docs/$SNAME.doc instead.
 #
-# This is done in PIPE.sh
+# R 4.5.x is taken from PATH (on IRIS: module load R/4.5.1_nds). The
+# common packages come from the shared or personal library; --vanilla
+# still honors the R_LIBS and R_LIBS_USER environment variables, only
+# ~/.Rprofile and ~/.Renviron are skipped.
 #
-# export PATH=$(echo $PATH | tr ':' '\n' | fgrep -v /R/R | tr '\n' ':')
-# unset R_LIBS
-# unset R_VERSION
-
-# #
-# # Now load R/3.x
-# #
-
-# module load R/R-3.6.1
-# MAJOROS=7
-# export R_VERSION=$(R --version | head -1 | awk '{print $3}')
-# export R_LIBS=/home/socci/lib/R/CentOS${MAJOROS}/$R_VERSION
-
-# R --version
-
-
 
 export SDIR="$( cd "$( dirname "$0" )" && pwd )"
 export SNAME=$(basename $0)
 
-if [ -e /etc/system-release ]; then
-    OSSTR=$(cat /etc/system-release)
-    OSVER=$(echo $OSSTR | perl -ne 'm/ ((\d+)\.(\d+)(|.\d+)) /; print $1')
-    OSMAJOR=$(echo $OSVER | perl -ne 'm/(\d+)\./; print $1')
-else
-    echo "MISSING /etc/system-release"
+fatal() {
+    echo
+    echo "    FATAL ERROR: $SNAME: $*"
+    echo
     exit 1
-fi
+}
 
-case $OSMAJOR in
-    6)
-    export R_LIBS=$SDIR/Rlib:/home/socci/lib/R/CentOS6/3.4.3
-    RSCRIPT=/ifs/work/socci/opt/R/3.4.3/bin/Rscript
-    ;;
+RSCRIPT=$(command -v Rscript) || fatal "Rscript not on PATH (module load R/4.5.1_nds)"
 
-    7)
-    export R_LIBS=$SDIR/Rlib:$R_LIBS
-    RSCRIPT=$(which Rscript)
-    ;;
-
-    *)
-    echo "Unsupportted OS Version" $OSVER, $OSMAJOR
-    exit 1
+case $($RSCRIPT --vanilla -e 'cat(as.character(getRversion()))') in
+    4.5.*) ;;
+    *) fatal "need R 4.5.x on PATH, found $($RSCRIPT --version 2>&1 | head -1)" ;;
 esac
 
-# echo $R_LIBS
-# echo $RSCRIPT
-# exit
+if [ ! -e $SDIR/Rlib/seqDNAcopy/DESCRIPTION ]; then
+    fatal "$SDIR/Rlib/seqDNAcopy missing; run $SDIR/00.SETUP.sh"
+fi
+
+export R_LIBS=$SDIR/Rlib${R_LIBS:+:$R_LIBS}
 
 DOCFILE=$SDIR/docs/${SNAME}.doc
 if [ "$#" == "0" ] && [ -e $DOCFILE ]; then

@@ -5,7 +5,7 @@ require(tidyverse)
 # "__<matched normal>" half from the project output files so the normals
 # are not disclosed. Every file is rewritten in place.
 #
-# write_xlsx() is the openxlsx wrapper defined in ~/.Rprofile
+# Run with: Rscript --no-init-file seqCNA/redactNormals.R
 #
 
 normal_id_pattern <- "__.*"
@@ -36,7 +36,7 @@ gene_table_file <- find_output_file("___GeneTable.xlsx")
 gene_table_file |>
   readxl::read_xlsx() |>
   mutate(ID = str_remove(ID, normal_id_pattern)) |>
-  write_xlsx(gene_table_file)
+  openxlsx::write.xlsx(gene_table_file)
 
 igv_seg_file <- find_output_file("___IGV.seg")
 
