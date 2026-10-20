@@ -102,6 +102,15 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
 - Pruning `out/` after BEST matches `bestMatches____out` on whole lines
   (`grep -vxFf`). The substring match (`fgrep -vf`, also in the LSF
   version) kept the pair `..._s_N10` when the best was `..._s_N1`.
+- `PIPE.sh` run directly inside an interactive Slurm job recorded the
+  session's `SLURM_JOB_ID` as its control job, so `checkRun.sh`
+  reported the run as RUNNING until the session ended. `PIPE.sh` now
+  records `RUN_MODE=sbatch` only when it is the batch script itself
+  (`$0` is Slurm's `job<id>/slurm_script`); a direct run records
+  `CTRL_JOBID=none` and its host and pid, and ignores an inherited
+  `SBATCH_SCRIPT_DIR`. `checkRun.sh` checks that the pid is still
+  `PIPE.sh`, not only alive. SIGHUP (closed terminal) now marks the run
+  FAILED and cancels its jobs, as SIGTERM does.
 
 ### Removed
 - `testR`, `testR.R`, `misc/INSTALL.RLIB`, `Rlib/INSTALL.md`,

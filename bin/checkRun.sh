@@ -227,13 +227,15 @@ case "$STATUS" in
     RUNNING)
         if [ "$CTRL_JOBID" == "none" ]; then
             #
-            # PIPE.sh run by hand, not under Slurm: only the pid can say.
+            # PIPE.sh run directly (a shell, an interactive job): only the
+            # pid can say. Pids are reused, so the process must still be
+            # PIPE.sh.
             #
             if [ "$HOST" != "$(hostname)" ]; then
                 VERDICT=RUNNING
                 EXIT=2
-                NOTE="PIPE.sh ran outside Slurm on $HOST; run checkRun.sh there to confirm"
-            elif kill -0 "$PID" 2>/dev/null; then
+                NOTE="PIPE.sh was run directly on $HOST; run checkRun.sh there to confirm"
+            elif ps -o args= -p "$PID" 2>/dev/null | grep -q "PIPE\.sh"; then
                 VERDICT=RUNNING
                 EXIT=2
             else
@@ -275,7 +277,11 @@ fi
 echo "SEQCNA STATUS: $VERDICT   $(date '+%Y-%m-%d %H:%M:%S')"
 echo "   dir        $(cd "$DIR" && pwd)"
 echo "   version    $VERSION"
-echo "   control    $CTRL_JOBID ${CTRL_STATE:+($CTRL_STATE)}  $CTRL_LOG"
+if [ "$CTRL_JOBID" == "none" ]; then
+    echo "   control    run directly, pid $PID on $HOST"
+else
+    echo "   control    $CTRL_JOBID ${CTRL_STATE:+($CTRL_STATE)}  $CTRL_LOG"
+fi
 echo "   started    $STARTED"
 if [ -n "$FINISHED" ]; then
     echo "   finished   $FINISHED"

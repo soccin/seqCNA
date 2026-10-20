@@ -43,6 +43,10 @@ sbatch seqCNA/PIPE.sh sWGS         # shallow WGS:   BINSIZE=auto
 seqCNA/bin/checkRun.sh             # 0 ok, 1 failed, 2 running
 ```
 
+Or run it directly, without `sbatch`, in a shell that stays up for the
+whole run (an interactive job, tmux, nohup):
+`seqCNA/PIPE.sh TARGETTED`. Run `checkRun.sh` on the same host.
+
 Deliverables land in `<Proj_No>/`: the per-pair PNGs,
 `<Proj_No>___IGV.seg`, `GeneMatrix.csv`, `SegmentMatrix.csv`,
 `<Proj_No>___GeneTable.xlsx`, `<Proj_No>___seqSeg.pdf`. The best

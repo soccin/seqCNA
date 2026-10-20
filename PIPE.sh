@@ -38,6 +38,16 @@
 # exports SBATCH_SCRIPT_DIR and SDIR is taken from that. Running PIPE.sh
 # directly (no sbatch) falls back to $0.
 #
+# The full run can also be started directly, in a shell that outlives it
+# (an interactive job, tmux, nohup):
+#
+#    ./seqCNA/PIPE.sh TARGETTED
+#
+# Then this script, not a Slurm job, is the control job: the run records
+# hold CTRL_JOBID=none with its host and pid, and checkRun.sh looks for
+# the pid there. That holds inside an interactive job too, where
+# SLURM_JOB_ID is set but names the session, not this run (see RUN_MODE).
+#
 # Stages (job names qSeqCNA_<STAGE>_<pid of this script>):
 #
 #   CHECK   control job: inputs, genome, tumors/normals, project id
@@ -60,7 +70,21 @@
 
 set -eu
 
-SDIR=${SBATCH_SCRIPT_DIR:-$( cd "$( dirname "$0" )" && pwd )}
+#
+# RUN_MODE: sbatch if this process is the batch script of Slurm job
+# $SLURM_JOB_ID, direct otherwise. SLURM_JOB_ID alone cannot tell: a run
+# started by hand inside an interactive job inherits the session's id.
+# Slurm runs a batch script as <SlurmdSpoolDir>/job<id>/slurm_script, so
+# $0 can (checked on IRIS, Slurm 25.11). In direct mode SBATCH_SCRIPT_DIR
+# is ignored; one inherited from the session would point elsewhere.
+#
+if [[ -n ${SLURM_JOB_ID:-} && $0 == */job$SLURM_JOB_ID/slurm_script ]]; then
+    RUN_MODE=sbatch
+    SDIR=${SBATCH_SCRIPT_DIR:-$( cd "$( dirname "$0" )" && pwd )}
+else
+    RUN_MODE=direct
+    SDIR=$( cd "$( dirname "$0" )" && pwd )
+fi
 
 if [ ! -e "$SDIR/getPairedCounts" ]; then
     echo
@@ -255,13 +279,14 @@ JOBS=SLURM.CTRL/jobs.tsv
 INFODIR=out/pipeline_info
 PAIRS_TSV=$INFODIR/pairs.tsv
 
-CTRL_JOBID=${SLURM_JOB_ID:-none}
+CTRL_JOBID=none
 CTRL_LOG=none
-if [ "$CTRL_JOBID" != "none" ]; then
+if [ "$RUN_MODE" == "sbatch" ]; then
+    CTRL_JOBID=$SLURM_JOB_ID
     CTRL_LOG=$(scontrol show job $CTRL_JOBID 2>/dev/null | sed -n 's/^ *StdOut=//p') || true
     CTRL_LOG=${CTRL_LOG:-SLURM.CTRL/$CTRL_JOBID.out}
 fi
-echo CTRL_JOBID=$CTRL_JOBID
+echo RUN_MODE=$RUN_MODE CTRL_JOBID=$CTRL_JOBID HOST=$(hostname) PID=$$
 
 RUN_STATUS=RUNNING
 RUN_STAGE=SETUP
@@ -288,6 +313,7 @@ MESSAGE=$RUN_MESSAGE
 STARTED=$RUN_STARTED
 FINISHED=$RUN_FINISHED
 VERSION=$SCRIPT_VERSION
+RUN_MODE=$RUN_MODE
 CTRL_JOBID=$CTRL_JOBID
 CTRL_LOG=$CTRL_LOG
 HOST=$(hostname)
@@ -404,14 +430,17 @@ writeRunStatus
 # Record it in the status file and cancel the rest of this run's stage
 # jobs so they do not keep running after the control job is gone. SIGTERM
 # reaches the trap promptly only while the control job is in bSync (see
-# slurmTools.sh), which is where it spends nearly all of its time.
+# slurmTools.sh), which is where it spends nearly all of its time. SIGHUP
+# is a direct run losing its terminal; under nohup it is ignored and the
+# trap is not set.
 #
 onSignal() {
-    RUN_MESSAGE="control job got SIG$1 (scancel, time limit or node shutdown)"
+    RUN_MESSAGE="control job got SIG$1 (scancel, time limit, node shutdown or closed terminal)"
     exit $2
 }
 trap 'onSignal TERM 143' TERM
 trap 'onSignal INT 130' INT
+trap 'onSignal HUP 129' HUP
 
 onExit() {
     local rc=$?
@@ -537,6 +566,7 @@ writeCmdLog() {
 	GURL: $GURL
 	GTAG: $SCRIPT_VERSION
 	PWD: $PWD
+	RUN_MODE: $RUN_MODE
 	CTRL_JOBID: $CTRL_JOBID
 
 	ASSAY_TYPE: $ASSAY_TYPE

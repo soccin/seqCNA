@@ -67,6 +67,15 @@ seqCNA/bin/checkRun.sh            # 0 ok, 1 failed, 2 running, 3 sacct failed
 which `PIPE.sh` finds the checkout. Jobs are submitted with `~/bin/bsub`
 and waited on with `~/bin/bSync.sh`.
 
+The full run can also be started directly (`seqCNA/PIPE.sh TARGETTED`)
+in a shell that outlives it: an interactive job, tmux, nohup. `PIPE.sh`
+sets `RUN_MODE=sbatch` only when `$0` is Slurm's spool copy
+`job$SLURM_JOB_ID/slurm_script`; otherwise `RUN_MODE=direct`, the
+process itself is the control job, `CTRL_JOBID=none`, and `checkRun.sh`
+checks that `PID` on `HOST` is still `PIPE.sh` (run it on that host).
+`SLURM_JOB_ID` alone cannot tell the two apart: inside an interactive
+job it names the session.
+
 Single steps can be run by hand. Any wrapped tool run with no arguments
 prints `docs/<name>.doc`.
 
@@ -127,10 +136,11 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
    `.out`, `.png` and every `<ProjNo>/` file must be non-empty;
    `bCheckAll` sweeps every job of the run; `STATUS=COMPLETED`.
 
-Run records: `00.RUNSTATUS.txt` (STATUS, STAGE, RC, MESSAGE, ...),
-`SLURM.CTRL/jobs.tsv` (job id, stage, sample, log), `#SEQCNA_EXIT=<rc>`
-as the last line of every stage log. Any exit before COMPLETED marks
-the run FAILED and cancels its queued jobs (EXIT trap).
+Run records: `00.RUNSTATUS.txt` (STATUS, STAGE, RC, MESSAGE,
+RUN_MODE, CTRL_JOBID, HOST, PID, ...), `SLURM.CTRL/jobs.tsv` (job id,
+stage, sample, log), `#SEQCNA_EXIT=<rc>` as the last line of every
+stage log. Any exit before COMPLETED marks the run FAILED and cancels
+its queued jobs (EXIT trap; also on SIGTERM, SIGINT, SIGHUP).
 
 After the pipeline:
 - `delivery.sh /path/Proj_X/r_00N` copies deliverables into `seqcna/`
