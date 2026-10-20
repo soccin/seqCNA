@@ -54,8 +54,9 @@
 #   FIX     one job per BAM: fixChromosomeNames.sh      SLURM.01.FIX
 #   COUNT   one job per tumor x normal: getPairedCounts  SLURM.02.COUNT
 #   SEG     one job per pair: seqSegment                 SLURM.03.SEG
-#   BEST    control job: selectBestMatch, outAll/, prune out/
+#   BEST    control job: selectBestMatch (pairing.tsv), outAll/, prune out/
 #   POST    one job: postProcess.sh                      SLURM.04.POST
+#           (deliverables name samples by tumor id only)
 #   STAGING control job: sweep of every job, deliverables, COMPLETED
 #
 # Ported from the ChIP-seq control job (v1.0.0); see docs/SLURM_PORT.md.
@@ -270,9 +271,14 @@ RUNRE="^${TAG}_.*_$$\$"
 #   SLURM.CTRL/jobs.tsv  one line per stage job: job id, stage, sample
 #                        and log path, written at submission.
 #
-#   out/pipeline_info/   pairs.tsv (PAIR, TUMOR_BAM, NORMAL_BAM, ODIR),
-#                        read by the SEG stage; cmd.sh.log, the
+#   out/pipeline_info/   pairs.tsv (PAIR, TUMOR_BAM, NORMAL_BAM, ODIR,
+#                        TUMOR, NORMAL), read by the COUNT and SEG stages
+#                        and by selectBestMatch; cmd.sh.log, the
 #                        provenance record.
+#
+#   pairing.tsv          the best normal of each tumor (TUMOR, NORMAL,
+#                        PAIR, rms.logr), written by selectBestMatch. It
+#                        names the normals, so it stays out of $PROJNO/.
 #
 RUNSTATUS=00.RUNSTATUS.txt
 JOBS=SLURM.CTRL/jobs.tsv
@@ -841,7 +847,7 @@ writeRunStatus
 # LSF version ran it and selectBestMatch dropped it. Every tumor needs at
 # least one normal other than itself.
 #
-printf 'PAIR\tTUMOR_BAM\tNORMAL_BAM\tODIR\n' >$PAIRS_TSV
+printf 'PAIR\tTUMOR_BAM\tNORMAL_BAM\tODIR\tTUMOR\tNORMAL\n' >$PAIRS_TSV
 for tumor in $(cat tumorBams); do
     tumorId=$($SDIR/getSampleTag.sh $tumor)
     SAMPLES="$SAMPLES $tumorId"
@@ -854,7 +860,8 @@ for tumor in $(cat tumorBams); do
             continue
         fi
         sID=${tumorId}__${normalId}
-        printf '%s\t%s\t%s\t%s\n' "$sID" "$tumor" "$normal" "out/$scatter/$tumorId/$sID" >>$PAIRS_TSV
+        printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$sID" "$tumor" "$normal" \
+            "out/$scatter/$tumorId/$sID" "$tumorId" "$normalId" >>$PAIRS_TSV
         nTumorPairs=$((nTumorPairs + 1))
     done
     if [ "$nTumorPairs" == "0" ]; then
@@ -871,7 +878,7 @@ writeCmdLog
 #
 # Stage 2: COUNT, one job per pair: binned, GC-corrected counts.
 #
-while IFS=$'\t' read -r sID tumor normal oDir; do
+while IFS=$'\t' read -r sID tumor normal oDir _; do
     CLASS=$(runClass $RATE_COUNT $tumor $normal) || fatal "cannot size [$tumor $normal]"
     seqSub COUNT $sID SLURM.02.COUNT $CLASS "-n 2 -M 8G" \
         $SDIR/getPairedCounts GENOME=$GENOME NORMAL=$normal TUMOR=$tumor \
@@ -881,24 +888,29 @@ done < <(awk 'NR > 1' $PAIRS_TSV)
 waitStage COUNT
 
 #
-# Stage 3: SEG, one job per pair: segmentation, clustering, plot.
+# Stage 3: SEG, one job per pair: segmentation, clustering, plot. With
+# TUMORID, seqSegment also writes the plot titled with the tumor id only
+# (<pair>_seqSeg.redacted.png), from which POST builds the PDF.
 #
-while IFS=$'\t' read -r sID tumor normal oDir; do
+while IFS=$'\t' read -r sID tumor normal oDir tumorId _; do
     COUNTS=$oDir/${sID}_Counts.rda
     if [ ! -s "$COUNTS" ]; then
         fatal "no COUNT output [$COUNTS]"
     fi
     seqSub SEG $sID SLURM.03.SEG SHORT "-n 2 -M 8G" \
-        $SDIR/seqSegment BINSIZE=$BINSIZE ODIR=$oDir COUNTS=$COUNTS
+        $SDIR/seqSegment BINSIZE=$BINSIZE ODIR=$oDir COUNTS=$COUNTS \
+            TUMORID=$tumorId
 done < <(awk 'NR > 1' $PAIRS_TSV)
 
 waitStage SEG
 
 #
 # Stage 4: BEST, in the control job. For each tumor keep the normal with
-# the lowest rms.logr (selectBestMatch writes bestMatches____out). The
-# full set of pairs is hard-linked into outAll/, then the non-best pair
-# directories are removed from out/. The match is on whole lines: as a
+# the lowest rms.logr: selectBestMatch writes bestMatches____out and
+# pairing.tsv, one best pair per tumor, with the tumor and normal ids
+# from pairs.tsv. POST uses pairing.tsv to replace the pair ids in the
+# deliverables by tumor ids. The full set of pairs is hard-linked into
+# outAll/, then the non-best pair directories are removed from out/. The match is on whole lines: as a
 # substring match, the best pair ..._s_N1 would also keep ..._s_N10.
 #
 setStage BEST
@@ -908,8 +920,11 @@ if [ ! -s bestMatches____out ]; then
     fatal "selectBestMatch wrote no best matches (bestMatches____out)"
 fi
 nBest=$(wc -l <bestMatches____out)
-if [ "$nBest" -lt "$nTumBams" ]; then
+if [ "$nBest" != "$nTumBams" ]; then
     fatal "selectBestMatch found $nBest best matches for $nTumBams tumors"
+fi
+if [ ! -s pairing.tsv ]; then
+    fatal "selectBestMatch wrote no pairing.tsv"
 fi
 
 mkdir outAll
@@ -936,7 +951,9 @@ for oDir in $(cat bestMatches____out); do
     checkFile $oDir/${sID}_seqSeg.seg
     checkFile $oDir/${sID}_seqSeg.out
     checkFile $oDir/${sID}_seqSeg.png
+    checkFile $oDir/${sID}_seqSeg.redacted.png
 done
+checkFile pairing.tsv
 checkFile $PROJNO/${PROJNO}___IGV.seg
 checkFile $PROJNO/${PROJNO}___seqSeg.pdf
 #
