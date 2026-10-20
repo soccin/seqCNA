@@ -47,8 +47,9 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
   failed or cancelled control job marks the run `FAILED` and cancels its
   queued jobs.
 - Up-front checks before anything is submitted: BAM directory, every
-  BAM readable with an index, `tumors` and `normals` present and
-  matching, one genome across all BAMs and a supported one, project id.
+  BAM readable with an index, `tumors` and `normals` matching the
+  relabeled BAM paths, one genome across all BAMs and a supported one,
+  project id.
 - `out/pipeline_info/pairs.tsv` (PAIR, TUMOR_BAM, NORMAL_BAM, ODIR) and
   `cmd.sh.log` (versions, tools, command line).
 - Walltime classes SHORT (under two hours, short partitions) and LONG;
@@ -62,6 +63,14 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
   this file.
 
 ### Changed
+- `PIPE.sh` keeps the LSF first step: run directly with no `tumors`
+  or `normals`, it writes `samples` (one line per BAM) and exits 0.
+  It now stops before any run record is written, so the run can be
+  submitted in the same directory. The early port checked `tumors` and
+  `normals` first and so never wrote `samples` in that case.
+- `tumors` and `normals` are checked against the relabeled BAM paths,
+  as they are applied after FIX. The early port checked the original
+  paths, which rejected lines copied from `samples` (`s_<id>__`).
 - `fixChromosomeNames.sh`: samtools from `bin/loadTools.sh` instead of
   `module load samtools/1.19.2`; calls `$SDIR/GenomeData/getGenomeBuildBAM.sh`
   instead of relying on PATH.
