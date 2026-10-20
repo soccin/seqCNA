@@ -1,7 +1,9 @@
 
 USAGE: getGeneCalls [options] ASSAY=<assayType> INPUTS=FileOfSeqCNAOutputDirs
 
-Compute the gene level calls from a set of seg files.
+Compute the gene level calls from a set of seg files. Autosomes only:
+segments and genes on X, Y and other contigs are dropped before
+calling.
 
 Options:
 
