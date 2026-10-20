@@ -12,7 +12,7 @@ Open issues, including the ones not required for the release, are in
 - [x] chrX: no chrX gene calls in any assay. `getGeneCalls.R` keeps
       the autosomes only, by genome, for segments and annotation. X
       stays in segmentation, `rms.logr`, the IGV `.seg` and the plots.
-- [ ] Seed: `seqSegment SEED=` with a fixed default, `set.seed()`
+- [x] Seed: `seqSegment SEED=` with a fixed default, `set.seed()`
       before `seqsegment()`, written to the `.out` file.
 - [ ] Pin versions under R 4.5.1: a lock file of the installed
       packages and their dependencies, installed into `Rlib/` by

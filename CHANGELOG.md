@@ -70,6 +70,12 @@ and tag `v5-juno` (3e6c18d).
 - `seqSegment TUMORID=`: also writes `<pair>_seqSeg.redacted.png`, the
   same plot titled with the tumor ID. `PIPE.sh` sets it, and
   `postProcess.sh` builds the PDF from these plots.
+- `seqSegment SEED=` (default 42): `set.seed()` before segmentation,
+  written to the `.out` file. DNAcopy computes p-values by
+  permutation, and 5.x set no seed: in `../test20` two reruns on the
+  same counts changed 3 of 43 best-pair segmentations and 19 gene
+  calls. With the seed a rerun is byte-identical (checked on one of
+  those pairs; seed 7 instead of 42 gives 52 segments instead of 50).
 - Walltime classes SHORT (under two hours, short partitions) and LONG;
   COUNT jobs are sized per pair from the BAM sizes (`runClass`).
 - `bin/loadTools.sh`: samtools 1.20 module, ImageMagick 7 from the

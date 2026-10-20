@@ -269,7 +269,10 @@ tree is dirty).
 
 - seqSegment.R: `MINBINCOUNT=35`, `undo.SD=2`, cluster merge threshold
   0.04 (`include/clusterSegs.R`, adapted from FACETS). The cluster with
-  the smallest `abs(logR)/sqrt(nProbes)` is set to logR 0.
+  the smallest `abs(logR)/sqrt(nProbes)` is set to logR 0. `SEED=42`:
+  `set.seed()` before `seqsegment()`, because DNAcopy's p-values are
+  by permutation; unseeded, a rerun on the same counts can move
+  breakpoints and change gene calls. The seed is in the `.out` file.
 - getGeneCalls.R: significant if `FDR < 0.05` and `|seg.mean| > 1`.
   When a gene overlaps several segments, the lowest `seg.mean` is used,
   so deletions take priority over amplifications. For the Exome assay
