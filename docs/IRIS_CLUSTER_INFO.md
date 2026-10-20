@@ -51,12 +51,18 @@ The pipeline depends on them, as ATAC-seq and ChIP-seq do.
 - `/tmp`: a 137 GB volume shared by every job on a node. Nothing of
   this pipeline writes there.
 
+## Reference data
+
+| Data | JUNO path | IRIS path |
+|---|---|---|
+| Pooled normals `IDT_Exome_v2_Normal` (README) | `~/Work/Pipelines/SeqCNV` | not yet copied (`00.ISSUES.md` #3) |
+
 ## Toolchain
 
 | Tool | Version | Where |
 |---|---|---|
 | R | 4.5.1 | `/usersoftware/core001/common/RHEL_8/gcc-12.2.0/R/4.5.1`, personal module `R/4.5.1_nds` in `~/.modules`. Sets `R_LIBS_USER=~/R/x86_64-pc-linux-gnu-library/4.5`, which is `/data1/core001/work/bic/socci/opt/lib/R/...`. |
-| R packages in the shared or personal library | tidyverse 2.0.0, Rsamtools 2.26.0, IRanges 2.44.0, data.table 1.18.6.1, openxlsx 4.2.9, jsonlite 2.0.0, Rcpp 1.1.2, RJSONIO 2.0.5 | Missing from both as of 2026-10-20: DNAcopy, pctGCdata (user to install). |
+| R packages in the shared or personal library | tidyverse 2.0.0, Rsamtools 2.26.0, IRanges 2.44.0, data.table 1.18.6.1, openxlsx 4.2.9, jsonlite 2.0.0, Rcpp 1.1.2, RJSONIO 2.0.5, DNAcopy 1.84.0, pctGCdata 0.3.0 | DNAcopy, pctGCdata and RJSONIO are in the personal library only (installed 2026-10-20). |
 | Other R modules | `r/3.6.3`, `R/4.3.0` (empty libraries), `r/4.4.1` (partial) | Not used. |
 | samtools | 1.20 | module `samtools/1.20`, `/admin/software/samtools/samtools-1.20/bin` |
 | ImageMagick | 7.1.2-33 | `/usersoftware/core001/common/RHEL_8/imagemagick/7.1.2-33/bin/magick`; personal module only, so `bin/loadTools.sh` prepends the path. |
@@ -78,18 +84,30 @@ toolchain.
 
 ## Measurements
 
-Foreground on `isca006`, 2026-10-20, Proj_12257 pair
-`s_C_71VKFN_N001_d01` (4.0 GB) x `s_C_TTH188_N001_d01` (5.0 GB), b37
-exome, `BINSIZE=100`:
+Foreground on `isca006`, 2026-10-20, a pair of the normal test BAMs
+(`docs/SLURM_PORT.md`, Validation): `s_C_71VKFN_N001_d01` (4.0 GB) x
+`s_C_TTH188_N001_d01` (5.0 GB), b37 exome, `BINSIZE=100`:
 
 | Tool | Elapsed | Peak RSS |
 |---|---|---|
 | `getPairedCounts` | 176 s | 2.0 GB |
 | `seqSegment` | 66 s | 2.7 GB |
 
+Every COUNT job of the Proj_12257 run ran at the same 0.33 min per GB
+of tumor plus normal BAM (14.3 to 28.3 GB pairs).
+
 ## Validation runs
 
-**Full run, 2026-10-20**, `../test01/`, control job 546394 on
+**Proj_12257, 2026-10-20**, `../../CNA/`: run directly (pid 3316002
+on `isca006`); stage jobs 1278043-1278056 (FIX), 1278119-1278157
+(COUNT), 1280450-1280491 (SEG), 1280960 (POST), all on
+`cmobic_short`. 72 of 72 `COMPLETED`, 11 min 35 s wall.
+
+The runs below used seven normal BAMs from argos run 18473 as both
+tumors and normals (`docs/SLURM_PORT.md`). Their directories were
+deleted on 2026-10-20.
+
+**Full run on the test BAMs, 2026-10-20**, `../test01/`, control job 546394 on
 `cmobic_cpu`; stage jobs 546419-546430 (FIX), 546510-546532 (COUNT),
 548253-548272 (SEG), 561199 (POST), all on `cmobic_short`. 28 of 28
 `COMPLETED`, 6 min 10 s wall. Per-stage Elapsed and MaxRSS in
@@ -99,8 +117,19 @@ exome, `BINSIZE=100`:
 `--mem=8G` while the same tool peaks at 2.0 GB RSS in the foreground:
 as PEMapper found, `jobacct_gather/cgroup` reports the cgroup
 watermark including page cache, so a job streaming 9 GB of BAM fills
-its cgroup with cache up to the cap. No job was OOM-killed.
+its cgroup with cache up to the cap. No job was OOM-killed, here or
+in the Proj_12257 run, where 22 of the 30 COUNT jobs reported
+`MaxRSS` at the cap.
 
 **Failure tests, 2026-10-20**: `../test02/` (missing index, no job
 submitted), `../test01/` (rerun refused), `../test03/` (control job
 588179, one COUNT job cancelled by hand).
+
+**After the merge to `devs`, 2026-10-20**, from fresh clones:
+`../test11/` (one tumor, one normal; control job 1236320, 10 jobs,
+5 min 41 s), `../test10/` (seven samples in both `tumors` and
+`normals`, run directly inside interactive job 168961; 42 pairs, 92
+jobs), `../test12/` (direct run, pid 3105705 on `isca006`),
+`../test13/` (direct run sent SIGHUP during COUNT; COUNT job 1265961
+cancelled), `../test14/` (control job 1265859). Results in
+`docs/SLURM_PORT.md`.

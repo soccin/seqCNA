@@ -5,14 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [6.0.0]
 
-To be released as 6.0.0: the port from JUNO/LSF (CentOS 6/7, R 3.6 and
+The port from JUNO/LSF (CentOS 6/7, R 3.6 and
 R 4.2) to IRIS/Slurm (RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R.
 The specification and its decisions (D1 to D16) are in
 `attic/docs/00.SPEC_IRIS_PORT.md`; how the port was done and validated
-is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
-(3e6c18d).
+is in `docs/SLURM_PORT.md`, with the Proj_12257 run (b37 exome,
+6 tumors x 5 normals) it was validated on. The last LSF version is on branch `juno`
+and tag `v5-juno` (3e6c18d).
 
 ### Breaking
 - IRIS/Slurm only. Submit with `sbatch seqCNA/PIPE.sh TARGETTED|sWGS`
@@ -35,9 +36,14 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
   upstream `hg38` addition to `HUMAN.BUILDS`.
 - `execWrapper.sh` no longer reads `/etc/system-release`; it requires
   R 4.5.x and `Rlib/seqDNAcopy`.
-- `redactNormals.R` calls `openxlsx::write.xlsx` directly instead of
-  `write_xlsx()` from `~/.Rprofile`; run standalone R scripts with
-  `Rscript --no-init-file`.
+- The deliverables name each sample by its tumor ID, not by the pair
+  ID `<tumor>__<normal>`, so they do not show which normal was used:
+  `<ProjNo>___IGV.seg`, `GeneMatrix.csv`, `SegmentMatrix.csv`,
+  `<ProjNo>___GeneTable.xlsx` and `<ProjNo>___seqSeg.pdf`. The file
+  names are unchanged. The PNGs in `<ProjNo>/` keep the pair ID and are
+  not for delivery. This replaces the manual `redactNormals.R` step,
+  which stripped `__.*` by regex and missed the PDF. Standalone R
+  scripts run with `Rscript --no-init-file`.
 
 ### Added
 - Run records, from the ChIP-seq port: `00.RUNSTATUS.txt`,
@@ -51,15 +57,29 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
   BAM readable with an index, `tumors` and `normals` matching the
   relabeled BAM paths, one genome across all BAMs and a supported one,
   project id.
-- `out/pipeline_info/pairs.tsv` (PAIR, TUMOR_BAM, NORMAL_BAM, ODIR) and
-  `cmd.sh.log` (versions, tools, command line).
+- `out/pipeline_info/pairs.tsv` (PAIR, TUMOR_BAM, NORMAL_BAM, ODIR,
+  TUMOR, NORMAL) and `cmd.sh.log` (versions, tools, command line).
+- `pairing.tsv` in the run directory (`selectBestMatch`): the best
+  normal of each tumor, with TUMOR, NORMAL, PAIR and the `rms.logr` it
+  was chosen by. It names the normals and is not delivered.
+- `redactDeliverables.R`, run by `postProcess.sh` after `getGeneCalls`:
+  replaces each pair ID by its tumor ID in the IGV `.seg`, the two CSVs
+  and the xlsx, by the exact map in `pairing.tsv`, not by a regex (a
+  sample can be both a tumor and a normal). It stops if a tumor has two
+  pairs or an ID is not in the map.
+- `seqSegment TUMORID=`: also writes `<pair>_seqSeg.redacted.png`, the
+  same plot titled with the tumor ID. `PIPE.sh` sets it, and
+  `postProcess.sh` builds the PDF from these plots.
 - Walltime classes SHORT (under two hours, short partitions) and LONG;
   COUNT jobs are sized per pair from the BAM sizes (`runClass`).
 - `bin/loadTools.sh`: samtools 1.20 module, ImageMagick 7 from the
   core001 shared tree, R 4.5 check, `TMPDIR` under `/localscratch`.
 - `resources/vcf2maf/v1.6.12/`: the two isoform override files
-  `getGeneCalls.R` reads for the Exome assay, vendored from vcf2maf
-  v1.6.12 (they lived under `/opt/common` on JUNO).
+  `getGeneCalls.R` reads for the Exome assay, copied unchanged from
+  https://github.com/mskcc/vcf2maf/tree/v1.6.12/data on 2026-10-20
+  (they lived under `/opt/common` on JUNO):
+  `isoform_overrides_uniprot` (md5 537a33fd15869d1528531e6289f8493e),
+  `isoform_overrides_at_mskcc` (md5 cff4b7fc3d1257ad8dd054e0e00101e3).
 - `docs/SLURM_PORT.md`, `docs/IRIS_CLUSTER_INFO.md`, `00.ISSUES.md`,
   this file.
 
@@ -90,9 +110,16 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
   COUNT and SEG `-n 2 -M 8G` (peak 2.0 and 2.7 GB), FIX `-n 1 -M 4G`,
   POST `-n 1 -M 8G`. Under LSF the pair jobs asked `rusage[mem=16]`
   per slot, advisory; `-M` is a hard cap here.
+- `selectBestMatch.R` takes each pair's tumor and normal from
+  `pairs.tsv` instead of parsing the pair ID (`__s_`), and keeps exactly
+  one normal per tumor (`slice_min`, a tie goes to the first pair ID;
+  `top_n` kept every tied pair). `PIPE.sh` requires one best pair per
+  tumor, not at least as many as there are tumors.
 - `selectBestMatch.R` no longer loads `readxl`; `getGeneCalls.R` no
   longer loads `biomaRt` (neither was used).
 - `README.md`, `CLAUDE.md` describe the Slurm pipeline.
+- `METHODS.md` states the software versions (R 4.5.1, DNAcopy 1.84.0,
+  seqDNAcopy 0.0.4).
 
 ### Fixed
 - `selectBestMatch.R` failed on a project with a single pair: it drops
@@ -113,9 +140,11 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
   FAILED and cancels its jobs, as SIGTERM does.
 
 ### Removed
-- `testR`, `testR.R`, `misc/INSTALL.RLIB`, `Rlib/INSTALL.md`,
-  `GenomeData/genomeInfo_*.sh` (all `/ifs` paths, never sourced), to
-  `attic/`.
+- `testR`, `testR.R`, `docs/testR.doc` (empty), `misc/INSTALL.RLIB`,
+  `Rlib/INSTALL.md`, `GenomeData/genomeInfo_*.sh` (all `/ifs` paths,
+  never sourced), to `attic/`.
+- `redactNormals.R`, to `attic/`: the pipeline writes redacted
+  deliverables.
 
 ### Not tested
 - The mouse path (`mm10` relabel, `Mouse-Twist` assay) and sWGS

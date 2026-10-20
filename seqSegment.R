@@ -16,7 +16,8 @@ args=list(
     ODIR=".",
     BINSIZE="auto",
     MINBINCOUNT=35,
-    YLIM=5
+    YLIM=5,
+    TUMORID=""
     )
 
 cat("###############################################################\n")
@@ -288,13 +289,28 @@ plot1Panels <- function(out) {
 
 }
 
-pFile=file.path(args$ODIR,paste0(sampleId,"_seqSeg",".png"))
+writePlot <- function(out,pFile) {
+    png(file=pFile,type="cairo",width=1150,height=800,pointsize=16)
+    plot1Panels(out)
+    invisible(dev.off())
+}
 
 # png(file=pFile,type="cairo",height=1150,width=800,pointsize=16)
 # plot2Panels(out)
 
-png(file=pFile,type="cairo",width=1150,height=800,pointsize=16)
-plot1Panels(out)
+writePlot(out,file.path(args$ODIR,paste0(sampleId,"_seqSeg",".png")))
 
-dev.off()
+#
+# The same plot titled with the tumor id only, for the deliverable PDF,
+# which must not show the normal. plot.DNAcopy takes the title from
+# colnames(out$data)[3] and draws the segment means only where
+# out$output$ID matches it.
+#
+
+if(args$TUMORID!="") {
+    outRedacted=out
+    colnames(outRedacted$data)[3]=args$TUMORID
+    outRedacted$output$ID=args$TUMORID
+    writePlot(outRedacted,file.path(args$ODIR,paste0(sampleId,"_seqSeg",".redacted.png")))
+}
 
