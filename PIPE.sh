@@ -98,15 +98,17 @@ fi
 source $SDIR/bin/loadTools.sh
 source $SDIR/bin/slurmTools.sh
 
-if [ ! -e "$SDIR/Rlib/seqDNAcopy/DESCRIPTION" ]; then
-    echo
-    echo "    FATAL ERROR: $SDIR/Rlib/seqDNAcopy is missing"
-    echo "    run $SDIR/00.SETUP.sh once per checkout (see README.md)"
-    echo
-    exit 1
-fi
-
 SCRIPT_VERSION=$(git --git-dir=$SDIR/.git --work-tree=$SDIR describe --always --long --tags --dirty)
+
+#
+# Tool versions, recorded in the run status. R and its packages are
+# checked against Rlib.lock.tsv in CHECK (bin/rscript.sh --check);
+# samtools and ImageMagick are only recorded.
+#
+R_VERSION=$(Rscript --vanilla -e 'cat(as.character(getRversion()))')
+RLIB_LOCK_MD5=$(md5sum <$SDIR/Rlib.lock.tsv | cut -d' ' -f1)
+SAMTOOLS_VERSION=$(samtools --version | sed -n '1s/^samtools //p')
+MAGICK_VERSION=$(magick -version | sed -n '1s/^Version: ImageMagick \([^ ]*\).*/\1/p')
 PIPENAME="seqCNA"
 
 ORIG_CMD="$SDIR/PIPE.sh $(printf '%q ' "$@")"
@@ -319,6 +321,10 @@ MESSAGE=$RUN_MESSAGE
 STARTED=$RUN_STARTED
 FINISHED=$RUN_FINISHED
 VERSION=$SCRIPT_VERSION
+R_VERSION=$R_VERSION
+RLIB_LOCK_MD5=$RLIB_LOCK_MD5
+SAMTOOLS_VERSION=$SAMTOOLS_VERSION
+MAGICK_VERSION=$MAGICK_VERSION
 RUN_MODE=$RUN_MODE
 CTRL_JOBID=$CTRL_JOBID
 CTRL_LOG=$CTRL_LOG
@@ -482,6 +488,13 @@ trap onExit EXIT
 setStage CHECK
 
 #
+# R and its packages: R and Rlib/ must match Rlib.lock.tsv. Every R
+# script checks again when it starts (bin/rscript.sh).
+#
+$SDIR/bin/rscript.sh --check \
+    || fatal "R or $SDIR/Rlib does not match Rlib.lock.tsv (details above); run $SDIR/00.SETUP.sh"
+
+#
 # BAMs: pipeline/<alignments|bam>/*.bam, each with an index.
 #
 findBams
@@ -590,6 +603,7 @@ writeCmdLog() {
 	  $(R --version | head -1 || true)
 	  $(magick -version | head -1 || true)
 	  $(sed -n 's/^seqDNAcopy /seqDNAcopy /p' $SDIR/Rlib/VERSIONS.txt | head -1 || true)
+	  Rlib.lock.tsv md5 $RLIB_LOCK_MD5
 
 	Script: $ORIG_CMD
 	END_VERSION

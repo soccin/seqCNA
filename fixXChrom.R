@@ -1,4 +1,7 @@
-suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages({
+    library(readr)
+    library(dplyr)
+})
 args=commandArgs(trailingOnly=T)
 seg=read_tsv(args[1])
 maxChrom=seg %>% distinct(chrom) %>% max

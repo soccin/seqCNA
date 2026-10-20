@@ -1,4 +1,8 @@
-suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages({
+  library(readr)
+  library(dplyr)
+  library(stringr)
+})
 
 #
 # SeqCNA labels each sample by its pair id "<tumor>__<normal>". Replace the
@@ -15,12 +19,12 @@ suppressPackageStartupMessages(library(tidyverse))
 # The xlsx and the CSVs exist only when getGeneCalls found a significant
 # gene (otherwise it writes README.txt). The PNGs keep the pair id.
 #
-# Run by postProcess.sh with: Rscript --no-init-file redactDeliverables.R PAIRING PROJDIR
+# Run by postProcess.sh with: bin/rscript.sh redactDeliverables.R PAIRING PROJDIR
 #
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 2) {
-  cat("\n   usage: Rscript --no-init-file redactDeliverables.R PAIRING PROJDIR\n\n")
+  cat("\n   usage: seqCNA/bin/rscript.sh seqCNA/redactDeliverables.R PAIRING PROJDIR\n\n")
   quit(status = 1)
 }
 pairing_file <- args[1]
@@ -40,7 +44,7 @@ if (length(dup_tumors) > 0 || anyDuplicated(pairing$PAIR) > 0) {
   ))
 }
 
-pair_to_tumor <- set_names(pairing$TUMOR, pairing$PAIR)
+pair_to_tumor <- rlang::set_names(pairing$TUMOR, pairing$PAIR)
 
 #' Map pair ids to tumor ids; every id must be in the pairing file
 #'
