@@ -7,18 +7,23 @@ open issues are in `00.ISSUES.md`; the port spec and its decisions
 
 ## 1. R environment
 
-- [ ] Install DNAcopy and pctGCdata in the personal R 4.5 library
+- [x] Install DNAcopy and pctGCdata in the personal R 4.5 library
       (`BiocManager::install("DNAcopy")`,
       `install.packages("pctGCdata")`, or
       `remotes::install_github("mskcc/pctGCdata")`). Spec D2.
-- [ ] Delete the temporary copies `Rlib/DNAcopy` and `Rlib/pctGCdata`.
+      Done: DNAcopy 1.84.0, pctGCdata 0.3.0 and RJSONIO 2.0.5 load
+      from `/data1/core001/work/bic/socci/opt/lib/R/.../4.5`.
+- [x] Delete the temporary copies `Rlib/DNAcopy` and `Rlib/pctGCdata`.
       They were copied from the trial library so the test jobs could
-      run, and they hide the check in `00.SETUP.sh`.
-- [ ] Rerun `00.SETUP.sh`. The switch to `devs` and the merge removed
+      run, and they hide the check in `00.SETUP.sh`. Deleted
+      2026-10-20.
+- [x] Rerun `00.SETUP.sh`. The switch to `devs` and the merge removed
       the built `Rlib/seqDNAcopy` (the old binary was tracked on
       `devs`), so the pipeline will not start until it is rebuilt.
       Check `Rlib/VERSIONS.txt` shows the packages coming from the
-      personal library and seqDNAcopy 0.0.4.
+      personal library and seqDNAcopy 0.0.4. Done 2026-10-20:
+      seqDNAcopy 0.0.4 from submodule c9747e0 (clean); every other
+      package from the personal library.
 
 ## 2. Validation
 
@@ -59,21 +64,28 @@ open issues are in `00.ISSUES.md`; the port spec and its decisions
 
 ## 3. Docs
 
-- [ ] Decision D15 in `attic/docs/00.SPEC_IRIS_PORT.md` says "so no
+Done 2026-10-20 on `docs/rel-v6` (off `rel/v6.0.0`).
+
+- [x] Decision D15 in `attic/docs/00.SPEC_IRIS_PORT.md` says "so no
       tag"; the annotated tag `v5-juno` now exists on 3e6c18d. Fix
       D15, and name the tag next to the `juno` branch in `CHANGELOG.md`
-      and `README.md`.
-- [ ] Pooled normals (`IDT_Exome_v2_Normal`): add the placeholder entry
-      in `docs/IRIS_CLUSTER_INFO.md` that D10 calls for; fill in the
-      IRIS path in it and in `README.md` once the BAMs are copied
-      (`00.ISSUES.md` #3).
-- [ ] CHANGELOG: record the source and md5 of the two vendored isoform
-      files (D8). They are in `resources/vcf2maf/README.md` only.
-- [ ] `METHODS.md`: add software versions (R 4.5.1, DNAcopy 1.84.0,
-      seqDNAcopy 0.0.4) if the method text should state them (spec
-      section 3.6). It currently names no versions.
-- [ ] Reread `CLAUDE.md`, `README.md`, `docs/*.doc` against the final
-      code.
+      and `README.md`. Also marked the spec as archived.
+- [x] Pooled normals (`IDT_Exome_v2_Normal`): add the placeholder entry
+      in `docs/IRIS_CLUSTER_INFO.md` that D10 calls for ("Reference
+      data"). Still open: the IRIS path, there and in `README.md`, once
+      the BAMs are copied (`00.ISSUES.md` #3).
+- [x] CHANGELOG: record the source and md5 of the two vendored isoform
+      files (D8). md5s rechecked against the files.
+- [x] `METHODS.md`: add software versions (R 4.5.1, DNAcopy 1.84.0,
+      seqDNAcopy 0.0.4). One sentence; the rest of the text needs a
+      rewrite after 6.0.0 (`00.ISSUES.md` #9).
+- [x] Reread `CLAUDE.md`, `README.md`, `docs/*.doc` against the final
+      code. `seqSegment.doc` and README gain `YLIM` (and README
+      `MINBINCOUNT`); the empty `docs/testR.doc` moved to `attic/`;
+      CLAUDE.md no longer says every wrapped tool has a doc file
+      (`selectBestMatch` has none). `docs/IRIS_CLUSTER_INFO.md` and
+      `docs/SLURM_PORT.md` record the installed DNAcopy and pctGCdata
+      and the test10 to test14 runs.
 
 ## 4. Release
 
@@ -82,10 +94,12 @@ open issues are in `00.ISSUES.md`; the port spec and its decisions
       (D15).
 - [ ] CHANGELOG: `[Unreleased]` becomes `[6.0.0] - <date>`; move items
       under "Not tested" as validation closes them.
-- [ ] Merge `devs` -> `master`; tag the release (existing release tags
-      use `ver_X.Y.Z`; choose `ver_6.0.0` or `v6.0.0`). `PIPE.sh` and
-      `getGITTag` use `git describe --tags`, so the tag is what the run
-      records show.
+- [ ] Merge `rel/v6.0.0` -> `master`; tag the release (existing
+      release tags use `ver_X.Y.Z`; choose `ver_6.0.0` or `v6.0.0`).
+      `PIPE.sh` and `getGITTag` use `git describe --tags`, so the tag
+      is what the run records show. `rel/v6.0.0` is `master` with
+      `devs` merged in (2026-10-20); the docs pass is on `docs/rel-v6`
+      off it.
 - [ ] Push `devs`, `master`, the release tag and `v5-juno` to origin.
       Delete `feat/iris` once merged.
 
@@ -102,6 +116,6 @@ open issues are in `00.ISSUES.md`; the port spec and its decisions
 
 Not required for the release; tracked in `00.ISSUES.md`:
 `delivery.sh` for IRIS (#4), one genome table (#5), status file on
-usage errors (#8). Superseded
+usage errors (#8), METHODS.md rewrite (#9). Superseded
 tidyverse calls (`top_n`, `summarize_at`, `spread`) and the undefined
 `first_UP()` in `convert_mouse_to_human.R` (spec section 2.3).
