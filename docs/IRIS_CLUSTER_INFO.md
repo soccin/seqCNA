@@ -84,18 +84,29 @@ toolchain.
 
 ## Measurements
 
-Foreground on `isca006`, 2026-10-20, Proj_12257 pair
-`s_C_71VKFN_N001_d01` (4.0 GB) x `s_C_TTH188_N001_d01` (5.0 GB), b37
-exome, `BINSIZE=100`:
+Foreground on `isca006`, 2026-10-20, a pair of the normal test BAMs
+(`docs/SLURM_PORT.md`, Validation): `s_C_71VKFN_N001_d01` (4.0 GB) x
+`s_C_TTH188_N001_d01` (5.0 GB), b37 exome, `BINSIZE=100`:
 
 | Tool | Elapsed | Peak RSS |
 |---|---|---|
 | `getPairedCounts` | 176 s | 2.0 GB |
 | `seqSegment` | 66 s | 2.7 GB |
 
+Every COUNT job of the Proj_12257 run ran at the same 0.33 min per GB
+of tumor plus normal BAM (14.3 to 28.3 GB pairs).
+
 ## Validation runs
 
-**Full run, 2026-10-20**, `../test01/`, control job 546394 on
+**Proj_12257, 2026-10-20**, `../../CNA/`: run directly (pid 3316002
+on `isca006`); stage jobs 1278043-1278056 (FIX), 1278119-1278157
+(COUNT), 1280450-1280491 (SEG), 1280960 (POST), all on
+`cmobic_short`. 72 of 72 `COMPLETED`, 11 min 35 s wall.
+
+The runs below used seven normal BAMs from argos run 18473 as both
+tumors and normals (`docs/SLURM_PORT.md`).
+
+**Full run on the test BAMs, 2026-10-20**, `../test01/`, control job 546394 on
 `cmobic_cpu`; stage jobs 546419-546430 (FIX), 546510-546532 (COUNT),
 548253-548272 (SEG), 561199 (POST), all on `cmobic_short`. 28 of 28
 `COMPLETED`, 6 min 10 s wall. Per-stage Elapsed and MaxRSS in
@@ -105,7 +116,9 @@ exome, `BINSIZE=100`:
 `--mem=8G` while the same tool peaks at 2.0 GB RSS in the foreground:
 as PEMapper found, `jobacct_gather/cgroup` reports the cgroup
 watermark including page cache, so a job streaming 9 GB of BAM fills
-its cgroup with cache up to the cap. No job was OOM-killed.
+its cgroup with cache up to the cap. No job was OOM-killed, here or
+in the Proj_12257 run, where 22 of the 30 COUNT jobs reported
+`MaxRSS` at the cap.
 
 **Failure tests, 2026-10-20**: `../test02/` (missing index, no job
 submitted), `../test01/` (rerun refused), `../test03/` (control job
