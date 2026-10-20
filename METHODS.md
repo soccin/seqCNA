@@ -8,6 +8,8 @@ The scaled target/tumor counts and raw normal counts are then segmented using th
 
 This procedure is repeated for each normal in the set chosen above. Then the normal with the smallest RMS logR, sqrt(mean(logR^2)), is picked as the optimal normal and the output from this pair is used as the copy number profile for the given target sample. To determine which segments are significantly altered we used the method from [Cheng 2015]: the mean and standard deviation of all probe values in all of the segments assigned to the diploid cluster are computed. For each segment a two-sided normal test is then used to compare the segment mean to the diploid cluster mean, using the diploid standard deviation as the scale. The resulting p-values are corrected for multiple testing using the FDR (Benjamini-Hochberg) method. Segments are scored as significant if the FDR < 0.05 and the absolute value of the log2 ratio is greater than 1 (absolute fold change > 2).
 
+The analysis used seqCNA 6.0.0 with R 4.5.1, DNAcopy 1.84.0 and seqDNAcopy 0.0.4.
+
 
 ## References:
 

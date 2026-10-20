@@ -5,14 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [6.0.0]
 
-To be released as 6.0.0: the port from JUNO/LSF (CentOS 6/7, R 3.6 and
+The port from JUNO/LSF (CentOS 6/7, R 3.6 and
 R 4.2) to IRIS/Slurm (RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R.
 The specification and its decisions (D1 to D16) are in
 `attic/docs/00.SPEC_IRIS_PORT.md`; how the port was done and validated
-is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
-(3e6c18d).
+is in `docs/SLURM_PORT.md`, with the Proj_12257 run (b37 exome,
+6 tumors x 5 normals) it was validated on. The last LSF version is on branch `juno`
+and tag `v5-juno` (3e6c18d).
 
 ### Breaking
 - IRIS/Slurm only. Submit with `sbatch seqCNA/PIPE.sh TARGETTED|sWGS`
@@ -58,8 +59,11 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
 - `bin/loadTools.sh`: samtools 1.20 module, ImageMagick 7 from the
   core001 shared tree, R 4.5 check, `TMPDIR` under `/localscratch`.
 - `resources/vcf2maf/v1.6.12/`: the two isoform override files
-  `getGeneCalls.R` reads for the Exome assay, vendored from vcf2maf
-  v1.6.12 (they lived under `/opt/common` on JUNO).
+  `getGeneCalls.R` reads for the Exome assay, copied unchanged from
+  https://github.com/mskcc/vcf2maf/tree/v1.6.12/data on 2026-10-20
+  (they lived under `/opt/common` on JUNO):
+  `isoform_overrides_uniprot` (md5 537a33fd15869d1528531e6289f8493e),
+  `isoform_overrides_at_mskcc` (md5 cff4b7fc3d1257ad8dd054e0e00101e3).
 - `docs/SLURM_PORT.md`, `docs/IRIS_CLUSTER_INFO.md`, `00.ISSUES.md`,
   this file.
 
@@ -93,6 +97,8 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
 - `selectBestMatch.R` no longer loads `readxl`; `getGeneCalls.R` no
   longer loads `biomaRt` (neither was used).
 - `README.md`, `CLAUDE.md` describe the Slurm pipeline.
+- `METHODS.md` states the software versions (R 4.5.1, DNAcopy 1.84.0,
+  seqDNAcopy 0.0.4).
 
 ### Fixed
 - `selectBestMatch.R` failed on a project with a single pair: it drops
@@ -113,9 +119,9 @@ is in `docs/SLURM_PORT.md`. The last LSF version is on branch `juno`
   FAILED and cancels its jobs, as SIGTERM does.
 
 ### Removed
-- `testR`, `testR.R`, `misc/INSTALL.RLIB`, `Rlib/INSTALL.md`,
-  `GenomeData/genomeInfo_*.sh` (all `/ifs` paths, never sourced), to
-  `attic/`.
+- `testR`, `testR.R`, `docs/testR.doc` (empty), `misc/INSTALL.RLIB`,
+  `Rlib/INSTALL.md`, `GenomeData/genomeInfo_*.sh` (all `/ifs` paths,
+  never sourced), to `attic/`.
 
 ### Not tested
 - The mouse path (`mm10` relabel, `Mouse-Twist` assay) and sWGS

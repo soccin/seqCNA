@@ -13,5 +13,8 @@ BINSIZE=(Integer|enum)        Size of bins in base pairs. Default value: "auto".
                               values: {auto,INTEGER}. If set to "auto" then determine bin
                               size dynamically
 
-MINBINCOUNT=(Integer)         Minimum number of counts per bin to be used in segmenation.
+MINBINCOUNT=(Integer)         Minimum number of counts per bin to be used in segmentation.
                               Default value: 35.
+
+YLIM=(Number)                 The plots show log2 ratios from -YLIM to YLIM.
+                              Default value: 5.

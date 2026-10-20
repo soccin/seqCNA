@@ -8,8 +8,8 @@ _N.B._ these scripts use a forked version of `seqDNAcopy` which has
 been updated to work with both human and mouse.
 
 Runs on IRIS (RHEL 8, Slurm) since 6.0.0. The last JUNO/LSF version is on
-branch `juno` (3e6c18d). See `CHANGELOG.md`, `docs/SLURM_PORT.md`,
-`00.ISSUES.md`.
+branch `juno` and tag `v5-juno` (3e6c18d). See `CHANGELOG.md`,
+`docs/SLURM_PORT.md`, `00.ISSUES.md`.
 
 ## Setup, once per checkout
 
@@ -99,4 +99,10 @@ ODIR=Directory                Directory to write output files.  Default value: "
 BINSIZE=(Integer|enum)        Size of bins in base pairs. Default value: "auto". Possible
                               values: {auto,INTEGER}. If set to "auto" then determine bin
                               size dynamically
+
+MINBINCOUNT=(Integer)         Minimum number of counts per bin to be used in segmentation.
+                              Default value: 35.
+
+YLIM=(Number)                 The plots show log2 ratios from -YLIM to YLIM.
+                              Default value: 5.
 ```

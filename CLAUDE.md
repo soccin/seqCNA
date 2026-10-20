@@ -76,8 +76,9 @@ checks that `PID` on `HOST` is still `PIPE.sh` (run it on that host).
 `SLURM_JOB_ID` alone cannot tell the two apart: inside an interactive
 job it names the session.
 
-Single steps can be run by hand. Any wrapped tool run with no arguments
-prints `docs/<name>.doc`.
+Single steps can be run by hand. `getPairedCounts`, `seqSegment` and
+`getGeneCalls` run with no arguments print `docs/<name>.doc`;
+`selectBestMatch` has no doc file and prints a one-line usage.
 
 ```bash
 seqCNA/getPairedCounts GENOME=hg19 TUMOR=t.bam NORMAL=n.bam ODIR=out/x SAMPLEID=s_T__s_N
