@@ -155,10 +155,38 @@ stage, sample, log), `#SEQCNA_EXIT=<rc>` as the last line of every
 stage log. Any exit before COMPLETED marks the run FAILED and cancels
 its queued jobs (EXIT trap; also on SIGTERM, SIGINT, SIGHUP).
 
+The client-facing version is static: the `- **Version:** vX.Y.Z`
+line of `VERSION.md`, changed by hand only when a release is made,
+with a git tag of the same name (`v6.0.0`). Never derive it from git.
+`PIPE.sh` reads it with `bin/getRelease.sh`, records it as `RELEASE=`
+in `00.RUNSTATUS.txt` and `cmd.sh.log`, and stops if it is missing;
+`VERSION=` there is `git describe --tags --always --long --dirty`, the
+exact code. `delivery.sh` puts the release of its own checkout in the
+email and the `METHODS.md` link.
+
 After the pipeline:
-- `delivery.sh /path/Proj_X/r_00N` copies deliverables into `seqcna/`
-  there (not ported; JUNO paths). `DELIVERY.md` and `DELIVERY_ZIP.md`
-  are the email templates.
+- `seqCNA/delivery.sh [-n] -d|DELIVERY_DIR[/r_NNN]`, run from the
+  analysis directory, delivers a run whose `bin/checkRun.sh` exits 0
+  (README.md, "Delivery"). It is ATAC-seq's `deliverResults.sh`: every
+  write to the delivery area goes through `asbot` (`dzdo -u
+  svc_core001_bot01`), `-d` derives the folder
+  `/data1/core002/res/bic/results/<pi>/<invest>/Proj_<no>` from the
+  `.../Users/<Pi>/<Invest>/Proj_<no>` path, the run folder is the next
+  `r_NNN`, and `-n` prints those writes and the permissions-database
+  call instead of running them. It copies the IGV `.seg`, the PDF and
+  the three call tables (or `README.txt`), plus `METHODS.md`, to
+  `r_NNN/seqcna/`; never the PNGs or `pairing.tsv`. Before copying it
+  stops if a table still contains `__<normal>` for a normal in
+  `pairing.tsv` (the xlsx is read with `unzip -p`). `PROJNO` and
+  `GENOME_TAG` come from `00.RUNSTATUS.txt`; the tag is mapped to the
+  assemblies the database accepts (b37, hg19, hybrid, mm10).
+  `bin/readme2yaml.R` writes `project.yaml` (pipeline `seqcna`) from
+  the first `README.txt` going up to `Proj_<no>`; there is no fallback
+  to `README.md`. The email is built from `tmpldeliveryEmail_01.txt`,
+  then `_02` (call tables) or `_03` (no significant calls), then `_99`,
+  with `{PROJNO}`, `{RUNDIR}` and `{VERSION}` filled in.
+  `DELIVERY_ZIP.md` is the email to use, by hand, when the results go
+  out as a ZIP attachment.
 - `seqCNA/bin/rscript.sh seqCNA/plotSeg.R [-r] SEG.rda` re-plots a
   `_seqSeg.rda`; `-r` removes the normal ID from the title.
 
@@ -192,6 +220,8 @@ directory) and `SNAME` (invoked name) and runs
   checks R 4.5.x, sets `TMPDIR` under `/localscratch/$USER`.
 - `rscript.sh`, `checkRlib.R`: the version check (see "Pinned
   versions").
+- `getRelease.sh`: prints the release from `VERSION.md`.
+  `readme2yaml.R`: `project.yaml` for `delivery.sh`.
 - `slurmTools.sh`: `bSync`, `bCheck`, `bCheckAll`, `bKill`,
   `failedJobsMessage`. ChIP-seq's file with `CHIP_` -> `SEQCNA_`; keep
   them in step.
