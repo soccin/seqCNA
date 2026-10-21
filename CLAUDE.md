@@ -14,7 +14,7 @@ clustering, FDR-based significance, gene-level calls.
 `docs/` holds the user-facing docs only: `methods.md` (the method text
 used in reports) and `output.md` (each deliverable, its columns, how to
 read the plots), both delivered with the results;
-`seqCNA-vs-FACETS*.md` (when to use this instead of FACETS) and
+`facets/seqCNA-vs-FACETS*.md` (when to use this instead of FACETS) and
 `usage/<tool>.doc` (the usage text of the wrapped tools). Docs for
 developers go in `docs/dev/`.
 

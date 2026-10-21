@@ -154,4 +154,8 @@ TUMORID=String                If set, also write <sampleId>_seqSeg.redacted.png:
                               plot titled with this id instead of the pair id, so it does
                               not show the normal. PIPE.sh sets it to the tumor id; the
                               deliverable PDF is built from these plots. Default value: "".
+
+SEED=(Integer)                Seed for set.seed() before segmentation. DNAcopy computes
+                              p-values by permutation, so the same counts and seed give
+                              the same segments. Default value: 42.
 ```

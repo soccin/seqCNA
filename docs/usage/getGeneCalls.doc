@@ -7,10 +7,10 @@ calling.
 
 Options:
 
-ASSAY=String        ASSAY used for sequencing. E.g.; IMPACT410. Required.
+ASSAY=String        ASSAY used for sequencing. E.g., IMPACT410. Required.
 
 INPUTS=File         File containing the paths to the output directories of
-                    seqSeqment. Required.
+                    seqSegment. Required.
 
 ODIR=Directory      Directory to write output files.  Default: "."
 
