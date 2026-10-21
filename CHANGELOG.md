@@ -24,26 +24,34 @@ and tag `v5-juno` (3e6c18d).
 - `seqCNA.sh` retired to `attic/`. Its two submissions per pair are the
   COUNT and SEG stages of `PIPE.sh`, which fans each stage out with
   `~/bin/bsub` and waits with `bSync`/`bCheck` between stages.
-- One R, 4.5.x from PATH, for every script. `PIPE.sh` no longer strips
+- One R, 4.5.1 from PATH, for every script. `PIPE.sh` no longer strips
   R from PATH and loads R 3.6.1; `postProcess.sh` no longer loads
-  R 4.2.2. The R packages the pipeline needs beyond the shared install
-  (DNAcopy, pctGCdata, RJSONIO) come from the user's library;
-  `seqDNAcopy` is built once per checkout into `Rlib/` (gitignored) by
-  `00.SETUP.sh`. The committed R 3.5.1 build of `Rlib/seqDNAcopy` is
+  R 4.2.2. The committed R 3.5.1 build of `Rlib/seqDNAcopy` is
   removed.
+- Pinned R packages. `Rlib.lock.tsv` lists R 4.5.1 and the 60 packages
+  the scripts load, with their dependencies, at exact versions
+  (Bioconductor 3.22: DNAcopy 1.84.0, Rsamtools 2.26.0, IRanges 2.44.0;
+  pctGCdata 0.3.0 from GitHub; tarball md5s). `00.SETUP.sh` builds them
+  from source into `Rlib/` (gitignored), then `seqDNAcopy` from the
+  submodule; the user's and the site library are no longer used. Every
+  R script runs through `bin/rscript.sh`, which checks R and `Rlib/`
+  against the lock and stops on a mismatch; `PIPE.sh` checks once in
+  CHECK. Versions change only at a planned scan (`bin/mkRlibLock.R`).
+  The locked versions are the ones test20 and the Proj_12257 run used.
 - `seqDNAcopy` 0.0.4 (submodule): `NAMESPACE` imports `IRangesList`
   instead of `RangesList`, removed from IRanges 2.x; takes the
   upstream `hg38` addition to `HUMAN.BUILDS`.
-- `execWrapper.sh` no longer reads `/etc/system-release`; it requires
-  R 4.5.x and `Rlib/seqDNAcopy`.
+- `execWrapper.sh` no longer reads `/etc/system-release`; it runs the
+  script through `bin/rscript.sh`.
+- Standalone R scripts (`fixXChrom.R`, `redactDeliverables.R`,
+  `plotSeg.R`) run through `bin/rscript.sh`, not plain `Rscript`.
 - The deliverables name each sample by its tumor ID, not by the pair
   ID `<tumor>__<normal>`, so they do not show which normal was used:
   `<ProjNo>___IGV.seg`, `GeneMatrix.csv`, `SegmentMatrix.csv`,
   `<ProjNo>___GeneTable.xlsx` and `<ProjNo>___seqSeg.pdf`. The file
   names are unchanged. The PNGs in `<ProjNo>/` keep the pair ID and are
   not for delivery. This replaces the manual `redactNormals.R` step,
-  which stripped `__.*` by regex and missed the PDF. Standalone R
-  scripts run with `Rscript --no-init-file`.
+  which stripped `__.*` by regex and missed the PDF.
 
 ### Added
 - Run records, from the ChIP-seq port: `00.RUNSTATUS.txt`,
@@ -52,7 +60,8 @@ and tag `v5-juno` (3e6c18d).
   2 running, 3 sacct failed). `COMPLETED` is written only after every
   job is `COMPLETED` in `sacct` and every deliverable is present. A
   failed or cancelled control job marks the run `FAILED` and cancels its
-  queued jobs.
+  queued jobs. `00.RUNSTATUS.txt` records `R_VERSION`,
+  `RLIB_LOCK_MD5`, `SAMTOOLS_VERSION` and `MAGICK_VERSION`.
 - Up-front checks before anything is submitted: BAM directory, every
   BAM readable with an index, `tumors` and `normals` matching the
   relabeled BAM paths, one genome across all BAMs and a supported one,
@@ -70,6 +79,12 @@ and tag `v5-juno` (3e6c18d).
 - `seqSegment TUMORID=`: also writes `<pair>_seqSeg.redacted.png`, the
   same plot titled with the tumor ID. `PIPE.sh` sets it, and
   `postProcess.sh` builds the PDF from these plots.
+- `seqSegment SEED=` (default 42): `set.seed()` before segmentation,
+  written to the `.out` file. DNAcopy computes p-values by
+  permutation, and 5.x set no seed: in `../test20` two reruns on the
+  same counts changed 3 of 43 best-pair segmentations and 19 gene
+  calls. With the seed a rerun is byte-identical (checked on one of
+  those pairs; seed 7 instead of 42 gives 52 segments instead of 50).
 - Walltime classes SHORT (under two hours, short partitions) and LONG;
   COUNT jobs are sized per pair from the BAM sizes (`runClass`).
 - `bin/loadTools.sh`: samtools 1.20 module, ImageMagick 7 from the
@@ -84,6 +99,17 @@ and tag `v5-juno` (3e6c18d).
   this file.
 
 ### Changed
+- Segmentation differs from 5.x. DNAcopy 1.75.5 (2023-10-08) fixed
+  `segment()` passing the whole weight vector to each chromosome, so
+  that every chromosome after chr1 was segmented with chr1's weights.
+  `seqsegment()` always passes weights, so every 5.x run, made with an
+  older DNAcopy, carries the bug; 6.0.0 uses DNAcopy 1.84.0. On the 38
+  tumors x 20 normals of `../test20` the JUNO run made 1,817 gene calls
+  and IRIS 1,229 on the same pairs (1,128 shared, none in the opposite
+  direction); the IRIS code with DNAcopy 1.60.0 reproduces all 1,817.
+  Counts, GC correction and `getGeneCalls` match JUNO. Rerun a 5.x
+  project before comparing or merging its calls with 6.x calls. Report:
+  `../test20/seqCNA_JUNO_vs_IRIS_concordance.html`.
 - `PIPE.sh` keeps the LSF first step: run directly with no `tumors`
   or `normals`, it writes `samples` (one line per BAM) and exits 0.
   It now stops before any run record is written, so the run can be
@@ -116,12 +142,21 @@ and tag `v5-juno` (3e6c18d).
   `top_n` kept every tied pair). `PIPE.sh` requires one best pair per
   tumor, not at least as many as there are tumors.
 - `selectBestMatch.R` no longer loads `readxl`; `getGeneCalls.R` no
-  longer loads `biomaRt` (neither was used).
+  longer loads `biomaRt` (neither was used). `fixXChrom.R` and
+  `redactDeliverables.R` load the packages they use instead of
+  `tidyverse`, which keeps the pinned set small.
 - `README.md`, `CLAUDE.md` describe the Slurm pipeline.
 - `METHODS.md` states the software versions (R 4.5.1, DNAcopy 1.84.0,
   seqDNAcopy 0.0.4).
 
 ### Fixed
+- No gene calls on chrX in any assay. `getGeneCalls.R` keeps the
+  autosomes only, by number, in the segments and the annotation. Before,
+  X was left out only for the annotations that name it `X` (Exome,
+  M-IMPACT_v1) or omit it; IMPACT410 and IMPACT505 name it `23`, as the
+  segments do, and so called X genes (AR, ATRX, ... on a JUNO segment
+  file of `../test20`). X stays in segmentation, `rms.logr`, the IGV
+  `.seg` and the plots. Patch contigs and MT are dropped too.
 - `selectBestMatch.R` failed on a project with a single pair: it drops
   the columns that do not vary between pairs, and with one pair that
   included `sampleId`. Under LSF the error was ignored and `out/` was
@@ -149,6 +184,4 @@ and tag `v5-juno` (3e6c18d).
 ### Not tested
 - The mouse path (`mm10` relabel, `Mouse-Twist` assay) and sWGS
   (`BINSIZE=auto`) were not run on IRIS; no such project was at hand
-  (`00.ISSUES.md`).
-- Output was not compared with a JUNO run of the same BAMs
   (`00.ISSUES.md`).

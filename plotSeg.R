@@ -3,7 +3,7 @@
 #
 # Standalone 1-panel plot of a seqSegment segmentation (_seqSeg.rda)
 #
-# usage: Rscript plotSeg.R [-b|--base] [-r|--redact] SEG.rda [OUT.png] [YLIM]
+# usage: seqCNA/bin/rscript.sh seqCNA/plotSeg.R [-b|--base] [-r|--redact] SEG.rda [OUT.png] [YLIM]
 #
 #    -b|--base     write the png to the current directory
 #    -r|--redact   strip "__s_.*$" from the sample id in the title
@@ -16,7 +16,7 @@ REDACT=any(cArgs %in% c("-r","--redact"))
 cArgs=cArgs[!cArgs %in% c("-b","--base","-r","--redact")]
 
 if(length(cArgs)<1) {
-    cat("\n   usage: Rscript plotSeg.R [-b|--base] [-r|--redact] SEG.rda [OUT.png] [YLIM]\n\n")
+    cat("\n   usage: seqCNA/bin/rscript.sh seqCNA/plotSeg.R [-b|--base] [-r|--redact] SEG.rda [OUT.png] [YLIM]\n\n")
     quit()
 }
 
