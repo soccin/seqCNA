@@ -7,7 +7,7 @@ The format is based on
 project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [6.0.0]
+## [6.0.0] - 2026-10-21
 
 The port from JUNO/LSF (CentOS 6/7, R 3.6 and R 4.2) to IRIS/Slurm
 (RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R. The specification
@@ -115,7 +115,9 @@ branch `juno` and tag `v5-juno` (3e6c18d).
   folder, links to `docs/output.md` and `docs/methods.md` on GitHub at
   the release tag, and no longer says the BAMs are in the alignment
   folder. The 5.x script copied to `/ifs/res` by hand-given path, with
-  no checks.
+  no checks. Tested with a delivery of the Proj_12257 run; the normal
+  check also on unredacted copies of `GeneMatrix.csv` and the xlsx, and
+  the missing-`README.txt` stop on a test directory.
 - **`VERSION.md`** holds the client-facing release (`v6.0.0`), set by
   hand when a release is made. `PIPE.sh` records it as `RELEASE=` in
   `00.RUNSTATUS.txt` and `cmd.sh.log` and stops if it is missing
@@ -235,12 +237,8 @@ branch `juno` and tag `v5-juno` (3e6c18d).
 ### Not tested
 - The mouse path (`mm10` relabel, `Mouse-Twist` assay) and sWGS
   (`BINSIZE=auto`) were not run on IRIS; no such project was at hand
-  (`00.ISSUES.md`).
-- `delivery.sh` was run only with `-n`, on the Proj_12257 run of
-  2026-10-21; the copy as `svc_core001_bot01` and the permissions
-  database step have not been run. Its normal check was tested on
-  unredacted copies of `GeneMatrix.csv` and the xlsx, and the
-  missing-`README.txt` stop on a test directory. The no-calls email
-  (`README.txt` instead of the tables) has not been seen on a run.
+  (`00.ISSUES.md` #2).
+- The `delivery.sh` email for a run with no calls (`README.txt`
+  instead of the tables) has not been seen on a run.
 - `RELEASE=` in `00.RUNSTATUS.txt`: no run has been made with it; the
   Proj_12257 run predates it.
