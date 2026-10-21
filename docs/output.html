@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>seqCNA Output</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">seqCNA Output</h1>
+</header>
+<p>The results of a seqCNA run are delivered in the folder
+<code>seqcna/</code>. <code>Proj_&lt;no&gt;</code> below is the project
+number. Each sample is named by its tumor sample ID
+(<code>s_...</code>). The normal that each tumor was compared with is
+chosen by the pipeline (Methods, “Choice of the normal”) and is not
+named in the files.</p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Proj_&lt;no&gt;___seqSeg.pdf</code></td>
+<td>Copy number plot of each tumor, one per page</td>
+</tr>
+<tr>
+<td><code>Proj_&lt;no&gt;___IGV.seg</code></td>
+<td>Every segment of every tumor, for IGV</td>
+</tr>
+<tr>
+<td><code>Proj_&lt;no&gt;___GeneTable.xlsx</code></td>
+<td>Called genes, one row per tumor and gene</td>
+</tr>
+<tr>
+<td><code>GeneMatrix.csv</code></td>
+<td>Called genes, a matrix of genes by tumors</td>
+</tr>
+<tr>
+<td><code>SegmentMatrix.csv</code></td>
+<td>Called genes with the segment they are in</td>
+</tr>
+<tr>
+<td><code>output.pdf</code>, <code>output.html</code></td>
+<td>This document</td>
+</tr>
+<tr>
+<td><code>methods.pdf</code>, <code>methods.html</code></td>
+<td>The methods</td>
+</tr>
+</tbody>
+</table>
+<h1 data-number="1" id="log2-ratios"><span
+class="header-section-number">1</span> Log2 ratios</h1>
+<p>Every copy number value in the files is a log2 ratio of tumor to
+normal coverage, after GC correction and scaling for the number of
+reads, shifted so that one level of the tumor, the baseline, is 0
+(Methods, “Segment clustering and the baseline”). A positive value is a
+gain relative to the baseline, a negative value a loss.</p>
+<p>seqCNA does not estimate the purity (the fraction of tumor cells in
+the sample) or the ploidy of the tumor. So the log2 ratios are not
+converted to numbers of copies, and the baseline is not known to be two
+copies.</p>
+<p>A gene is called when its segment has FDR &lt; 0.05 and an absolute
+log2 ratio greater than 1, that is a coverage ratio more than twice or
+less than half that of the baseline (Methods, “Gene-level calls”). The
+bound is strict: a segment at exactly 1 or -1 is not called. The
+threshold is on the log2 ratio only. Smaller changes are not called,
+even with FDR &lt; 0.05; they can be seen in the plots and the IGV
+file.</p>
+<h1 data-number="2" id="proj_no___seqseg.pdf"><span
+class="header-section-number">2</span>
+<code>Proj_&lt;no&gt;___seqSeg.pdf</code></h1>
+<p>One page per tumor, titled with the tumor ID.</p>
+<ul>
+<li>The x axis is the position along the genome in Mb, with the
+chromosomes end to end. Dashed vertical lines separate the chromosomes,
+and their numbers are at the bottom. Chromosome X is numbered 23 (human)
+or 20 (mouse).</li>
+<li>Each point is the log2 ratio of one bin, light blue and gray on
+alternating chromosomes. The y axis runs from -5 to 5; points beyond
+that are not shown. In targeted sequencing there are bins only in the
+capture targets, so the points are not spread evenly along the
+genome.</li>
+<li>The red lines are the segments, at the level of their cluster.</li>
+<li>The dashed horizontal lines are at log2 ratios -1, log2(1.5) = 0.58
+and 1. Only segments below -1 or above 1 can be called.</li>
+<li>The dotted horizontal lines are at plus and minus the MAD.</li>
+</ul>
+<p>The two lines of text at the top are measures of the data of the
+pair:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
+<thead>
+<tr>
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NumBins</code></td>
+<td>Number of bins segmented</td>
+</tr>
+<tr>
+<td><code>MAD</code></td>
+<td>Median absolute deviation (R <code>mad</code>, scaled to estimate a
+standard deviation) of the bin log2 ratios from their segment level: the
+noise in the data</td>
+</tr>
+<tr>
+<td><code>nSegs</code></td>
+<td>Number of segments, chromosome X included</td>
+</tr>
+<tr>
+<td><code>RMSD.Segs.noX</code></td>
+<td>Root mean square of the segment levels, chromosome X excluded; each
+segment counts once, whatever its length</td>
+</tr>
+<tr>
+<td><code>sum.logr.sq</code></td>
+<td>Sum of the squared bin log2 ratios</td>
+</tr>
+<tr>
+<td><code>rms.logr</code></td>
+<td>Root mean square of the bin log2 ratios. The normal with the lowest
+value is the one chosen</td>
+</tr>
+<tr>
+<td><code>rms.logr.flat</code></td>
+<td>Root mean square of the bin log2 ratios around their segment level,
+another measure of the noise</td>
+</tr>
+</tbody>
+</table>
+<p>Chromosome X is plotted but never called. If the tumor and the normal
+come from individuals of different sex, the whole of X is shifted down
+(male tumor, female normal) or up (female tumor, male normal).</p>
+<h1 data-number="3" id="proj_no___igv.seg"><span
+class="header-section-number">3</span>
+<code>Proj_&lt;no&gt;___IGV.seg</code></h1>
+<p>Every segment of every tumor, significant or not, tab-separated, one
+row per segment. To view it in IGV, choose the genome of the project
+(hg19 for GRCh37/b37, mm10 for mouse), then File &gt; Load from File.
+IGV colors each segment by its log2 ratio, red for a gain and blue for a
+loss.</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ID</code></td>
+<td>Tumor ID</td>
+</tr>
+<tr>
+<td><code>chrom</code></td>
+<td>Chromosome: 1 to 22 and X (mouse: 1 to 19 and X), without
+<code>chr</code></td>
+</tr>
+<tr>
+<td><code>loc.start</code>, <code>loc.end</code></td>
+<td>Centers of the first and last bins of the segment, in bp</td>
+</tr>
+<tr>
+<td><code>num.mark</code></td>
+<td>Number of bins in the segment</td>
+</tr>
+<tr>
+<td><code>seg.mean</code></td>
+<td>Log2 ratio of the segment (the level of its cluster)</td>
+</tr>
+</tbody>
+</table>
+<p>The p-value and FDR of each segment are not in this file; for the
+segments with a called gene they are in <code>SegmentMatrix.csv</code>
+and the gene table.</p>
+<h1 data-number="4" id="gene-call-tables"><span
+class="header-section-number">4</span> Gene call tables</h1>
+<p>The three tables list the genes called in at least one tumor
+(Methods, “Gene-level calls”), on the autosomes only. In each tumor, a
+gene is given one segment: of the segments that its exons overlap, the
+one with the lowest log2 ratio, significant or not. The gene is called
+if that segment has FDR &lt; 0.05 and an absolute log2 ratio greater
+than 1. So a gene partly in a deletion is called as a deletion, and a
+gene partly in a gain is not called if the rest of it is in a segment
+with a lower log2 ratio. If no gene is called in any tumor, the tables
+are not written.</p>
+<p>Genes are named by their gene symbol and the Ensembl ID of the
+canonical transcript used.</p>
+<h2 data-number="4.1" id="proj_no___genetable.xlsx"><span
+class="header-section-number">4.1</span>
+<code>Proj_&lt;no&gt;___GeneTable.xlsx</code></h2>
+<p>One sheet, one row per tumor and called gene, sorted by tumor and
+position.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ID</code></td>
+<td>Tumor ID</td>
+</tr>
+<tr>
+<td><code>gene</code>, <code>transcript</code></td>
+<td>Gene symbol and Ensembl transcript</td>
+</tr>
+<tr>
+<td><code>chrom</code>, <code>loc.start</code>,
+<code>loc.end</code></td>
+<td>The segment, as in the IGV file</td>
+</tr>
+<tr>
+<td><code>seg.mean</code></td>
+<td>Log2 ratio of the segment, to 3 decimals</td>
+</tr>
+<tr>
+<td><code>FDR</code></td>
+<td>FDR of the segment</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="4.2" id="genematrix.csv"><span
+class="header-section-number">4.2</span>
+<code>GeneMatrix.csv</code></h2>
+<p>One row per called gene. The columns are <code>gene</code>,
+<code>transcript</code>, then one column per tumor with at least one
+call. A value is the log2 ratio of the call, or 0 if the gene is not
+called in that tumor. A 0 means “not called”, not a log2 ratio of 0: the
+gene can still be in a segment with a log2 ratio away from 0 that does
+not pass the threshold. Tumors without any call have no column.</p>
+<h2 data-number="4.3" id="segmentmatrix.csv"><span
+class="header-section-number">4.3</span>
+<code>SegmentMatrix.csv</code></h2>
+<p>The same calls with their segments, one row per called gene and
+segment, sorted by position. A row is the call of one tumor (or of
+several tumors with the same segment); its column holds the log2 ratio,
+and the columns of the other tumors are empty.</p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chrom</code>, <code>loc.start</code>, <code>loc.end</code>,
+<code>num.mark</code></td>
+<td>The segment, as in the IGV file</td>
+</tr>
+<tr>
+<td><code>cluster</code></td>
+<td>Number of the segment’s cluster within the tumor; for checking
+only</td>
+</tr>
+<tr>
+<td><code>pValue</code>, <code>FDR</code></td>
+<td>p-value and FDR of the segment</td>
+</tr>
+<tr>
+<td><code>start</code>, <code>stop</code>, <code>exon</code></td>
+<td>An exon of the gene that overlaps the segment</td>
+</tr>
+<tr>
+<td><code>gene</code>, <code>transcript</code></td>
+<td>Gene symbol and Ensembl transcript</td>
+</tr>
+<tr>
+<td>one column per tumor</td>
+<td>Log2 ratio of the segment, in the rows of that tumor’s calls</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

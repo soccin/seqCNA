@@ -1,25 +1,27 @@
-# Output
+# seqCNA Output
 
 The results of a seqCNA run are delivered in the folder `seqcna/`.
 `Proj_<no>` below is the project number. Each sample is named by its
 tumor sample ID (`s_...`). The normal that each tumor was compared
-with is chosen by the pipeline (`methods.md`, "Choice of the normal")
+with is chosen by the pipeline (Methods, "Choice of the normal")
 and is not named in the files.
 
 | File | Content |
-|---|---|
+|--------|------------|
 | `Proj_<no>___seqSeg.pdf` | Copy number plot of each tumor, one per page |
 | `Proj_<no>___IGV.seg` | Every segment of every tumor, for IGV |
 | `Proj_<no>___GeneTable.xlsx` | Called genes, one row per tumor and gene |
 | `GeneMatrix.csv` | Called genes, a matrix of genes by tumors |
 | `SegmentMatrix.csv` | Called genes with the segment they are in |
+| `output.pdf`, `output.html` | This document |
+| `methods.pdf`, `methods.html` | The methods |
 
 ## Log2 ratios
 
 Every copy number value in the files is a log2 ratio of tumor to normal
 coverage, after GC correction and scaling for the number of reads,
 shifted so that one level of the tumor, the baseline, is 0
-(`methods.md`, "Segment clustering and the baseline"). A positive value
+(Methods, "Segment clustering and the baseline"). A positive value
 is a gain relative to the baseline, a negative value a loss.
 
 seqCNA does not estimate the purity (the fraction of tumor cells in
@@ -29,12 +31,12 @@ two copies.
 
 A gene is called when its segment has FDR < 0.05 and an absolute log2
 ratio greater than 1, that is a coverage ratio more than twice or less
-than half that of the baseline (`methods.md`, "Gene-level calls"). The
+than half that of the baseline (Methods, "Gene-level calls"). The
 bound is strict: a segment at exactly 1 or -1 is not called. The
 threshold is on the log2 ratio only. Smaller changes are not called,
-even with FDR < 0.05; they can be seen in the PDF and the IGV file.
+even with FDR < 0.05; they can be seen in the plots and the IGV file.
 
-## Proj_<no>___seqSeg.pdf
+## `Proj_<no>___seqSeg.pdf`
 
 One page per tumor, titled with the tumor ID.
 
@@ -56,7 +58,7 @@ The two lines of text at the top are measures of the data of the
 pair:
 
 | Value | Meaning |
-|---|---|
+|---|---------|
 | `NumBins` | Number of bins segmented |
 | `MAD` | Median absolute deviation (R `mad`, scaled to estimate a standard deviation) of the bin log2 ratios from their segment level: the noise in the data |
 | `nSegs` | Number of segments, chromosome X included |
@@ -69,7 +71,7 @@ Chromosome X is plotted but never called. If the tumor and the normal
 come from individuals of different sex, the whole of X is shifted down
 (male tumor, female normal) or up (female tumor, male normal).
 
-## Proj_<no>___IGV.seg
+## `Proj_<no>___IGV.seg`
 
 Every segment of every tumor, significant or not, tab-separated, one
 row per segment. To view it in IGV, choose the genome of the project
@@ -78,7 +80,7 @@ IGV colors each segment by its log2 ratio, red for a gain and blue for
 a loss.
 
 | Column | Meaning |
-|---|---|
+|---|-------|
 | `ID` | Tumor ID |
 | `chrom` | Chromosome: 1 to 22 and X (mouse: 1 to 19 and X), without `chr` |
 | `loc.start`, `loc.end` | Centers of the first and last bins of the segment, in bp |
@@ -92,7 +94,7 @@ gene table.
 ## Gene call tables
 
 The three tables list the genes called in at least one tumor
-(`methods.md`, "Gene-level calls"), on the autosomes only. In each
+(Methods, "Gene-level calls"), on the autosomes only. In each
 tumor, a gene is given one segment: of the segments that its exons
 overlap, the one with the lowest log2 ratio, significant or not. The
 gene is called if that segment has FDR < 0.05 and an absolute log2
@@ -104,7 +106,7 @@ tumor, the tables are not written.
 Genes are named by their gene symbol and the Ensembl ID of the
 canonical transcript used.
 
-### Proj_<no>___GeneTable.xlsx
+### `Proj_<no>___GeneTable.xlsx`
 
 One sheet, one row per tumor and called gene, sorted by tumor and
 position.
@@ -117,7 +119,7 @@ position.
 | `seg.mean` | Log2 ratio of the segment, to 3 decimals |
 | `FDR` | FDR of the segment |
 
-### GeneMatrix.csv
+### `GeneMatrix.csv`
 
 One row per called gene. The columns are `gene`, `transcript`, then
 one column per tumor with at least one call. A value is the log2 ratio
@@ -127,7 +129,7 @@ segment with a log2 ratio away from 0 that does not pass the
 threshold. Tumors without any call
 have no column.
 
-### SegmentMatrix.csv
+### `SegmentMatrix.csv`
 
 The same calls with their segments, one row per called gene and
 segment, sorted by position. A row is the call of one tumor (or of
@@ -135,7 +137,7 @@ several tumors with the same segment); its column holds the log2
 ratio, and the columns of the other tumors are empty.
 
 | Column | Meaning |
-|---|---|
+|--------|------------|
 | `chrom`, `loc.start`, `loc.end`, `num.mark` | The segment, as in the IGV file |
 | `cluster` | Number of the segment's cluster within the tumor; for checking only |
 | `pValue`, `FDR` | p-value and FDR of the segment |
