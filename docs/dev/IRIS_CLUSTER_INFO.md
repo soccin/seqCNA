@@ -101,7 +101,8 @@ of tumor plus normal BAM (14.3 to 28.3 GB pairs).
 **Proj_12257, 2026-10-20**, `../../CNA/`: run directly (pid 3316002
 on `isca006`); stage jobs 1278043-1278056 (FIX), 1278119-1278157
 (COUNT), 1280450-1280491 (SEG), 1280960 (POST), all on
-`cmobic_short`. 72 of 72 `COMPLETED`, 11 min 35 s wall.
+`cmobic_short`. 72 of 72 `COMPLETED`, 11 min 35 s wall. The
+directory now holds the rerun of 2026-10-21 (e19e87b).
 
 **JUNO comparison, 2026-10-20**, `../test20/`: run directly (pid
 3122405 on `isca006`); stage jobs 1269562-1269675 (FIX),
@@ -124,10 +125,10 @@ The runs below used seven normal BAMs from argos run 18473 as both
 tumors and normals (`docs/dev/SLURM_PORT.md`). Their directories were
 deleted on 2026-10-20.
 
-**Full run on the test BAMs, 2026-10-20**, `../test01/`, control job 546394 on
-`cmobic_cpu`; stage jobs 546419-546430 (FIX), 546510-546532 (COUNT),
-548253-548272 (SEG), 561199 (POST), all on `cmobic_short`. 28 of 28
-`COMPLETED`, 6 min 10 s wall. Per-stage Elapsed and MaxRSS in
+**Full run on the test BAMs, 2026-10-20**, `../test01/`, control job
+546394 on `cmobic_cpu`; stage jobs 546419-546430 (FIX),
+546510-546532 (COUNT), 548253-548272 (SEG), 561199 (POST), all on
+`cmobic_short`. 28 of 28 `COMPLETED`, 6 min 10 s wall. Per-stage Elapsed and MaxRSS in
 `docs/dev/SLURM_PORT.md`.
 
 `MaxRSS` for the COUNT jobs ranged from 1.9 to 8.4 GB against
