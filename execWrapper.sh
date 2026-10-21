@@ -4,9 +4,9 @@
 #
 # getPairedCounts, seqSegment, getGeneCalls and selectBestMatch are
 # symlinks to this file. It exports SDIR (this checkout) and SNAME (the
-# invoked name) and runs $0.R through bin/rscript.sh, which limits R to
-# the pinned library Rlib/ (built by 00.SETUP.sh) and checks R and every
-# package against Rlib.lock.tsv first. With no arguments it prints
+# invoked name) and runs $0.R through bin/rscript.sh, which puts Rlib/
+# (seqDNAcopy, built by 00.SETUP.sh) first on R_LIBS and checks R and
+# the packages in Rlib.lock.tsv first. With no arguments it prints
 # docs/$SNAME.doc instead.
 #
 

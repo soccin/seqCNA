@@ -19,11 +19,11 @@ git clone --recurse-submodules git@github.com:soccin/seqCNA.git
 seqCNA/00.SETUP.sh
 ```
 
-`00.SETUP.sh` installs every R package the pipeline uses, at the
-versions pinned in `Rlib.lock.tsv`, into `seqCNA/Rlib/`, then builds
-`seqDNAcopy` there (about 30 minutes; it needs network access to CRAN,
-Bioconductor and GitHub). Your own R library is not used. Every R
-script checks R and `Rlib/` against the lock and stops on a mismatch.
+`00.SETUP.sh` builds `seqDNAcopy` into `seqCNA/Rlib/`. The other
+packages come from the shared or your personal R library. R and the
+packages that set the output (DNAcopy, pctGCdata, Rsamtools,
+data.table) must be at the versions in `Rlib.lock.tsv`; every R script
+checks them and stops on a mismatch.
 
 ## Running
 

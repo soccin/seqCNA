@@ -5,21 +5,12 @@
 # Usage, from anywhere:
 #    seqCNA/00.SETUP.sh
 #
-# Installs every R package the pipeline uses, at the versions in
-# Rlib.lock.tsv, into Rlib/ (gitignored): each from its source tarball
-# (CRAN, Bioconductor or GitHub, md5-checked), then seqDNAcopy from the
-# submodule. Nothing is taken from the user or site library. R itself
-# comes from PATH and must be the locked version (on IRIS: module load
-# R/4.5.1_nds).
-#
-# The library is built in Rlib.new/ and replaces Rlib/ only when it is
-# complete and passes bin/checkRlib.R, so a failed build leaves the old
-# one in place. The tarballs are kept in Rlib/src/ and reused by the
-# next build. Safe to rerun; it rebuilds. Takes about half an hour,
-# mostly compiling. SETUP_NCPU (default 4) sets make -j.
-#
-# To change a version, write a new lock with bin/mkRlibLock.R (see
-# there); never install into Rlib/ by hand.
+# Builds seqDNAcopy, the fork in the submodule, into Rlib/ (gitignored),
+# replacing whatever Rlib/ held. Every other package comes from the
+# shared or personal library. R and the packages in Rlib.lock.tsv must
+# be at the locked versions; bin/checkRlib.R checks them at the end and
+# every R script checks them again (bin/rscript.sh). R itself comes from
+# PATH (on IRIS: module load R/4.5.1_nds). Safe to rerun; it rebuilds.
 #
 
 set -eu
@@ -39,7 +30,7 @@ command -v Rscript >/dev/null 2>&1 || fatal "Rscript not on PATH (module load R/
 LOCK=$SDIR/Rlib.lock.tsv
 [ -s "$LOCK" ] || fatal "no $LOCK"
 
-RWANT=$(awk -F'\t' '$3=="R"{print $2}' $LOCK)
+RWANT=$(awk -F'\t' '$1=="R"{print $2}' $LOCK)
 RVERSION=$(Rscript --vanilla -e 'cat(as.character(getRversion()))')
 if [ "$RVERSION" != "$RWANT" ]; then
     fatal "R $RVERSION on PATH; Rlib.lock.tsv needs R $RWANT (module load R/4.5.1_nds)"
@@ -50,10 +41,6 @@ if [ ! -e seqDNAcopy/DESCRIPTION ]; then
     fatal "seqDNAcopy/ submodule is empty; run: git submodule update --init"
 fi
 
-STAGE=$SDIR/Rlib.new
-rm -rf $STAGE
-mkdir -p $STAGE/src
-
 #
 # Compiling goes to node-local scratch, not /tmp (see bin/loadTools.sh)
 #
@@ -61,35 +48,17 @@ export TMPDIR=/localscratch/$USER/seqCNA_setup.$$
 mkdir -p $TMPDIR
 trap 'rm -rf $TMPDIR' EXIT
 
-export R_LIBS=$STAGE
-export R_LIBS_USER=$STAGE
-export R_LIBS_SITE=$STAGE
-export MAKEFLAGS=-j${SETUP_NCPU:-4}
+rm -rf Rlib
+mkdir Rlib
+R CMD INSTALL --clean --preclean -l Rlib seqDNAcopy
 
 #
-# Locked packages, then seqDNAcopy from the submodule
+# Check, and record what was built against
 #
 
-Rscript --vanilla bin/installRlib.R $LOCK $STAGE $STAGE/src $SDIR/Rlib/src
+export R_LIBS=$SDIR/Rlib${R_LIBS:+:$R_LIBS}
 
-R CMD INSTALL --clean --preclean -l $STAGE seqDNAcopy
-
-Rscript --vanilla bin/checkRlib.R $LOCK $STAGE
-
-rm -rf $SDIR/Rlib.old
-if [ -d $SDIR/Rlib ]; then
-    mv $SDIR/Rlib $SDIR/Rlib.old
-fi
-mv $STAGE $SDIR/Rlib
-rm -rf $SDIR/Rlib.old
-
-#
-# Record what was built
-#
-
-export R_LIBS=$SDIR/Rlib
-export R_LIBS_USER=$SDIR/Rlib
-export R_LIBS_SITE=$SDIR/Rlib
+Rscript --vanilla bin/checkRlib.R $LOCK $SDIR/Rlib
 
 {
     Rscript --vanilla bin/checkRlib.R --list $LOCK $SDIR/Rlib

@@ -29,13 +29,14 @@ Other files to read first:
 
 ```bash
 git submodule update --init     # seqDNAcopy source
-seqCNA/00.SETUP.sh              # builds Rlib/ (gitignored), ~30 min
+seqCNA/00.SETUP.sh              # builds seqDNAcopy into Rlib/ (gitignored)
 ```
 
 R 4.5.1 must be on PATH (`module load R/4.5.1_nds`). `00.SETUP.sh`
-installs every R package the pipeline uses, at the versions in
-`Rlib.lock.tsv`, from source tarballs into `Rlib/`, then seqDNAcopy
-from the submodule (see "Pinned versions").
+builds seqDNAcopy from the submodule into `Rlib/`; every other package
+comes from the shared or personal library. The packages that set the
+output must be at the versions in `Rlib.lock.tsv` (see "Pinned
+versions").
 
 ## Running
 
@@ -173,25 +174,24 @@ directory) and `SNAME` (invoked name) and runs
 
 - `bin/rscript.sh` runs every R script: the wrapped tools, the
   standalone scripts (`fixXChrom.R`, `redactDeliverables.R` from
-  `postProcess.sh`; `plotSeg.R` by hand). It sets `R_LIBS`,
-  `R_LIBS_USER` and `R_LIBS_SITE` to `Rlib/`, so R sees `Rlib/` and its
-  own library only, runs `bin/checkRlib.R` against `Rlib.lock.tsv`
-  (exit 1 on any mismatch), then `Rscript --vanilla`. Scripts cannot
-  use `~/.Rprofile` helpers; `include/tools.R` redefines `cc()` and
+  `postProcess.sh`; `plotSeg.R` by hand). It puts `Rlib/` first on
+  `R_LIBS`, runs `bin/checkRlib.R` against `Rlib.lock.tsv` (exit 1 on
+  any mismatch), then `Rscript --vanilla`. Scripts cannot use
+  `~/.Rprofile` helpers; `include/tools.R` redefines `cc()` and
   `len()`.
 - Wrapped scripts source `include/*.R` via `Sys.getenv("SDIR")`, which
   falls back to the relative path `seqCNA`.
-- A script may load only packages in `Rlib.lock.tsv`. A new package
-  means adding it to `TOP` in `bin/mkRlibLock.R` and a new lock (see
-  "Pinned versions").
+- A new package a script loads goes into `RECORD` in
+  `bin/checkRlib.R`, or into `Rlib.lock.tsv` if it computes part of
+  the output (see "Pinned versions").
 
 ### Shell helpers (bin/)
 
 - `loadTools.sh`: sourced by `PIPE.sh`, `fixChromosomeNames.sh`,
   `postProcess.sh`. Loads `samtools/1.20`, prepends ImageMagick 7,
   checks R 4.5.x, sets `TMPDIR` under `/localscratch/$USER`.
-- `rscript.sh`, `checkRlib.R`, `installRlib.R`, `mkRlibLock.R`,
-  `rlibTools.R`: the pinned R library (see "Pinned versions").
+- `rscript.sh`, `checkRlib.R`: the version check (see "Pinned
+  versions").
 - `slurmTools.sh`: `bSync`, `bCheck`, `bCheckAll`, `bKill`,
   `failedJobsMessage`. ChIP-seq's file with `CHIP_` -> `SEQCNA_`; keep
   them in step.
@@ -210,32 +210,35 @@ file.
 
 - One R, 4.5.1, for every script. `seqDNAcopy/` is a git submodule with
   the fork's source (`git submodule update --init`). `00.SETUP.sh`
-  builds it into `Rlib/` (gitignored) after the locked packages and
+  builds it into `Rlib/` (gitignored), which holds nothing else, and
   records versions in `Rlib/VERSIONS.txt`. The fork's NAMESPACE imports
   `IRangesList` (0.0.4); `RangesList` is gone from IRanges 2.x.
-- pctGCdata 0.3.0 is not on CRAN; the lock takes it from GitHub
+- pctGCdata 0.3.0 is not on CRAN; the installed copy came from GitHub
   (`veseshan/pctGCdata`, tag v0.3.0, commit d2d4faf).
 
 ### Pinned versions
 
-A sysadmin or user library update must never change seqCNA output.
-`Rlib.lock.tsv` (package, version, source, md5 of the source tarball)
-lists R itself, every package the scripts load with its whole
-Depends/Imports/LinkingTo closure except R's base packages, in install
-order, and seqDNAcopy. `00.SETUP.sh` builds exactly that set into
-`Rlib.new/` (`bin/installRlib.R`: download, md5 check, install from
-source; nothing from the user or site library), checks it and only
-then replaces `Rlib/`. `bin/rscript.sh` checks R and `Rlib/` against
-the lock before every R script, and `PIPE.sh` CHECK does once
-(`rscript.sh --check`); a mismatch stops the run. `00.RUNSTATUS.txt`
-records `R_VERSION`, `RLIB_LOCK_MD5`, `SAMTOOLS_VERSION` and
-`MAGICK_VERSION`; samtools and ImageMagick are recorded, not checked.
+A library update must never change seqCNA output silently.
+`Rlib.lock.tsv` (package, version, role) lists only R and the packages
+that compute what ends up in the output; the role column says what:
+R (`loess` in GC correction, the RNG behind `set.seed`), DNAcopy
+(segmentation), pctGCdata (GC content), Rsamtools (`scanBam`, which
+reads are counted), data.table (`foverlaps` in getGeneCalls) and
+seqDNAcopy. The other packages (dplyr, readr, openxlsx, ...) can make
+a run fail but not change its numbers; they are not checked, only
+recorded in `Rlib/VERSIONS.txt` (`RECORD` in `bin/checkRlib.R`).
+Nothing is installed by the pipeline except seqDNAcopy: the locked
+packages come from the shared or personal library.
+`bin/rscript.sh` checks the lock before every R script, and `PIPE.sh`
+CHECK does once (`rscript.sh --check`); a mismatch stops the run, and
+the fix is to reinstall the locked version. `00.RUNSTATUS.txt` records
+`R_VERSION`, `RLIB_LOCK_MD5`, `SAMTOOLS_VERSION` and `MAGICK_VERSION`;
+samtools and ImageMagick are recorded, not checked.
 
 Versions change only at a planned version scan: install the new
-versions in a scratch library, `bin/mkRlibLock.R LIBDIR CACHEDIR >
-Rlib.lock.tsv`, `00.SETUP.sh`, rerun a reference project, compare with
-the previous run, record it in `CHANGELOG.md` and `METHODS.md`. Never
-install into `Rlib/` by hand.
+versions, edit `Rlib.lock.tsv` by hand, rerun a reference project,
+compare with the previous run, record it in `CHANGELOG.md` and
+`METHODS.md`.
 
 ### Genome handling
 

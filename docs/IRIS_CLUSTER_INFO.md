@@ -62,7 +62,7 @@ The pipeline depends on them, as ATAC-seq and ChIP-seq do.
 | Tool | Version | Where |
 |---|---|---|
 | R | 4.5.1 | `/usersoftware/core001/common/RHEL_8/gcc-12.2.0/R/4.5.1`, personal module `R/4.5.1_nds` in `~/.modules`. Sets `R_LIBS_USER=~/R/x86_64-pc-linux-gnu-library/4.5`, which is `/data1/core001/work/bic/socci/opt/lib/R/...`. |
-| R packages in the shared or personal library | tidyverse 2.0.0, Rsamtools 2.26.0, IRanges 2.44.0, data.table 1.18.6.1, openxlsx 4.2.9, jsonlite 2.0.0, Rcpp 1.1.2, RJSONIO 2.0.5, DNAcopy 1.84.0, pctGCdata 0.3.0 | DNAcopy, pctGCdata and RJSONIO are in the personal library only (installed 2026-10-20). The pipeline no longer uses either library: `Rlib.lock.tsv` was written from these versions (Bioconductor 3.22) and `00.SETUP.sh` builds them into `Rlib/`. |
+| R packages in the shared or personal library | tidyverse 2.0.0, Rsamtools 2.26.0, IRanges 2.44.0, data.table 1.18.6.1, openxlsx 4.2.9, jsonlite 2.0.0, Rcpp 1.1.2, RJSONIO 2.0.5, DNAcopy 1.84.0, pctGCdata 0.3.0 | DNAcopy, pctGCdata and RJSONIO are in the personal library only (installed 2026-10-20). The pipeline uses them; R, DNAcopy, pctGCdata, Rsamtools and data.table are checked against `Rlib.lock.tsv` (Bioconductor 3.22). |
 | Other R modules | `r/3.6.3`, `R/4.3.0` (empty libraries), `r/4.4.1` (partial) | Not used. |
 | samtools | 1.20 | module `samtools/1.20`, `/admin/software/samtools/samtools-1.20/bin` |
 | ImageMagick | 7.1.2-33 | `/usersoftware/core001/common/RHEL_8/imagemagick/7.1.2-33/bin/magick`; personal module only, so `bin/loadTools.sh` prepends the path. |
@@ -113,6 +113,12 @@ Per-stage Elapsed and MaxRSS in `docs/SLURM_PORT.md`.
 same inputs twice, control jobs 1325450 and 1325451, 36 of 36
 `COMPLETED` each, about 6 min wall. `00.SETUP.sh` built the 60 locked
 packages from source in about 23 min on `isca006` (`make -j4`).
+
+**Reduced lock, 2026-10-21**, `../test33/`: the same inputs with only
+R, DNAcopy, pctGCdata, Rsamtools, data.table and seqDNAcopy locked and
+the other packages from the personal library; control job 1528228 on
+`isca240`, 36 of 36 `COMPLETED`, about 7 min wall. Output identical to
+test31 except git tags and file timestamps.
 
 The runs below used seven normal BAMs from argos run 18473 as both
 tumors and normals (`docs/SLURM_PORT.md`). Their directories were
