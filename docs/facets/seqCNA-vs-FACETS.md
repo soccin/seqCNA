@@ -67,7 +67,7 @@ Described in `docs/output.md`, which is delivered with the results.
 ## What FACETS Does
 
 FACETS (Fraction and Allele-specific Copy number Estimate from Tumor/Normal Sequencing)
-[Shen & Seshan 2022] is a more sophisticated algorithm that models allele-specific copy
+[Shen 2016] is a more sophisticated algorithm that models allele-specific copy
 number jointly with tumor purity and ploidy. It performs joint segmentation of the total
 copy number log-ratio and the allele-specific signal (B-allele frequency from germline
 heterozygous SNPs). From this it infers:
@@ -307,4 +307,6 @@ The methods text is `docs/methods.md`; it is delivered with the results of every
 - Cheng, DT, et al; J Mol Diagn 2015 May; 17(3): 251-264.
 
 - Olshen, AB, et al; Biostatistics 2004 Oct; 5(4): 557-572.
+
+- Shen, R, Seshan, VE; Nucleic Acids Res 2016; 44(16): e131.
 
