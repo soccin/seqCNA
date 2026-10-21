@@ -9,7 +9,7 @@ in the folder
 
     seqcna
 
-You will find the following files (output.md, in the same folder,
+You will find the following files (output.pdf, in the same folder,
 describes each one in detail):
 
 - Proj_{PROJNO}___seqSeg.pdf is a multipage PDF with the copy number
