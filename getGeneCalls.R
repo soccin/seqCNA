@@ -16,7 +16,7 @@ convertGeneSymbolsMouseToHuman <- function(mgg) {
 
 }
 
-VERSION="5.dev"
+VERSION="6.0.0"
 
 SNAME=Sys.getenv("SNAME")
 SDIR=Sys.getenv("SDIR")
