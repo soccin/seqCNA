@@ -85,7 +85,7 @@ toolchain.
 ## Measurements
 
 Foreground on `isca006`, 2026-10-20, a pair of the normal test BAMs
-(`docs/SLURM_PORT.md`, Validation): `s_C_71VKFN_N001_d01` (4.0 GB) x
+(`docs/dev/SLURM_PORT.md`, Validation): `s_C_71VKFN_N001_d01` (4.0 GB) x
 `s_C_TTH188_N001_d01` (5.0 GB), b37 exome, `BINSIZE=100`:
 
 | Tool | Elapsed | Peak RSS |
@@ -107,7 +107,7 @@ on `isca006`); stage jobs 1278043-1278056 (FIX), 1278119-1278157
 3122405 on `isca006`); stage jobs 1269562-1269675 (FIX),
 1270334-1272829 (COUNT), 1273218-1275214 (SEG), 1275364 (POST), all
 on `cmobic_short`. 1,579 of 1,579 `COMPLETED`, 19 min 50 s wall.
-Per-stage Elapsed and MaxRSS in `docs/SLURM_PORT.md`.
+Per-stage Elapsed and MaxRSS in `docs/dev/SLURM_PORT.md`.
 
 **Pinned library, 2026-10-20**, `../test31/` and `../test32/`: the
 same inputs twice, control jobs 1325450 and 1325451, 36 of 36
@@ -121,14 +121,14 @@ the other packages from the personal library; control job 1528228 on
 test31 except git tags and file timestamps.
 
 The runs below used seven normal BAMs from argos run 18473 as both
-tumors and normals (`docs/SLURM_PORT.md`). Their directories were
+tumors and normals (`docs/dev/SLURM_PORT.md`). Their directories were
 deleted on 2026-10-20.
 
 **Full run on the test BAMs, 2026-10-20**, `../test01/`, control job 546394 on
 `cmobic_cpu`; stage jobs 546419-546430 (FIX), 546510-546532 (COUNT),
 548253-548272 (SEG), 561199 (POST), all on `cmobic_short`. 28 of 28
 `COMPLETED`, 6 min 10 s wall. Per-stage Elapsed and MaxRSS in
-`docs/SLURM_PORT.md`.
+`docs/dev/SLURM_PORT.md`.
 
 `MaxRSS` for the COUNT jobs ranged from 1.9 to 8.4 GB against
 `--mem=8G` while the same tool peaks at 2.0 GB RSS in the foreground:
@@ -149,4 +149,4 @@ submitted), `../test01/` (rerun refused), `../test03/` (control job
 jobs), `../test12/` (direct run, pid 3105705 on `isca006`),
 `../test13/` (direct run sent SIGHUP during COUNT; COUNT job 1265961
 cancelled), `../test14/` (control job 1265859). Results in
-`docs/SLURM_PORT.md`.
+`docs/dev/SLURM_PORT.md`.

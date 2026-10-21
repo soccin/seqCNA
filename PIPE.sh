@@ -59,7 +59,8 @@
 #           (deliverables name samples by tumor id only)
 #   STAGING control job: sweep of every job, deliverables, COMPLETED
 #
-# Ported from the ChIP-seq control job (v1.0.0); see docs/SLURM_PORT.md.
+# Ported from the ChIP-seq control job (v1.0.0); see
+# docs/dev/SLURM_PORT.md.
 #
 #SBATCH -p cmobic_cpu
 #SBATCH --qos=priority
@@ -667,7 +668,7 @@ LONG_W=12:00:00
 # Minutes per GB of input (tumor + normal BAM). Measured 2026-10-20 in
 # the foreground on an IRIS login node: 176 s for 9.0 GB of exome BAMs
 # (0.33 min/GB, peak 2.0 GB RSS); 1 min/GB is a 3x margin. See
-# docs/SLURM_PORT.md.
+# docs/dev/SLURM_PORT.md.
 #
 RATE_COUNT=1
 

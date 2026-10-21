@@ -9,7 +9,7 @@ been updated to work with both human and mouse.
 
 Runs on IRIS (RHEL 8, Slurm) since 6.0.0. The last JUNO/LSF version is on
 branch `juno` and tag `v5-juno` (3e6c18d). See `CHANGELOG.md`,
-`docs/SLURM_PORT.md`, `00.ISSUES.md`.
+`docs/dev/SLURM_PORT.md`, `00.ISSUES.md`.
 
 ## Setup, once per checkout
 
@@ -79,7 +79,7 @@ normal of `pairing.tsv`, and you can read the delivery folder. Then it:
   and the PI and investigator emails of the first `README.txt` found
   going up from the analysis directory to `Proj_<no>`;
 - copies, as `svc_core001_bot01`, the deliverables of `<Proj_No>/`
-  (not the PNGs) and `METHODS.md` to `r_NNN/seqcna`;
+  (not the PNGs) and `docs/methods.md` to `r_NNN/seqcna`;
 - writes the email, from `tmpldeliveryEmail_*.txt`, to
   `deliveryEmail_<no>_r_NNN_<yymmdd>.txt`;
 - registers the run with the bicdelivery permissions database
@@ -88,7 +88,7 @@ normal of `pairing.tsv`, and you can read the delivery folder. Then it:
   command to rerun this step alone.
 
 The email gives the release in `VERSION.md` of the checkout the script
-is run from and links to `METHODS.md` on GitHub at that tag. A
+is run from and links to `docs/methods.md` on GitHub at that tag. A
 delivery folder other than `<pi>/<invest>/Proj_<no>` for the PI and
 investigator of `README.txt` gives a `WARNING`. For a delivery by
 email instead, zip `seqcna/` and use `DELIVERY_ZIP.md`.

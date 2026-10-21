@@ -19,7 +19,7 @@ Open issues, including the ones not required for the release, are in
       seqDNAcopy); one launcher stops on a version mismatch; samtools
       and ImageMagick versions recorded.
 - [x] Small functional test, run twice (identical output with the
-      seed): test31, test32 (`docs/SLURM_PORT.md`).
+      seed): test31, test32 (`docs/dev/SLURM_PORT.md`).
 - [x] The Proj_12257 rerun in `../../CNA` (user), `COMPLETED`
       2026-10-21, at e19e87b.
 
@@ -35,7 +35,7 @@ Open issues, including the ones not required for the release, are in
       items under "Not tested" as validation closes them.
 - [ ] Merge `rel/v6.0.0` -> `master`; tag the release `v6.0.0`
       (decided 2026-10-21), the same name as `VERSION.md`: the delivery
-      email links to `METHODS.md` at that tag. `PIPE.sh` and
+      email links to `docs/methods.md` at that tag. `PIPE.sh` and
       `getGITTag` use `git describe --tags`, so the tag is what the run
       records show.
 - [ ] Push `devs`, `master`, the release tag and `v5-juno` to origin.

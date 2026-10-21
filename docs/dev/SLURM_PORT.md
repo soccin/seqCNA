@@ -158,7 +158,7 @@ beside the checkout (`../test01/` and so on) and were deleted on
 | reduced lock | `Rlib.lock.tsv` cut to R, DNAcopy, pctGCdata, Rsamtools, data.table and seqDNAcopy, the other packages from the shared or personal library; `00.SETUP.sh` builds only seqDNAcopy (seconds). test33 (test30's inputs), control job 1528228 | `COMPLETED`, 36 of 36 jobs, about 7 min wall. Identical to test31 except the git tag (`.out`, `.json`, `GITTag` in `_Counts.rda`) and the timestamps inside the xlsx and PDF (xlsx cells identical). `bin/checkRlib.R` stops on a wrong locked version and on anything but seqDNAcopy in `Rlib/` |
 
 sacct for Proj_12257 (`MaxRSS` is the cgroup watermark and includes
-page cache, see `docs/IRIS_CLUSTER_INFO.md`; a direct run has no
+page cache, see `docs/dev/IRIS_CLUSTER_INFO.md`; a direct run has no
 control job):
 
 | Stage | Jobs | Elapsed | MaxRSS | ReqMem |
