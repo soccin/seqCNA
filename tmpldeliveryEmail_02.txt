@@ -2,7 +2,9 @@
 - GeneMatrix.csv, SegmentMatrix.csv, Proj_{PROJNO}___GeneTable.xlsx
   These files have gene-level and segment-level _significant_ calls,
   where segments are scored as significant if the FDR < 0.05 and
-  abs(log2R) > 1. Calls are made on the autosomes only.
+  abs(log2R) > 1. Calls are made on the autosomes only. Gains and
+  losses of a single copy are below this threshold; they can be seen
+  in the PDF and the IGV file (see output.md).
 
   * Proj_{PROJNO}___GeneTable.xlsx has significant gene calls with
     the spanning segments along with their FDR value and log2 ratios

@@ -15,9 +15,9 @@
 #   - writes project.yaml for the bicdelivery permissions database,
 #     from the run and the first README.txt found going up from here
 #     to Proj_<no> (bin/readme2yaml.R);
-#   - copies the deliverables and docs/methods.md of this checkout to
-#     DELIVERY/r_NNN/seqcna. The PNGs (titled with the pair ID) and
-#     pairing.tsv are not delivered;
+#   - copies the deliverables and docs/methods.md and docs/output.md
+#     of this checkout to DELIVERY/r_NNN/seqcna. The PNGs (titled with
+#     the pair ID) and pairing.tsv are not delivered;
 #   - writes the delivery email to deliveryEmail_<no>_r_NNN_<yymmdd>.txt,
 #     with the release of VERSION.md of this checkout;
 #   - registers the run with the permissions database.
@@ -192,17 +192,20 @@ if [[ "$USE_DEFAULT" -eq 1 ]]; then
 fi
 
 #
-# The email and the methods.md link name the release of VERSION.md of
-# this checkout; it changes only when a release is made, never with git.
+# The email and its methods.md and output.md links name the release of
+# VERSION.md of this checkout; it changes only when a release is made,
+# never with git.
 #
 if ! VERSION=$("$SDIR/bin/getRelease.sh"); then
     fatal "no release in $SDIR/VERSION.md"
 fi
 
-METHODS=$SDIR/docs/methods.md
-if [ ! -s "$METHODS" ]; then
-    fatal "missing $METHODS"
-fi
+DOCS=("$SDIR/docs/methods.md" "$SDIR/docs/output.md")
+for f in "${DOCS[@]}"; do
+    if [ ! -s "$f" ]; then
+        fatal "missing $f"
+    fi
+done
 
 ##
 # Deliverables: the IGV .seg and the PDF, then either the three call
@@ -349,7 +352,7 @@ fi
 # Copy
 
 asbot mkdir -p "$DEST/$DFOLDER"
-asbot rsync -aP "${FILES[@]}" "$METHODS" "$DEST/$DFOLDER/"
+asbot rsync -aP "${FILES[@]}" "${DOCS[@]}" "$DEST/$DFOLDER/"
 
 ##
 # Email
