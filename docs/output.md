@@ -13,7 +13,6 @@ and is not named in the files.
 | `Proj_<no>___GeneTable.xlsx` | Called genes, one row per tumor and gene |
 | `GeneMatrix.csv` | Called genes, a matrix of genes by tumors |
 | `SegmentMatrix.csv` | Called genes with the segment they are in |
-| `README.txt` | Instead of the three tables above, when no gene is called |
 | `methods.md` | The method |
 | `output.md` | This file |
 
@@ -102,8 +101,7 @@ gene is called if that segment has FDR < 0.05 and an absolute log2
 ratio greater than 1. So a gene partly in a deletion is called as a
 deletion, and a gene partly in a gain is not called if the rest of it
 is in a segment with a lower log2 ratio. If no gene is called in any
-tumor, the tables are not written, and `README.txt` says "No
-significant copy number changes".
+tumor, the tables are not written.
 
 Genes are named by their gene symbol and the Ensembl ID of the
 canonical transcript used.
