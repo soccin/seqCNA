@@ -13,8 +13,6 @@ and is not named in the files.
 | `Proj_<no>___GeneTable.xlsx` | Called genes, one row per tumor and gene |
 | `GeneMatrix.csv` | Called genes, a matrix of genes by tumors |
 | `SegmentMatrix.csv` | Called genes with the segment they are in |
-| `methods.md` | The method |
-| `output.md` | This file |
 
 ## Log2 ratios
 
