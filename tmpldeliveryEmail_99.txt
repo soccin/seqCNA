@@ -1,8 +1,9 @@
 
-- output.md describes each file: the columns of the tables, how to
-  read the plots, and what the log2 ratios mean.
+- output.pdf (or output.html, the same in a web browser) describes
+  each file: the columns of the tables, how to read the plots, and
+  what the log2 ratios mean.
 
-- methods.md describes the methods.
+- methods.pdf (or methods.html) describes the methods.
 
 Both are also online:
 

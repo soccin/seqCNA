@@ -7,7 +7,7 @@ which unpacks into the folder
 
     seqcna
 
-You will find the following files (output.md, in the same folder,
+You will find the following files (output.pdf, in the same folder,
 describes each one in detail):
 
 - Proj_{PROJNO}___seqSeg.pdf is a multipage PDF with the copy number
@@ -21,8 +21,8 @@ describes each one in detail):
   These files have gene-level and segment-level _significant_ calls,
   where segments are scored as significant if the FDR < 0.05 and
   abs(log2R) > 1. Calls are made on the autosomes only. Changes
-  below this threshold are not called; they can be seen in the PDF
-  and the IGV file (see output.md).
+  below this threshold are not called; they can be seen in the plots
+  and the IGV file (see output.pdf).
 
   * Proj_{PROJNO}___GeneTable.xlsx has significant gene calls with
     the spanning segments along with their FDR value and log2 ratios
@@ -32,10 +32,11 @@ describes each one in detail):
     includes the data for the spanning segment. GeneMatrix.csv just has
     the gene info
 
-- output.md describes each file: the columns of the tables, how to
-  read the plots, and what the log2 ratios mean.
+- output.pdf (or output.html, the same in a web browser) describes
+  each file: the columns of the tables, how to read the plots, and
+  what the log2 ratios mean.
 
-- methods.md describes the methods.
+- methods.pdf (or methods.html) describes the methods.
 
 Both are also online:
 

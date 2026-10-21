@@ -1,4 +1,4 @@
-# Methods
+# seqCNA Methods
 
 ## seqCNA: copy number changes from sequencing data
 

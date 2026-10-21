@@ -13,7 +13,8 @@ clustering, FDR-based significance, gene-level calls.
 
 `docs/` holds the user-facing docs only: `methods.md` (the method text
 used in reports) and `output.md` (each deliverable, its columns, how to
-read the plots), both delivered with the results;
+read the plots), both delivered with the results as the PDF and HTML
+that `MAKE_DOCS.sh` renders from them (committed next to the `.md`);
 `facets/seqCNA-vs-FACETS*.md` (when to use this instead of FACETS) and
 `usage/<tool>.doc` (the usage text of the wrapped tools). Docs for
 developers go in `docs/dev/`.
@@ -183,9 +184,9 @@ After the pipeline:
   `.../Users/<Pi>/<Invest>/Proj_<no>` path, the run folder is the next
   `r_NNN`, and `-n` prints those writes and the permissions-database
   call instead of running them. It copies the IGV `.seg`, the PDF and
-  the three call tables (or `README.txt`), plus `docs/methods.md` and
-  `docs/output.md`, to `r_NNN/seqcna/`; never the PNGs or
-  `pairing.tsv`. Before copying it stops if a table still contains
+  the three call tables (or `README.txt`), plus `docs/methods.pdf`,
+  `.html` and `docs/output.pdf`, `.html`, to `r_NNN/seqcna/`; never
+  the `.md`, the PNGs or `pairing.tsv`. Before copying it stops if a table still contains
   `__<normal>` for a normal in `pairing.tsv` (the xlsx is read with
   `unzip -p`). `PROJNO` and `GENOME_TAG` come from `00.RUNSTATUS.txt`; the tag is mapped to the
   assemblies the database accepts (b37, hg19, hybrid, mm10).
@@ -350,7 +351,11 @@ tree is dirty).
   Autosomes only (see chrX above).
 - `docs/methods.md` states these values; update it if they change.
   `docs/output.md` describes every deliverable, its columns, the plot
-  and the thresholds; update it if any of them change.
+  and the thresholds; update it if any of them change. After editing
+  either, run `docs/MAKE_DOCS.sh` and commit the `.pdf` and `.html`
+  with the `.md`: `delivery.sh` delivers the renders, so a stale one
+  goes to the client. The PDF header gives the release of
+  `VERSION.md`, so render again when it changes.
 
 ## Environment dependencies
 
