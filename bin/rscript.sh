@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# rscript.sh -- run an R script on the pinned library
+# rscript.sh -- run an R script after checking the locked versions
 #
 # Usage:
 #    seqCNA/bin/rscript.sh SCRIPT.R [ARGS...]
@@ -8,12 +8,13 @@
 #
 # Every R script of the pipeline runs through this: execWrapper.sh for
 # the wrapped tools, postProcess.sh for fixXChrom.R and
-# redactDeliverables.R, and by hand for plotSeg.R. R's library path is
-# set to Rlib/ (built by 00.SETUP.sh) and R's own library only, so
-# nothing is taken from a user or site library, and bin/checkRlib.R
-# checks R and every package against Rlib.lock.tsv before the script
-# runs; a mismatch stops it with exit 1. The script runs under
-# Rscript --vanilla (no ~/.Rprofile, no ~/.Renviron).
+# redactDeliverables.R, and by hand for plotSeg.R. Rlib/ (seqDNAcopy,
+# built by 00.SETUP.sh) goes first on R_LIBS; the other packages come
+# from the shared or personal library. bin/checkRlib.R checks R and the
+# packages in Rlib.lock.tsv before the script runs; a mismatch stops it
+# with exit 1. The script runs under Rscript --vanilla (no ~/.Rprofile,
+# no ~/.Renviron; R_LIBS and R_LIBS_USER from the environment still
+# apply).
 #
 # --check runs only the check.
 #
@@ -29,13 +30,7 @@ RSCRIPT=$(command -v Rscript) || {
     exit 1
 }
 
-#
-# R_HOME/etc/Renviron sets each of these only when it is unset or
-# empty, so all three must be set, to Rlib/.
-#
-export R_LIBS=$RS_SDIR/Rlib
-export R_LIBS_USER=$RS_SDIR/Rlib
-export R_LIBS_SITE=$RS_SDIR/Rlib
+export R_LIBS=$RS_SDIR/Rlib${R_LIBS:+:$R_LIBS}
 
 $RSCRIPT --vanilla $RS_SDIR/bin/checkRlib.R $RS_SDIR/Rlib.lock.tsv $RS_SDIR/Rlib || exit 1
 

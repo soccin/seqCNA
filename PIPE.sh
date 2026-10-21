@@ -101,7 +101,7 @@ source $SDIR/bin/slurmTools.sh
 SCRIPT_VERSION=$(git --git-dir=$SDIR/.git --work-tree=$SDIR describe --always --long --tags --dirty)
 
 #
-# Tool versions, recorded in the run status. R and its packages are
+# Tool versions, recorded in the run status. R and the locked packages are
 # checked against Rlib.lock.tsv in CHECK (bin/rscript.sh --check);
 # samtools and ImageMagick are only recorded.
 #
@@ -488,11 +488,11 @@ trap onExit EXIT
 setStage CHECK
 
 #
-# R and its packages: R and Rlib/ must match Rlib.lock.tsv. Every R
-# script checks again when it starts (bin/rscript.sh).
+# R and the packages in Rlib.lock.tsv must be at the locked versions.
+# Every R script checks again when it starts (bin/rscript.sh).
 #
 $SDIR/bin/rscript.sh --check \
-    || fatal "R or $SDIR/Rlib does not match Rlib.lock.tsv (details above); run $SDIR/00.SETUP.sh"
+    || fatal "R or a package does not match Rlib.lock.tsv (details above)"
 
 #
 # BAMs: pipeline/<alignments|bam>/*.bam, each with an index.

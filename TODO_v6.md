@@ -14,10 +14,10 @@ Open issues, including the ones not required for the release, are in
       stays in segmentation, `rms.logr`, the IGV `.seg` and the plots.
 - [x] Seed: `seqSegment SEED=` with a fixed default, `set.seed()`
       before `seqsegment()`, written to the `.out` file.
-- [x] Pin versions under R 4.5.1: a lock file of the installed
-      packages and their dependencies, installed into `Rlib/` by
-      `00.SETUP.sh`; one launcher restricts R to `Rlib` and stops on a
-      version mismatch; samtools and ImageMagick versions recorded.
+- [x] Pin versions under R 4.5.1: a lock file of R and the packages
+      that set the output (DNAcopy, pctGCdata, Rsamtools, data.table,
+      seqDNAcopy); one launcher stops on a version mismatch; samtools
+      and ImageMagick versions recorded.
 - [x] Small functional test, run twice (identical output with the
       seed): test31, test32 (`docs/SLURM_PORT.md`).
 - [ ] The Proj_12257 rerun in `../../CNA` (user).

@@ -28,16 +28,14 @@ and tag `v5-juno` (3e6c18d).
   R from PATH and loads R 3.6.1; `postProcess.sh` no longer loads
   R 4.2.2. The committed R 3.5.1 build of `Rlib/seqDNAcopy` is
   removed.
-- Pinned R packages. `Rlib.lock.tsv` lists R 4.5.1 and the 60 packages
-  the scripts load, with their dependencies, at exact versions
-  (Bioconductor 3.22: DNAcopy 1.84.0, Rsamtools 2.26.0, IRanges 2.44.0;
-  pctGCdata 0.3.0 from GitHub; tarball md5s). `00.SETUP.sh` builds them
-  from source into `Rlib/` (gitignored), then `seqDNAcopy` from the
-  submodule; the user's and the site library are no longer used. Every
-  R script runs through `bin/rscript.sh`, which checks R and `Rlib/`
-  against the lock and stops on a mismatch; `PIPE.sh` checks once in
-  CHECK. Versions change only at a planned scan (`bin/mkRlibLock.R`).
-  The locked versions are the ones test20 and the Proj_12257 run used.
+- Pinned versions of what sets the output. `Rlib.lock.tsv` lists R
+  4.5.1, DNAcopy 1.84.0, pctGCdata 0.3.0, Rsamtools 2.26.0,
+  data.table 1.18.6.1 and seqDNAcopy 0.0.4, with what each computes.
+  Every R script runs through `bin/rscript.sh`, which checks them and
+  stops on a mismatch; `PIPE.sh` checks once in CHECK. The other
+  packages are not checked, only recorded in `Rlib/VERSIONS.txt`. All
+  but seqDNAcopy come from the shared or personal library. The locked
+  versions are the ones test20 and the Proj_12257 run used.
 - `seqDNAcopy` 0.0.4 (submodule): `NAMESPACE` imports `IRangesList`
   instead of `RangesList`, removed from IRanges 2.x; takes the
   upstream `hg38` addition to `HUMAN.BUILDS`.

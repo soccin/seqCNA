@@ -15,8 +15,8 @@
 # (seqSegment TUMORID=). The PNGs copied to <ProjectName>/ keep the pair
 # id; they are for checking, not for delivery.
 #
-# Every R script runs through bin/rscript.sh, on the pinned library
-# Rlib/; bin/loadTools.sh provides samtools and ImageMagick (magick).
+# Every R script runs through bin/rscript.sh, which checks the locked
+# versions; bin/loadTools.sh provides samtools and ImageMagick (magick).
 #
 
 set -eu
