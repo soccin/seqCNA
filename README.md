@@ -13,8 +13,10 @@ is on branch `juno` and tag `v5-juno` (3e6c18d). See `CHANGELOG.md`,
 
 `docs/methods.md` is the method text for reports and
 `docs/output.md` describes the deliverables; both are delivered with
-the results. `docs/facets/` compares seqCNA with FACETS and says when
-to use which.
+the results as PDF and HTML. After editing either, run
+`docs/MAKE_DOCS.sh` (pandoc and xelatex) and commit the `.pdf` and
+`.html` it writes with the `.md`. `docs/facets/` compares seqCNA with
+FACETS and says when to use which.
 
 ## Setup, once per checkout
 
@@ -87,8 +89,8 @@ normal of `pairing.tsv`, and you can read the delivery folder. Then it:
   and the PI and investigator emails of the first `README.txt` found
   going up from the analysis directory to `Proj_<no>`;
 - copies, as `svc_core001_bot01`, the deliverables of `<Proj_No>/`
-  (not the PNGs), `docs/methods.md` and `docs/output.md` to
-  `r_NNN/seqcna`;
+  (not the PNGs), and the PDF and HTML of `docs/methods.md` and
+  `docs/output.md` (not the `.md`), to `r_NNN/seqcna`;
 - writes the email, from `tmpldeliveryEmail_*.txt`, to
   `deliveryEmail_<no>_r_NNN_<yymmdd>.txt`;
 - registers the run with the bicdelivery permissions database

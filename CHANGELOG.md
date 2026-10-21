@@ -7,7 +7,7 @@ The format is based on
 project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [6.0.0]
+## [6.0.0] - 2026-10-21
 
 The port from JUNO/LSF (CentOS 6/7, R 3.6 and R 4.2) to IRIS/Slurm
 (RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R. The specification
@@ -105,8 +105,8 @@ branch `juno` and tag `v5-juno` (3e6c18d).
   contains `__<normal>` for a normal in `pairing.tsv`. It delivers the
   same files as 5.x (the IGV `.seg`, the PDF, `GeneMatrix.csv`,
   `SegmentMatrix.csv`, the GeneTable xlsx, or `README.txt` when nothing
-  is significant) plus `docs/methods.md` and `docs/output.md`; not the
-  PNGs or `pairing.tsv`.
+  is significant) plus `docs/methods.md` and `docs/output.md` as PDF
+  and HTML; not the `.md`, the PNGs or `pairing.tsv`.
   The new `bin/readme2yaml.R` writes `project.yaml` (pipeline `seqcna`,
   the assembly from `GENOME_TAG`) from the first `README.txt` going up
   to `Proj_<no>`, and the run is registered with the bicdelivery
@@ -115,7 +115,16 @@ branch `juno` and tag `v5-juno` (3e6c18d).
   folder, links to `docs/output.md` and `docs/methods.md` on GitHub at
   the release tag, and no longer says the BAMs are in the alignment
   folder. The 5.x script copied to `/ifs/res` by hand-given path, with
-  no checks.
+  no checks. Tested with a delivery of the Proj_12257 run; the normal
+  check also on unredacted copies of `GeneMatrix.csv` and the xlsx, and
+  the missing-`README.txt` stop on a test directory. That delivery
+  copied the `.md` docs; the PDF and HTML were tested with a dry run
+  (`-n`) only.
+- `docs/MAKE_DOCS.sh` renders `docs/methods.md` and `docs/output.md`
+  to PDF (xelatex) and HTML with pandoc, as ATAC-seq does; the renders
+  are committed with the `.md`. The level 1 heading is the title, the
+  PDF page header gives the release of `VERSION.md`, and the HTML loads
+  nothing from the web.
 - **`VERSION.md`** holds the client-facing release (`v6.0.0`), set by
   hand when a release is made. `PIPE.sh` records it as `RELEASE=` in
   `00.RUNSTATUS.txt` and `cmd.sh.log` and stops if it is missing
@@ -136,6 +145,10 @@ branch `juno` and tag `v5-juno` (3e6c18d).
   Counts, GC correction and `getGeneCalls` match JUNO. Rerun a 5.x
   project before comparing or merging its calls with 6.x calls. Report:
   `../test20/seqCNA_JUNO_vs_IRIS_concordance.html`.
+- `VERSION` in `getPairedCounts.R`, `seqSegment.R` and
+  `getGeneCalls.R`, and `Version:` in `DESCRIPTION`, are 6.0.0 (were
+  5.dev). `VERSION` is written to the counts `.rda` and the `.out`
+  file.
 - `PIPE.sh` keeps the LSF first step: run directly with no `tumors`
   or `normals`, it writes `samples` (one line per BAM) and exits 0.
   It now stops before any run record is written, so the run can be
@@ -182,7 +195,7 @@ branch `juno` and tag `v5-juno` (3e6c18d).
   estimated, so they are not copy numbers) and the calling rule. It is
   delivered with `docs/methods.md`, and the email refers to both.
 - `docs/` holds only user-facing docs: `METHODS.md` moved to
-  `docs/methods.md` (delivered and linked under that name), the tool
+  `docs/methods.md` (linked under that name), the tool
   usage files to `docs/usage/`, the FACETS comparison to
   `docs/facets/`, and the developer docs (`SLURM_PORT.md`,
   `IRIS_CLUSTER_INFO.md`) to `docs/dev/`.
@@ -235,12 +248,8 @@ branch `juno` and tag `v5-juno` (3e6c18d).
 ### Not tested
 - The mouse path (`mm10` relabel, `Mouse-Twist` assay) and sWGS
   (`BINSIZE=auto`) were not run on IRIS; no such project was at hand
-  (`00.ISSUES.md`).
-- `delivery.sh` was run only with `-n`, on the Proj_12257 run of
-  2026-10-21; the copy as `svc_core001_bot01` and the permissions
-  database step have not been run. Its normal check was tested on
-  unredacted copies of `GeneMatrix.csv` and the xlsx, and the
-  missing-`README.txt` stop on a test directory. The no-calls email
-  (`README.txt` instead of the tables) has not been seen on a run.
+  (`00.ISSUES.md` #2).
+- The `delivery.sh` email for a run with no calls (`README.txt`
+  instead of the tables) has not been seen on a run.
 - `RELEASE=` in `00.RUNSTATUS.txt`: no run has been made with it; the
   Proj_12257 run predates it.

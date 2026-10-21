@@ -15,9 +15,10 @@
 #   - writes project.yaml for the bicdelivery permissions database,
 #     from the run and the first README.txt found going up from here
 #     to Proj_<no> (bin/readme2yaml.R);
-#   - copies the deliverables and docs/methods.md and docs/output.md
-#     of this checkout to DELIVERY/r_NNN/seqcna. The PNGs (titled with
-#     the pair ID) and pairing.tsv are not delivered;
+#   - copies the deliverables and the PDF and HTML of docs/methods.md
+#     and docs/output.md (docs/MAKE_DOCS.sh) of this checkout to
+#     DELIVERY/r_NNN/seqcna. The .md files, the PNGs (titled with the
+#     pair ID) and pairing.tsv are not delivered;
 #   - writes the delivery email to deliveryEmail_<no>_r_NNN_<yymmdd>.txt,
 #     with the release of VERSION.md of this checkout;
 #   - registers the run with the permissions database.
@@ -200,10 +201,19 @@ if ! VERSION=$("$SDIR/bin/getRelease.sh"); then
     fatal "no release in $SDIR/VERSION.md"
 fi
 
-DOCS=("$SDIR/docs/methods.md" "$SDIR/docs/output.md")
+#
+# The docs go out as PDF and HTML, rendered from the .md by
+# docs/MAKE_DOCS.sh and committed with them.
+#
+DOCS=()
+for doc in methods output; do
+    for ext in pdf html; do
+        DOCS+=("$SDIR/docs/$doc.$ext")
+    done
+done
 for f in "${DOCS[@]}"; do
     if [ ! -s "$f" ]; then
-        fatal "missing $f"
+        fatal "missing $f (docs/MAKE_DOCS.sh)"
     fi
 done
 

@@ -1,8 +1,8 @@
 Package: seqCNA
 Type: Script
 Title: Copy Number Analysis of Sequencing Data
-Version: 5.dev
-Date: 2017-06-25
+Version: 6.0.0
+Date: 2026-10-21
 Author: N. D. Socci
 Maintainer: N. D. Socci <soccin@mskcc.org>
 Description: sequence Copynumber analysis using seqDNAcopy
