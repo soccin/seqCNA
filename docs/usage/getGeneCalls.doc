@@ -7,10 +7,13 @@ calling.
 
 Options:
 
-ASSAY=String        ASSAY used for sequencing. E.g.; IMPACT410. Required.
+ASSAY=String        ASSAY used for sequencing: a directory under
+                    resources/geneAnnotations/ (Exome, IMPACT410,
+                    IMPACT505, M-IMPACT_v1, M-IMPACT_v2, Mouse-Twist).
+                    Required.
 
 INPUTS=File         File containing the paths to the output directories of
-                    seqSeqment. Required.
+                    seqSegment. Required.
 
 ODIR=Directory      Directory to write output files.  Default: "."
 

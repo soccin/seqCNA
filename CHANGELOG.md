@@ -2,18 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on
+[Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this
+project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [6.0.0]
 
-The port from JUNO/LSF (CentOS 6/7, R 3.6 and
-R 4.2) to IRIS/Slurm (RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R.
-The specification and its decisions (D1 to D16) are in
+The port from JUNO/LSF (CentOS 6/7, R 3.6 and R 4.2) to IRIS/Slurm
+(RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R. The specification
+and its decisions (D1 to D16) are in
 `attic/docs/00.SPEC_IRIS_PORT.md`; how the port was done and validated
-is in `docs/SLURM_PORT.md`, with the Proj_12257 run (b37 exome,
-6 tumors x 5 normals) it was validated on. The last LSF version is on branch `juno`
-and tag `v5-juno` (3e6c18d).
+is in `docs/dev/SLURM_PORT.md`, with the Proj_12257 run (b37 exome,
+6 tumors x 5 normals) it was validated on. The last LSF version is on
+branch `juno` and tag `v5-juno` (3e6c18d).
 
 ### Breaking
 - IRIS/Slurm only. Submit with `sbatch seqCNA/PIPE.sh TARGETTED|sWGS`
@@ -103,22 +105,24 @@ and tag `v5-juno` (3e6c18d).
   contains `__<normal>` for a normal in `pairing.tsv`. It delivers the
   same files as 5.x (the IGV `.seg`, the PDF, `GeneMatrix.csv`,
   `SegmentMatrix.csv`, the GeneTable xlsx, or `README.txt` when nothing
-  is significant) plus `METHODS.md`; not the PNGs or `pairing.tsv`.
+  is significant) plus `docs/methods.md` and `docs/output.md`; not the
+  PNGs or `pairing.tsv`.
   The new `bin/readme2yaml.R` writes `project.yaml` (pipeline `seqcna`,
   the assembly from `GENOME_TAG`) from the first `README.txt` going up
   to `Proj_<no>`, and the run is registered with the bicdelivery
   permissions database. The email (`tmpldeliveryEmail_*.txt`, written
   to `deliveryEmail_<no>_r_NNN_<yymmdd>.txt`) gives the release and run
-  folder, links to `METHODS.md` on GitHub at the release tag, and no
-  longer says the BAMs are in the alignment folder. The 5.x script
-  copied to `/ifs/res` by hand-given path, with no checks.
+  folder, links to `docs/output.md` and `docs/methods.md` on GitHub at
+  the release tag, and no longer says the BAMs are in the alignment
+  folder. The 5.x script copied to `/ifs/res` by hand-given path, with
+  no checks.
 - **`VERSION.md`** holds the client-facing release (`v6.0.0`), set by
   hand when a release is made. `PIPE.sh` records it as `RELEASE=` in
   `00.RUNSTATUS.txt` and `cmd.sh.log` and stops if it is missing
   (`bin/getRelease.sh`); `VERSION=` stays the `git describe` of the
   exact code.
-- `docs/SLURM_PORT.md`, `docs/IRIS_CLUSTER_INFO.md`, `00.ISSUES.md`,
-  this file.
+- `docs/dev/SLURM_PORT.md`, `docs/dev/IRIS_CLUSTER_INFO.md`,
+  `00.ISSUES.md`, this file.
 
 ### Changed
 - Segmentation differs from 5.x. DNAcopy 1.75.5 (2023-10-08) fixed
@@ -147,8 +151,8 @@ and tag `v5-juno` (3e6c18d).
   directory; a new run replaces its records. The early port refused
   any rerun, so a typo in `tumors` needed a new directory.
 - `fixChromosomeNames.sh`: samtools from `bin/loadTools.sh` instead of
-  `module load samtools/1.19.2`; calls `$SDIR/GenomeData/getGenomeBuildBAM.sh`
-  instead of relying on PATH.
+  `module load samtools/1.19.2`; calls
+  `$SDIR/GenomeData/getGenomeBuildBAM.sh` instead of relying on PATH.
 - `GenomeData/getGenomeBuildBAM.sh`: samtools from PATH; exits 1 when
   the header cannot be read instead of printing `unknown` for the md5
   of empty input.
@@ -168,8 +172,30 @@ and tag `v5-juno` (3e6c18d).
   `redactDeliverables.R` load the packages they use instead of
   `tidyverse`, which keeps the pinned set small.
 - `README.md`, `CLAUDE.md` describe the Slurm pipeline.
-- `METHODS.md` states the software versions (R 4.5.1, DNAcopy 1.84.0,
-  seqDNAcopy 0.0.4).
+- `docs/methods.md` rewritten against the code. It said 10 normals
+  were first chosen by insert size; every normal is run. It now
+  states the read filters, the GC correction, the sWGS bin size, the
+  clustering, the gene annotations and the versions of R, DNAcopy,
+  seqDNAcopy, pctGCdata, Rsamtools and data.table.
+- New `docs/output.md`: each deliverable, its columns, how to read the
+  plot, what the log2 ratios are relative to (no purity or ploidy is
+  estimated, so they are not copy numbers) and the calling rule. It is
+  delivered with `docs/methods.md`, and the email refers to both.
+- `docs/` holds only user-facing docs: `METHODS.md` moved to
+  `docs/methods.md` (delivered and linked under that name), the tool
+  usage files to `docs/usage/`, the FACETS comparison to
+  `docs/facets/`, and the developer docs (`SLURM_PORT.md`,
+  `IRIS_CLUSTER_INFO.md`) to `docs/dev/`.
+- The FACETS comparison corrected against the code: seqCNA reports log2
+  ratios relative to a baseline level of the tumor, with a p-value and
+  FDR per segment and no gain or deletion categories; the methods text
+  there is replaced by a pointer to `docs/methods.md`; FACETS is cited
+  as Shen and Seshan 2016.
+- `DELIVERY_ZIP.md` follows the email templates (file names, output.md
+  and methods.md, autosomes only).
+- Usage text: `seqSegment` `MINBINCOUNT=` says that bins with that many
+  normal counts or fewer are removed; `getGeneCalls` `ASSAY=` lists the
+  assays. `README.md` copies all three usage texts.
 
 ### Fixed
 - No gene calls on chrX in any assay. `getGeneCalls.R` keeps the

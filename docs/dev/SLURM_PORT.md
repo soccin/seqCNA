@@ -4,10 +4,10 @@ Done 2026-10-20 on `feat/iris`, for 6.0.0. The survey, design and
 decisions (D1 to D16) are in `attic/docs/00.SPEC_IRIS_PORT.md`. The
 model is the ChIP-seq port (`docs/SLURM_PORT.md` there, v1.0.0),
 itself from ATAC-seq: a synchronous control job that fans each stage
-out with `~/bin/bsub` and blocks with `bSync`/`bCheck`. The PEMapper pattern
-(the whole DAG submitted at once with `afterok` ids) was considered and
-not used (spec 3.3). JUNO is gone; there is no LSF path left
-(`attic/seqCNA.sh` is reference only).
+out with `~/bin/bsub` and blocks with `bSync`/`bCheck`. The PEMapper
+pattern (the whole DAG submitted at once with `afterok` ids) was
+considered and not used (spec 3.3). JUNO is gone; there is no LSF
+path left (`attic/seqCNA.sh` is reference only).
 
 ## Strategy: keep the pipeline shape, change three things
 
@@ -19,7 +19,8 @@ not used (spec 3.3). JUNO is gone; there is no LSF path left
    no `/etc/system-release`.
 2. How jobs are submitted and waited on: the ChIP-seq control-job
    primitives, with `CHIP_` renamed `SEQCNA_`.
-3. Where tools and resources live: `bin/loadTools.sh`, `resources/vcf2maf/`.
+3. Where tools and resources live: `bin/loadTools.sh`,
+   `resources/vcf2maf/`.
 
 | LSF | Slurm | Where |
 | --- | --- | --- |
@@ -74,8 +75,8 @@ would have to exceed 60 GB before it went LONG.
 ## Run records and checking a run
 
 As ChIP-seq, with `SEQCNA` in place of `CHIP`: `00.RUNSTATUS.txt`
-(adds `ASSAY_TYPE`, `BINSIZE`, `BAMDIR`, `GENOME_TAG`, `GENOME`, `ASSAY`,
-`PROJNO`, `NPAIRS`, `SAMPLES`), `SLURM.CTRL/jobs.tsv`,
+(adds `ASSAY_TYPE`, `BINSIZE`, `BAMDIR`, `GENOME_TAG`, `GENOME`,
+`ASSAY`, `PROJNO`, `NPAIRS`, `SAMPLES`), `SLURM.CTRL/jobs.tsv`,
 `#SEQCNA_EXIT=<rc>` trailers, `bin/checkRun.sh` (exit 0 ok, 1 failed,
 2 running, 3 sacct failed). `RUN_MODE` is `sbatch` when `PIPE.sh` is
 the batch script of `$SLURM_JOB_ID` (`$0` is
@@ -124,7 +125,9 @@ each), run as a new project is run: `PIPE.sh` first without `tumors`
 and `normals`, which writes `samples`, then the two files built from
 its lines. The clone was `devs` f231abf, the 6.0.0 code before the
 `VERSION` bump, with every package but seqDNAcopy from the personal
-library.
+library. The numbers below are from that run of 2026-10-20. The
+directory now holds a rerun made on 2026-10-21 at e19e87b, with the
+chrX, seed and version-lock changes, which also `COMPLETED`.
 
 The test runs exercise the pipeline, not the calls. Their input is
 `SeqCNAPort/pipeline/bam`: seven normal BAMs (`s_C_*_N001_d01`, 4.0 to
@@ -146,7 +149,7 @@ beside the checkout (`../test01/` and so on) and were deleted on
 | failure: missing index | test02, one BAM without `.bai`, `PIPE.sh` run directly | `FAILED` at `STAGE=CHECK`, rc 1, no job submitted, `MESSAGE=no index (.bai) for [...]` |
 | failure: rerun | test01, `PIPE.sh` again | refused before the EXIT trap: "this directory already holds a run: 00.RUNSTATUS.txt SLURM.CTRL/jobs.tsv out outAll bamRelabel"; the first run's records untouched |
 | failure: cancelled stage job | test03, control job 588179, `scancel` of COUNT job 588659 while running | `FAILED` at `STAGE=COUNT`, rc 1, after the other 9 COUNT jobs finished; `MESSAGE=COUNT failed: <pair> job 588659 CANCELLED: ... DUE to SIGNAL Terminated`; no SEG job submitted; `checkRun.sh` 1 with the job listed under cancelled |
-| redactNormals | copy of the test01 deliverables, `Rscript --no-init-file` | rc 0; `__<normal>` removed from the four tables, xlsx rewritten by `openxlsx::write.xlsx` |
+| redactNormals | copy of the test01 deliverables, `Rscript --no-init-file` | rc 0; `__<normal>` removed from the four tables, xlsx rewritten by `openxlsx::write.xlsx`. The script was later retired to `attic/`; `redactDeliverables.R` replaces it in `postProcess.sh` (test30) |
 | one tumor, one normal | test11 (`devs` 95deb1c), control job 1236320 | `COMPLETED`, 10 of 10 jobs (7 FIX, 1 COUNT, 1 SEG, 1 POST), `checkRun.sh` 0, 5 min 41 s. `bestMatches____out` holds the one pair, `out/` not pruned; `README.txt` ("No significant copy number changes") instead of the gene tables. The `.seg` is byte-identical to the same pair in test01 |
 | self-pairs skipped | test10 (`devs` 95deb1c), seven samples in both `tumors` and `normals`, run directly inside interactive job 168961 | `COMPLETED`, 92 jobs (7 FIX, 42 COUNT, 42 SEG, 1 POST); no self-pair in `pairs.tsv`, `out/` (7 best) or `outAll/` (42). Run before the `RUN_MODE` fix, so it recorded `CTRL_JOBID=168961` |
 | direct run | test12, `PIPE.sh` run directly, pid 3105705 on `isca006` | `COMPLETED`, 10 of 10 jobs, `RUN_MODE=direct`, `CTRL_JOBID=none`, `checkRun.sh` 0; `___IGV.seg` identical to test11 |
@@ -158,7 +161,7 @@ beside the checkout (`../test01/` and so on) and were deleted on
 | reduced lock | `Rlib.lock.tsv` cut to R, DNAcopy, pctGCdata, Rsamtools, data.table and seqDNAcopy, the other packages from the shared or personal library; `00.SETUP.sh` builds only seqDNAcopy (seconds). test33 (test30's inputs), control job 1528228 | `COMPLETED`, 36 of 36 jobs, about 7 min wall. Identical to test31 except the git tag (`.out`, `.json`, `GITTag` in `_Counts.rda`) and the timestamps inside the xlsx and PDF (xlsx cells identical). `bin/checkRlib.R` stops on a wrong locked version and on anything but seqDNAcopy in `Rlib/` |
 
 sacct for Proj_12257 (`MaxRSS` is the cgroup watermark and includes
-page cache, see `docs/IRIS_CLUSTER_INFO.md`; a direct run has no
+page cache, see `docs/dev/IRIS_CLUSTER_INFO.md`; a direct run has no
 control job):
 
 | Stage | Jobs | Elapsed | MaxRSS | ReqMem |

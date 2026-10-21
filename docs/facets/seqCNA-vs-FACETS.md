@@ -5,7 +5,8 @@
 The seqCNA pipeline is an in-house bioinformatics tool for somatic copy number analysis
 from tumor/normal sequencing data. It implements a "total copy number" approach, in contrast
 to allele-specific methods such as FACETS. The pipeline was developed at the MSK
-Bioinformatics Core and is built around the `seqDNAcopy` library [Seshan 2014].
+Bioinformatics Core and is built around `seqDNAcopy`, V. Seshan's package for read
+counting, GC correction and segmentation. The full method is in `docs/methods.md`.
 
 Source code: https://github.com/soccin/seqCNA
 
@@ -15,46 +16,58 @@ Source code: https://github.com/soccin/seqCNA
 
 ### Algorithm
 
-1. **Read counting and binning.** For each sample pair, the pipeline counts reads aligned
-   to fixed-width genomic bins. For targeted/exome data (MSK-IMPACT, WES) the default bin
-   size is 100 bp; larger bins are used for shallow WGS.
+1. **Read counting and binning.** For each tumor/normal pair, the pipeline counts
+   fragments in 100 bp bins, each fragment once at its midpoint. For targeted/exome data
+   (MSK-IMPACT, WES) these bins are segmented as they are; for shallow WGS they are merged
+   into larger bins, with the size chosen for each pair from the normal's coverage.
 
 2. **GC normalization.** Raw bin counts are corrected for GC-content bias, which is the
    dominant technical confounder in coverage-based copy number analysis.
 
 3. **Log-ratio computation.** For each bin the log2 ratio of tumor-to-normal coverage is
-   computed. This is the central signal: positive values indicate copy gain, negative values
-   indicate copy loss.
+   computed. This is the central signal.
 
 4. **Segmentation via CBS.** The log-ratio track is segmented using the Circular Binary
    Segmentation (CBS) algorithm [Olshen 2004] as implemented in `seqDNAcopy`. CBS
    identifies statistically significant breakpoints where copy number changes.
 
-5. **Gene-level annotation.** Each gene is assigned a copy number call (gain, loss,
-   amplification, deletion) based on the segment it overlaps. A p-value and FDR are
-   computed per gene.
+5. **Clustering and baseline.** Segments at nearly the same level are merged into
+   clusters. The cluster with a level near 0 and many bins is the baseline and is set to
+   0, so positive values are gains and negative values losses relative to the tumor's
+   baseline level. Each segment gets a p-value against the bins of the baseline cluster,
+   following the significance test of the MSK-IMPACT method [Cheng 2015], and an FDR
+   over the segments of the tumor.
+
+6. **Gene-level calls.** Each gene is given the log2 ratio of one segment: of the
+   segments its exons overlap, the one with the lowest log2 ratio. The gene is called if
+   that segment has FDR < 0.05 and |log2R| > 1, on the autosomes only. A call is a log2
+   ratio; it is not put into a category such as gain, amplification or deletion.
 
 ### Inputs
 
-- Tumor BAM file (mapped with BWA MEM)
-- Control BAM file: matched normal, an unmatched normal, or a pooled normal
-- Reference genome: hg19 or mm10 (mouse support via a forked version of `seqDNAcopy`)
+- Tumor BAM files: hg19/b37 or mm10 (mouse support via a forked version of `seqDNAcopy`)
+- Normal BAM files: matched, unmatched or pooled. Each tumor is compared with every
+  normal, and the normal whose coverage pattern is closest to the tumor's (lowest
+  `rms.logr`) is kept
 
 ### Outputs
 
+Described in `docs/output.md`, which is delivered with the results.
+
 | File | Description |
 |------|-------------|
-| `*.pdf` | Multi-page PDF with copy number profile plots for all samples |
-| `*.png` | Individual per-sample copy number profile plots |
-| `*.seg` | Segmentation file (CBS output, compatible with downstream tools) |
-| gene calls file | Gene-level copy number calls with p-values/FDR |
+| `Proj_<no>___seqSeg.pdf` | Copy number plot of each tumor, one per page |
+| `Proj_<no>___IGV.seg` | Every segment of every tumor, for IGV |
+| `Proj_<no>___GeneTable.xlsx` | Called genes, one row per tumor and gene, with the FDR |
+| `GeneMatrix.csv` | Called genes, a matrix of genes by tumors |
+| `SegmentMatrix.csv` | Called genes with their segments, p-values and FDR |
 
 ---
 
 ## What FACETS Does
 
 FACETS (Fraction and Allele-specific Copy number Estimate from Tumor/Normal Sequencing)
-[Shen & Seshan 2022] is a more sophisticated algorithm that models allele-specific copy
+[Shen 2016] is a more sophisticated algorithm that models allele-specific copy
 number jointly with tumor purity and ploidy. It performs joint segmentation of the total
 copy number log-ratio and the allele-specific signal (B-allele frequency from germline
 heterozygous SNPs). From this it infers:
@@ -102,7 +115,8 @@ pipeline) and is widely used for published cancer genomics studies.
 - Mouse tumor samples
 - Cross-platform cohorts (e.g., some samples on IMPACT, some on WGS) where a single
   consistent method is preferable over running two different algorithms
-- Compatibility with the clinical DMP/MSK-IMPACT copy number method
+- Results that follow the significance test of the clinical MSK-IMPACT copy number
+  method [Cheng 2015]
 
 ### When to use FACETS
 
@@ -128,28 +142,29 @@ ratio per bin/segment. It does not model, estimate, or output:
 
 This is not an implementation gap but a design-level constraint: the pipeline uses only
 read-depth and does not incorporate the B-allele frequency of germline heterozygous
-SNPs. As a consequence, a segment at log2R = -1 could represent one copy in a pure
-diploid tumor, or one copy in a triploid tumor with 50% purity, or any number of other
-combinations --the method provides no way to resolve this ambiguity. For studies where
+SNPs. The log2 ratios are relative to a baseline level of the tumor, which is not known
+to be two copies. Without purity and ploidy a log2 ratio cannot be converted to a number
+of copies, and the method provides no way to estimate them. For studies where
 absolute copy number, purity estimates, or LOH calls are scientifically required, seqCNA
 is not a substitute for FACETS; it is explicitly a fallback for situations where FACETS
 cannot be run.
 
 **Call thresholds are fixed, not data-driven**
 
-Significant gene-level calls are reported when FDR < 0.05 and |log2R| > 1 (i.e., at
-least a 2-fold change from the normal baseline). This threshold is hard-coded and not
-adapted to tumor purity. In a low-purity sample the expected log-ratio for a single-copy
-loss may be well below 1.0, meaning real events will be missed. Conversely, noisy samples
+Significant gene-level calls are reported when FDR < 0.05 and |log2R| > 1 (i.e., a
+coverage ratio more than twice or less than half that of the tumor's baseline cluster).
+This threshold is hard-coded and not adapted to tumor purity. As purity drops, the log2
+ratio of every change moves toward 0, so real events can fall under the fixed threshold
+and be missed. Conversely, noisy samples
 may generate many false positives near the threshold. There is no purity-corrected
 significance model as there is in FACETS.
 
 **Cannot distinguish shallow from deep deletion**
 
-Because only total depth is available, a segment with log2R ~ -1 (consistent with one
-copy lost) is indistinguishable from log2R ~ -inf (homozygous deletion) without additional
-context. The pipeline requires the user to make a binary choice about how to label
-deletions in downstream tools (e.g., oncoprint). This is less of a problem for deep
+Because only total depth is available and purity is not estimated, the depth of a
+deletion cannot be read from its log2 ratio: the value does not say whether one copy or
+both copies are lost. The user has to make a binary choice about how to label deletions
+in downstream tools (e.g., oncoprint). This is less of a problem for deep
 focal deletions of known tumor suppressors (CDKN2A, PTEN, etc.) where the log-ratio
 signal is extreme, but is a genuine ambiguity for broad, shallow losses.
 
@@ -157,7 +172,7 @@ signal is extreme, but is a genuine ambiguity for broad, shallow losses.
 
 The pipeline was developed and tuned for shallow WGS and targeted panels (MSK-IMPACT).
 When applied to deep whole-genome sequencing data for the first time, both
-hypersegmentation and poor diploid-state estimation were observed across a subset of
+hypersegmentation and a poorly chosen baseline cluster were observed across a subset of
 samples, to the extent that gene-level calls could not be trusted without manual QC and
 parameter adjustment. The high read depth at deep WGS coverage provides strong
 statistical power to detect very small copy number differences that may reflect technical
@@ -275,27 +290,23 @@ purity/ploidy solution highly sensitive to data quality:
 **Role of seqCNA as a fallback**
 
 In practice, seqCNA serves as the fallback for cases where FACETS fails or cannot be
-run. Its primary advantage in this role is that it was deliberately designed to
-replicate the copy number method used in the MSK clinical assay (DMP/MSK-IMPACT),
-including the same p-value calculation, making its output directly comparable to
-clinical IMPACT results even when the more sophisticated FACETS solution is unavailable.
+run. Its primary advantage in this role is that it follows the significance test of the
+copy number method of the MSK clinical assay (DMP/MSK-IMPACT) [Cheng 2015], so its
+output can be compared with clinical IMPACT results even when the more sophisticated
+FACETS solution is unavailable. It is not an exact copy of that method: for example,
+seqCNA merges segments into clusters with a threshold of 0.04, where DMP uses 0.08.
 
 ---
 
 ## Methods Text (for publications)
 
-> Copy number analysis was performed using the seqCNA pipeline
-> (https://github.com/soccin/seqCNA). Briefly, FASTQ files were aligned to [hg19 / mm10]
-> using BWA MEM. Read counts were computed in 100 bp bins across the genome using the
-> `seqDNAcopy` library [Seshan 2014] and normalized for library size and GC content. The
-> log2 tumor-to-normal ratio was segmented using the Circular Binary Segmentation (CBS)
-> algorithm [Olshen 2004]. Gene-level copy number calls were assigned based on segment
-> mean log-ratios.
->
-> References:
-> - Olshen AB, Venkatraman ES, Lucito R, Wigler M. Circular binary segmentation for the
->   analysis of array-based DNA copy number data. Biostatistics. 2004;5(4):557-72.
-> - Seshan VE. Detecting copy number changes and structural rearrangements using DNA
->   sequencing. Statistical Analysis of Next Generation Sequencing Data. Springer, Cham,
->   2014:355-378. (https://github.com/veseshan/seqDNAcopy)
+The methods text is `docs/methods.md`; it is delivered with the results of every run.
+
+## References
+
+- Cheng, DT, et al; J Mol Diagn 2015 May; 17(3): 251-264.
+
+- Olshen, AB, et al; Biostatistics 2004 Oct; 5(4): 557-572.
+
+- Shen, R, Seshan, VE; Nucleic Acids Res 2016; 44(16): e131.
 

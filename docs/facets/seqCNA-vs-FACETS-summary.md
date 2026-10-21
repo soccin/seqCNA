@@ -1,7 +1,8 @@
 # seqCNA vs FACETS: Summary
 
 **seqCNA** computes log2 tumor/normal coverage ratios, segments them with CBS, and reports
-gene-level copy number calls. It is simple, robust, and handles cases FACETS cannot:
+the log2 ratio of each gene in a significant segment. It is simple, robust, and handles
+cases FACETS cannot:
 unmatched or pooled normals, mouse genomes, and mixed capture platforms.
 
 **FACETS** jointly models the coverage log-ratio and B-allele frequencies at germline SNPs
@@ -23,10 +24,10 @@ cross-platform cohorts where a single consistent method is needed.
 **Use FACETS** when you have a matched tumor/normal pair, need integer copy number, LOH,
 or purity/ploidy estimates, or are integrating with TEMPO.
 
-**Key seqCNA caveat:** Output is relative only -- no absolute copy number, no purity
-correction, no LOH. A segment at log2R = -1 could represent one lost copy in a pure
-diploid tumor or any number of other scenarios; the method cannot resolve this ambiguity.
-It is explicitly a fallback for situations where FACETS cannot run.
+**Key seqCNA caveat:** Output is relative only: log2 ratios relative to a baseline level
+of the tumor, with no absolute copy number, no purity correction, no LOH. Without purity
+and ploidy a log2 ratio cannot be converted to a number of copies. It is explicitly a
+fallback for situations where FACETS cannot run.
 
 **Key FACETS caveat:** Fails or degrades on low-purity samples, inbred mouse models (too
 few heterozygous SNPs), mismatched bait sets, and highly aneuploid or genome-doubled

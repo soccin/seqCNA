@@ -7,9 +7,14 @@ sequencing, or targeted assays) using the `seqDNAcopy` package from
 _N.B._ these scripts use a forked version of `seqDNAcopy` which has
 been updated to work with both human and mouse.
 
-Runs on IRIS (RHEL 8, Slurm) since 6.0.0. The last JUNO/LSF version is on
-branch `juno` and tag `v5-juno` (3e6c18d). See `CHANGELOG.md`,
-`docs/SLURM_PORT.md`, `00.ISSUES.md`.
+Runs on IRIS (RHEL 8, Slurm) since 6.0.0. The last JUNO/LSF version
+is on branch `juno` and tag `v5-juno` (3e6c18d). See `CHANGELOG.md`,
+`docs/dev/SLURM_PORT.md`, `00.ISSUES.md`.
+
+`docs/methods.md` is the method text for reports and
+`docs/output.md` describes the deliverables; both are delivered with
+the results. `docs/facets/` compares seqCNA with FACETS and says when
+to use which.
 
 ## Setup, once per checkout
 
@@ -42,7 +47,8 @@ matched against the relabeled BAM paths
 ```bash
 sbatch seqCNA/PIPE.sh TARGETTED    # IMPACT, exome: BINSIZE=100
 sbatch seqCNA/PIPE.sh sWGS         # shallow WGS:   BINSIZE=auto
-seqCNA/bin/checkRun.sh             # 0 ok, 1 failed, 2 running
+seqCNA/bin/checkRun.sh             # 0 ok, 1 failed, 2 running,
+                                   # 3 sacct failed
 ```
 
 Or run it directly, without `sbatch`, in a shell that stays up for the
@@ -52,12 +58,13 @@ whole run (an interactive job, tmux, nohup):
 Deliverables land in `<Proj_No>/`: `<Proj_No>___IGV.seg`,
 `GeneMatrix.csv`, `SegmentMatrix.csv`, `<Proj_No>___GeneTable.xlsx`
 (or `README.txt` when no gene is significant) and
-`<Proj_No>___seqSeg.pdf`. They name each sample by its tumor ID only,
-so they do not show which normal was used. `<Proj_No>/` also holds the
-per-pair PNGs, titled with the pair ID `<tumor>__<normal>`; they are
-for checking, not for delivery. The normal chosen for each tumor is in
-`pairing.tsv` in the run directory. The best tumor-normal pairs are in
-`out/`, all pairs in `outAll/`.
+`<Proj_No>___seqSeg.pdf`; `docs/output.md` describes each one, and
+`docs/methods.md` the method. They name each sample by its tumor ID
+only, so they do not show which normal was used. `<Proj_No>/` also
+holds the per-pair PNGs, titled with the pair ID `<tumor>__<normal>`;
+they are for checking, not for delivery. The normal chosen for each
+tumor is in `pairing.tsv` in the run directory. The best tumor-normal
+pairs are in `out/`, all pairs in `outAll/`.
 
 ### Delivery
 
@@ -68,8 +75,9 @@ seqCNA/delivery.sh -n -d     # dry run: print, write nothing
 seqCNA/delivery.sh -d
 ```
 
-`-d` delivers to `/data1/core002/res/bic/results/<pi>/<invest>/Proj_<no>`,
-taken from the path `.../Users/<Pi>/<Invest>/Proj_<no>/...`; any other
+`-d` delivers to
+`/data1/core002/res/bic/results/<pi>/<invest>/Proj_<no>`, taken from
+the path `.../Users/<Pi>/<Invest>/Proj_<no>/...`; any other
 delivery folder can be given instead. The run folder is the next
 `r_NNN` there, unless the path ends in one. The script stops unless
 the run `COMPLETED`, the deliverables are present, no table names a
@@ -79,7 +87,8 @@ normal of `pairing.tsv`, and you can read the delivery folder. Then it:
   and the PI and investigator emails of the first `README.txt` found
   going up from the analysis directory to `Proj_<no>`;
 - copies, as `svc_core001_bot01`, the deliverables of `<Proj_No>/`
-  (not the PNGs) and `METHODS.md` to `r_NNN/seqcna`;
+  (not the PNGs), `docs/methods.md` and `docs/output.md` to
+  `r_NNN/seqcna`;
 - writes the email, from `tmpldeliveryEmail_*.txt`, to
   `deliveryEmail_<no>_r_NNN_<yymmdd>.txt`;
 - registers the run with the bicdelivery permissions database
@@ -88,10 +97,11 @@ normal of `pairing.tsv`, and you can read the delivery folder. Then it:
   command to rerun this step alone.
 
 The email gives the release in `VERSION.md` of the checkout the script
-is run from and links to `METHODS.md` on GitHub at that tag. A
-delivery folder other than `<pi>/<invest>/Proj_<no>` for the PI and
-investigator of `README.txt` gives a `WARNING`. For a delivery by
-email instead, zip `seqcna/` and use `DELIVERY_ZIP.md`.
+is run from and links to `docs/output.md` and `docs/methods.md` on
+GitHub at that tag. A delivery folder other than
+`<pi>/<invest>/Proj_<no>` for the PI and investigator of `README.txt`
+gives a `WARNING`. For a delivery by email instead, zip `seqcna/` and
+use `DELIVERY_ZIP.md`.
 
 ### Normals
 
@@ -141,8 +151,8 @@ BINSIZE=(Integer|enum)        Size of bins in base pairs. Default value: "auto".
                               values: {auto,INTEGER}. If set to "auto" then determine bin
                               size dynamically
 
-MINBINCOUNT=(Integer)         Minimum number of counts per bin to be used in segmentation.
-                              Default value: 35.
+MINBINCOUNT=(Integer)         Bins with this many normal counts or fewer are removed
+                              before segmentation. Default value: 35.
 
 YLIM=(Number)                 The plots show log2 ratios from -YLIM to YLIM.
                               Default value: 5.
@@ -151,4 +161,30 @@ TUMORID=String                If set, also write <sampleId>_seqSeg.redacted.png:
                               plot titled with this id instead of the pair id, so it does
                               not show the normal. PIPE.sh sets it to the tumor id; the
                               deliverable PDF is built from these plots. Default value: "".
+
+SEED=(Integer)                Seed for set.seed() before segmentation. DNAcopy computes
+                              p-values by permutation, so the same counts and seed give
+                              the same segments. Default value: 42.
+```
+
+### getGeneCalls
+
+```
+USAGE: getGeneCalls [options] ASSAY=<assayType> INPUTS=FileOfSeqCNAOutputDirs
+
+Compute the gene level calls from a set of seg files. Autosomes only:
+segments and genes on X, Y and other contigs are dropped before
+calling.
+
+Options:
+
+ASSAY=String        ASSAY used for sequencing: a directory under
+                    resources/geneAnnotations/ (Exome, IMPACT410,
+                    IMPACT505, M-IMPACT_v1, M-IMPACT_v2, Mouse-Twist).
+                    Required.
+
+INPUTS=File         File containing the paths to the output directories of
+                    seqSegment. Required.
+
+ODIR=Directory      Directory to write output files.  Default: "."
 ```

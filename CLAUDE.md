@@ -9,9 +9,14 @@ seqCNA calls copy number changes from sequencing data (shallow WGS or
 targeted/exome) by comparing tumor BAMs to normal BAMs. It uses
 `seqDNAcopy`, a fork of V. Seshan's package with mouse support added.
 Steps: binned read counts, GC correction, CBS segmentation, segment
-clustering, FDR-based significance, gene-level calls. `METHODS.md` has
-the method text used in reports; `docs/seqCNA-vs-FACETS*.md` explains
-when to use this instead of FACETS.
+clustering, FDR-based significance, gene-level calls.
+
+`docs/` holds the user-facing docs only: `methods.md` (the method text
+used in reports) and `output.md` (each deliverable, its columns, how to
+read the plots), both delivered with the results;
+`facets/seqCNA-vs-FACETS*.md` (when to use this instead of FACETS) and
+`usage/<tool>.doc` (the usage text of the wrapped tools). Docs for
+developers go in `docs/dev/`.
 
 The code is bash and R scripts for the IRIS cluster (RHEL 8, Slurm).
 There is no build step, test suite, or linter. `attic/` holds retired
@@ -20,8 +25,9 @@ scripts, including the LSF-era `seqCNA.sh`.
 Other files to read first:
 - `CHANGELOG.md`: what changed per release
 - `00.ISSUES.md`: open issues
-- `docs/SLURM_PORT.md`: how the port from JUNO/LSF was done and validated
-- `docs/IRIS_CLUSTER_INFO.md`: cluster facts with job ids
+- `docs/dev/SLURM_PORT.md`: how the port from JUNO/LSF was done and
+  validated
+- `docs/dev/IRIS_CLUSTER_INFO.md`: cluster facts with job ids
 - `attic/docs/00.SPEC_IRIS_PORT.md`: the port specification and
   decisions D1-D16
 
@@ -50,7 +56,8 @@ Required inputs in the project directory:
 - `pipeline/` containing a subdirectory matching `alignments|bam` with
   the BAMs, each with a `.bai`
 - `tumors`, `normals`: one pattern per line, matched with `fgrep -f`
-  against the relabeled BAM paths `bamRelabel/<base>/<base>__relabel.bam`
+  against the relabeled BAM paths
+  `bamRelabel/<base>/<base>__relabel.bam`
 
 Without `tumors` or `normals`, `PIPE.sh` writes `samples` (one line per
 BAM, the base name minus any `Proj_..._s_` prefix plus `__`) and exits
@@ -79,7 +86,7 @@ checks that `PID` on `HOST` is still `PIPE.sh` (run it on that host).
 job it names the session.
 
 Single steps can be run by hand. `getPairedCounts`, `seqSegment` and
-`getGeneCalls` run with no arguments print `docs/<name>.doc`;
+`getGeneCalls` run with no arguments print `docs/usage/<name>.doc`;
 `selectBestMatch` has no doc file and prints a one-line usage.
 
 ```bash
@@ -106,8 +113,9 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
 0. First step, before any run record: write `samples` if absent; stop
    with exit 0 if `tumors` or `normals` is missing or empty.
 1. CHECK (control job): BAM directory, BAMs and indexes, `tumors` and
-   `normals` each match a relabeled BAM path, one genome across BAMs via `GenomeData/getGenomeBuildBAM.sh`
-   and the assay from it, project id from `pipeline/*request.txt` or
+   `normals` each match a relabeled BAM path, one genome across BAMs
+   via `GenomeData/getGenomeBuildBAM.sh` and the assay from it,
+   project id from `pipeline/*request.txt` or
    `extractProjectIDFromPath.py`. Nothing is submitted until all pass.
 2. FIX, one job per BAM: `fixChromosomeNames.sh` writes
    `bamRelabel/<base>/<base>__relabel.bam` with `chr` stripped from
@@ -135,7 +143,8 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
    `bestMatches____out`).
 7. POST, one job: `postProcess.sh <Assay> <ProjNo>` copies the PNGs
    (pair IDs, for checking; not delivered) to `<ProjNo>/`, concatenates
-   the `.seg` files into `<ProjNo>___IGV.seg`, runs `fixXChrom.R`
+   the `.seg` files into `<ProjNo>___IGV.seg` (in `find` order, not
+   sorted: `00.ISSUES.md` #12), runs `fixXChrom.R`
    (renames the highest numeric chromosome to X), `getGeneCalls`
    (`GeneMatrix.csv`, `SegmentMatrix.csv`, `<ProjNo>___GeneTable.xlsx`,
    or `README.txt` when nothing is significant), then
@@ -162,7 +171,7 @@ with a git tag of the same name (`v6.0.0`). Never derive it from git.
 in `00.RUNSTATUS.txt` and `cmd.sh.log`, and stops if it is missing;
 `VERSION=` there is `git describe --tags --always --long --dirty`, the
 exact code. `delivery.sh` puts the release of its own checkout in the
-email and the `METHODS.md` link.
+email and the `docs/output.md` and `docs/methods.md` links.
 
 After the pipeline:
 - `seqCNA/delivery.sh [-n] -d|DELIVERY_DIR[/r_NNN]`, run from the
@@ -174,11 +183,11 @@ After the pipeline:
   `.../Users/<Pi>/<Invest>/Proj_<no>` path, the run folder is the next
   `r_NNN`, and `-n` prints those writes and the permissions-database
   call instead of running them. It copies the IGV `.seg`, the PDF and
-  the three call tables (or `README.txt`), plus `METHODS.md`, to
-  `r_NNN/seqcna/`; never the PNGs or `pairing.tsv`. Before copying it
-  stops if a table still contains `__<normal>` for a normal in
-  `pairing.tsv` (the xlsx is read with `unzip -p`). `PROJNO` and
-  `GENOME_TAG` come from `00.RUNSTATUS.txt`; the tag is mapped to the
+  the three call tables (or `README.txt`), plus `docs/methods.md` and
+  `docs/output.md`, to `r_NNN/seqcna/`; never the PNGs or
+  `pairing.tsv`. Before copying it stops if a table still contains
+  `__<normal>` for a normal in `pairing.tsv` (the xlsx is read with
+  `unzip -p`). `PROJNO` and `GENOME_TAG` come from `00.RUNSTATUS.txt`; the tag is mapped to the
   assemblies the database accepts (b37, hg19, hybrid, mm10).
   `bin/readme2yaml.R` writes `project.yaml` (pipeline `seqcna`) from
   the first `README.txt` going up to `Proj_<no>`; there is no fallback
@@ -198,7 +207,7 @@ After the pipeline:
 are symlinks to `execWrapper.sh`. The wrapper exports `SDIR` (repo
 directory) and `SNAME` (invoked name) and runs
 `bin/rscript.sh $0.R "$@"`. To add a tool: write `foo.R`, symlink
-`foo -> execWrapper.sh`, add `docs/foo.doc`.
+`foo -> execWrapper.sh`, add `docs/usage/foo.doc`.
 
 - `bin/rscript.sh` runs every R script: the wrapped tools, the
   standalone scripts (`fixXChrom.R`, `redactDeliverables.R` from
@@ -268,7 +277,7 @@ samtools and ImageMagick are recorded, not checked.
 Versions change only at a planned version scan: install the new
 versions, edit `Rlib.lock.tsv` by hand, rerun a reference project,
 compare with the previous run, record it in `CHANGELOG.md` and
-`METHODS.md`.
+`docs/methods.md`.
 
 ### Genome handling
 
@@ -339,12 +348,15 @@ tree is dirty).
   so deletions take priority over amplifications. For the Exome assay
   the canonical isoforms come from `resources/vcf2maf/v1.6.12/`.
   Autosomes only (see chrX above).
-- `METHODS.md` states these values; update it if they change.
+- `docs/methods.md` states these values; update it if they change.
+  `docs/output.md` describes every deliverable, its columns, the plot
+  and the thresholds; update it if any of them change.
 
 ## Environment dependencies
 
 - `~/bin/sbatch`, `~/bin/bsub`, `~/bin/bSync.sh`: the personal Slurm
-  wrappers, as in ATAC-seq and ChIP-seq. `docs/IRIS_CLUSTER_INFO.md`.
+  wrappers, as in ATAC-seq and ChIP-seq.
+  `docs/dev/IRIS_CLUSTER_INFO.md`.
 - `module load R/4.5.1_nds` (personal module in `~/.modules`) before
   submitting; batch jobs inherit the environment (`--export=ALL`).
 - `samtools/1.20` module; ImageMagick at
