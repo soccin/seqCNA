@@ -56,7 +56,8 @@ Required inputs in the project directory:
 - `pipeline/` containing a subdirectory matching `alignments|bam` with
   the BAMs, each with a `.bai`
 - `tumors`, `normals`: one pattern per line, matched with `fgrep -f`
-  against the relabeled BAM paths `bamRelabel/<base>/<base>__relabel.bam`
+  against the relabeled BAM paths
+  `bamRelabel/<base>/<base>__relabel.bam`
 
 Without `tumors` or `normals`, `PIPE.sh` writes `samples` (one line per
 BAM, the base name minus any `Proj_..._s_` prefix plus `__`) and exits
@@ -112,8 +113,9 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
 0. First step, before any run record: write `samples` if absent; stop
    with exit 0 if `tumors` or `normals` is missing or empty.
 1. CHECK (control job): BAM directory, BAMs and indexes, `tumors` and
-   `normals` each match a relabeled BAM path, one genome across BAMs via `GenomeData/getGenomeBuildBAM.sh`
-   and the assay from it, project id from `pipeline/*request.txt` or
+   `normals` each match a relabeled BAM path, one genome across BAMs
+   via `GenomeData/getGenomeBuildBAM.sh` and the assay from it,
+   project id from `pipeline/*request.txt` or
    `extractProjectIDFromPath.py`. Nothing is submitted until all pass.
 2. FIX, one job per BAM: `fixChromosomeNames.sh` writes
    `bamRelabel/<base>/<base>__relabel.bam` with `chr` stripped from
@@ -141,7 +143,8 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
    `bestMatches____out`).
 7. POST, one job: `postProcess.sh <Assay> <ProjNo>` copies the PNGs
    (pair IDs, for checking; not delivered) to `<ProjNo>/`, concatenates
-   the `.seg` files into `<ProjNo>___IGV.seg`, runs `fixXChrom.R`
+   the `.seg` files into `<ProjNo>___IGV.seg` (in `find` order, not
+   sorted: `00.ISSUES.md` #12), runs `fixXChrom.R`
    (renames the highest numeric chromosome to X), `getGeneCalls`
    (`GeneMatrix.csv`, `SegmentMatrix.csv`, `<ProjNo>___GeneTable.xlsx`,
    or `README.txt` when nothing is significant), then
@@ -181,10 +184,10 @@ After the pipeline:
   `r_NNN`, and `-n` prints those writes and the permissions-database
   call instead of running them. It copies the IGV `.seg`, the PDF and
   the three call tables (or `README.txt`), plus `docs/methods.md` and
-  `docs/output.md`, to `r_NNN/seqcna/`; never the PNGs or `pairing.tsv`. Before copying it
-  stops if a table still contains `__<normal>` for a normal in
-  `pairing.tsv` (the xlsx is read with `unzip -p`). `PROJNO` and
-  `GENOME_TAG` come from `00.RUNSTATUS.txt`; the tag is mapped to the
+  `docs/output.md`, to `r_NNN/seqcna/`; never the PNGs or
+  `pairing.tsv`. Before copying it stops if a table still contains
+  `__<normal>` for a normal in `pairing.tsv` (the xlsx is read with
+  `unzip -p`). `PROJNO` and `GENOME_TAG` come from `00.RUNSTATUS.txt`; the tag is mapped to the
   assemblies the database accepts (b37, hg19, hybrid, mm10).
   `bin/readme2yaml.R` writes `project.yaml` (pipeline `seqcna`) from
   the first `README.txt` going up to `Proj_<no>`; there is no fallback
