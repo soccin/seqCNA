@@ -4,15 +4,23 @@ Open items before `rel/v6.0.0` is merged to `master` and tagged 6.0.0.
 Open issues, including the ones not required for the release, are in
 `00.ISSUES.md`.
 
-## 1. Validation
+## 1. From the JUNO comparison
 
-- [ ] Compare with a JUNO run of a previous seqCNA project
-      (`00.ISSUES.md` #1, spec D12 and section 4 step 5). Diff
-      `_seqSeg.seg`, `_seqSeg.out`, `bestMatches____out`,
-      `GeneMatrix.csv`. Differences must be explained by package
-      versions and stay below the calling thresholds. In progress in
-      `../test20`; record its job ids and sacct Elapsed and MaxRSS in
-      `docs/SLURM_PORT.md` and `docs/IRIS_CLUSTER_INFO.md`.
+`00.ISSUES.md` #1 is closed (DNAcopy weights fix). Notes in
+`../test20/NOTES_JUNO_IRIS_COMP.md`.
+
+- [x] chrX: no chrX gene calls in any assay. `getGeneCalls.R` keeps
+      the autosomes only, by genome, for segments and annotation. X
+      stays in segmentation, `rms.logr`, the IGV `.seg` and the plots.
+- [x] Seed: `seqSegment SEED=` with a fixed default, `set.seed()`
+      before `seqsegment()`, written to the `.out` file.
+- [x] Pin versions under R 4.5.1: a lock file of the installed
+      packages and their dependencies, installed into `Rlib/` by
+      `00.SETUP.sh`; one launcher restricts R to `Rlib` and stops on a
+      version mismatch; samtools and ImageMagick versions recorded.
+- [x] Small functional test, run twice (identical output with the
+      seed): test31, test32 (`docs/SLURM_PORT.md`).
+- [ ] The Proj_12257 rerun in `../../CNA` (user).
 
 ## 2. Release
 

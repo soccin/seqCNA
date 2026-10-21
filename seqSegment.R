@@ -17,7 +17,8 @@ args=list(
     BINSIZE="auto",
     MINBINCOUNT=35,
     YLIM=5,
-    TUMORID=""
+    TUMORID="",
+    SEED=42L
     )
 
 cat("###############################################################\n")
@@ -83,6 +84,14 @@ if(tolower(args$BINSIZE)=="auto") {
 }
 
 undo.SD=2
+
+#
+# DNAcopy::segment computes its p-values by permutation, so without a
+# fixed seed a rerun on the same counts can move breakpoints.
+#
+
+seed=args$SEED
+set.seed(seed)
 out=seqsegment(bb,sampleid=sampleId,
                 binSize=binSize,minBinCount=args$MINBINCOUNT,
                 undo.splits="sdundo",undo.SD=undo.SD)
@@ -100,6 +109,7 @@ out$param$minBinCount=args$MINBINCOUNT
 out$param$undo=list(undo.splits="sdundo",undo.SD=undo.SD)
 out$param$genome=cArgs$GENOME
 out$param$clusterThreshold=clusterThreshold
+out$param$seed=seed
 
 #
 # probe.seg.values is the segment means projected
@@ -165,6 +175,7 @@ writeVariable("binSize")
 numBins=nrow(out$data)
 writeVariable("numBins")
 writeVariable("undo.SD")
+writeVariable("seed")
 writeVariable("global.mad")
 writeVariable("rms.derivative.noise")
 writeVariable("sum.logr.sq")
