@@ -1,0 +1,18 @@
+
+- output.pdf (or output.html, the same in a web browser) describes
+  each file: the columns of the tables, how to read the plots, and
+  what the log2 ratios mean.
+
+- methods.pdf (or methods.html) describes the methods.
+
+Both are also online:
+
+    https://github.com/soccin/seqCNA/blob/{VERSION}/docs/output.md
+    https://github.com/soccin/seqCNA/blob/{VERSION}/docs/methods.md
+
+If you have any questions let me know.
+
+Nicholas Socci
+Bioinformatics Core
+MSKCC
+soccin@mskcc.org

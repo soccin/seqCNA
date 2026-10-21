@@ -1,0 +1,20 @@
+Subject: Results for Project {PROJNO} copy number (seqCNA) ready
+
+The results for the DNA copy number pipeline (seqCNA {VERSION}) are now
+ready. You can access them at:
+
+    https://bicdelivery.mskcc.org/project/{PROJNO}/seqcna/{RUNDIR}
+
+in the folder
+
+    seqcna
+
+You will find the following files (output.pdf, in the same folder,
+describes each one in detail):
+
+- Proj_{PROJNO}___seqSeg.pdf is a multipage PDF with the copy number
+  profile of each sample
+
+- Proj_{PROJNO}___IGV.seg has the output of the DNAcopy CBS segmentation
+  algorithm. This file can be loaded into IGV to view a genome-wide
+  figure.

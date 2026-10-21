@@ -2,7 +2,7 @@
 # getPairedCounts.R
 #
 
-VERSION="5.dev"
+VERSION="6.0.0"
 
 SNAME=Sys.getenv("SNAME")
 SDIR=Sys.getenv("SDIR")
@@ -28,7 +28,7 @@ args=parseArgs(args)
 
 if(is.null(args)) {
 
-    cat(readLines(file.path(SDIR,"docs",paste0(SNAME,".doc"))),sep="\n")
+    cat(readLines(file.path(SDIR,"docs","usage",paste0(SNAME,".doc"))),sep="\n")
     cat("\n\n")
     quit()
 

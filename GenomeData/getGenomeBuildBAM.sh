@@ -5,9 +5,20 @@ if [ "$#" != "1" ]; then
     exit
 fi
 
-SAMTOOLS=/opt/common/CentOS_7/samtools/samtools-1.9/bin/samtools
+#
+# samtools from PATH (PIPE.sh sources bin/loadTools.sh; by hand: module
+# load samtools/1.20). Exit 1 on a missing samtools or an unreadable BAM
+# rather than printing "unknown" for the md5 of an empty header.
+#
+
+SAMTOOLS=$(command -v samtools) || { echo "getGenomeBuildBAM.sh: samtools not on PATH" >&2; exit 1; }
 
 GENOME_MD5=$($SAMTOOLS view -H $1 | egrep "^@SQ" | cut -f-3 | sort  | md5sum - | awk '{print $1}')
+# d41d8... is the md5 of empty input: samtools failed or the BAM has no @SQ
+if [ "$GENOME_MD5" == "d41d8cd98f00b204e9800998ecf8427e" ]; then
+    echo "getGenomeBuildBAM.sh: cannot read the header of [$1]" >&2
+    exit 1
+fi
 
 case $GENOME_MD5 in
     b879c678e7fd80718cf20d10c6b846e4)

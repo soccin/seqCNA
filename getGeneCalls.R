@@ -16,7 +16,7 @@ convertGeneSymbolsMouseToHuman <- function(mgg) {
 
 }
 
-VERSION="5.dev"
+VERSION="6.0.0"
 
 SNAME=Sys.getenv("SNAME")
 SDIR=Sys.getenv("SDIR")
@@ -39,7 +39,7 @@ args=parseArgs(args)
 
 if(is.null(args)) {
 
-    cat(readLines(file.path(SDIR,"docs",paste0(SNAME,".doc"))),sep="\n")
+    cat(readLines(file.path(SDIR,"docs","usage",paste0(SNAME,".doc"))),sep="\n")
     cat("\n\n")
     quit()
 
@@ -59,15 +59,34 @@ outDirs=scan(args$INPUTS,"")
 out1file=dir(outDirs[1],pattern="_seqSeg.out",full.names=T)
 out1=parseSeqCNAOutFile(out1file)
 
+genome=normalizeGenomeTag(out1$genome)
+
+#
+# Gene calls are made on the autosomes only. A call on X or Y needs a
+# sex-matched normal and the known sex of the sample, which we do not
+# have. The segments name X by number (23 human, 20 mouse) and the
+# annotations name it X, 23 or not at all, so keep the autosomes by
+# number in both rather than rely on the names not matching.
+#
+
+autosomes=switch(genome,
+    b37=as.character(1:22),
+    mm10=as.character(1:19),
+    {
+        cat("\n\n    FATAL ERROR: getGeneCalls: unknown genome [",genome,"]\n\n",sep="")
+        quit(status=1)
+    })
+
 geneAnnoteFile=file.path(
     SDIR,
     glb$geneAnnotationsDir,
     args$ASSAY,
-    normalizeGenomeTag(out1$genome),
+    genome,
     "gene_annotations.txt.gz")
 
 geneDb=fread(cmd=paste0("zcat ", geneAnnoteFile))
 geneDb$chrom=as.character(geneDb$chrom)
+geneDb=geneDb[chrom %in% autosomes]
 
 setkey(geneDb,chrom,start,stop)
 
@@ -77,6 +96,7 @@ getSegFileFromOutDir <- function(odir) {
 
 segs=rbindlist(lapply(lapply(outDirs,getSegFileFromOutDir),fread))
 segs$chrom=as.character(segs$chrom)
+segs=segs[chrom %in% autosomes]
 setkey(segs,chrom,loc.start,loc.end)
 
 
@@ -95,7 +115,6 @@ ff=ff[order(ff$seg.mean),]
 ff=ff[!duplicated(ff,by=c("ID","gene"))]
 
 suppressPackageStartupMessages({
-    require("biomaRt")
     require(dtplyr)
     require(dplyr)
     require(tidyr)
@@ -132,9 +151,15 @@ robustMin <- function(xx) {
 
 }
 
+#
+# Canonical isoforms for Exome: the vcf2maf v1.6.12 override lists,
+# vendored in resources/vcf2maf/v1.6.12/ (they were read from
+# /opt/common on the LSF clusters).
+#
 if(args$ASSAY %in% c("Exome")) {
-    iso1=read_tsv("/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/isoform_overrides_uniprot")
-    iso2=read_tsv("/opt/common/CentOS_6-dev/vcf2maf/v1.6.12/data/isoform_overrides_at_mskcc")
+    isoDir=file.path(SDIR,"resources/vcf2maf/v1.6.12")
+    iso1=read_tsv(file.path(isoDir,"isoform_overrides_uniprot"),show_col_types=FALSE)
+    iso2=read_tsv(file.path(isoDir,"isoform_overrides_at_mskcc"),show_col_types=FALSE)
     canonicalIsoforms=union(iso1[[1]],iso2[[1]])
 } else {
     canonicalIsoforms=sort(unique(geneEvents$transcript))

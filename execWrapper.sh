@@ -1,62 +1,19 @@
 #!/bin/bash
-
 #
-# Need to go back to R version 3
+# execWrapper.sh -- run the R script that shares the invoking name
 #
-# First remove current R and R env vars
+# getPairedCounts, seqSegment, getGeneCalls and selectBestMatch are
+# symlinks to this file. It exports SDIR (this checkout) and SNAME (the
+# invoked name) and runs $0.R through bin/rscript.sh, which puts Rlib/
+# (seqDNAcopy, built by 00.SETUP.sh) first on R_LIBS and checks R and
+# the packages in Rlib.lock.tsv first. With no arguments it prints
+# docs/usage/$SNAME.doc instead.
 #
-# This is done in PIPE.sh
-#
-# export PATH=$(echo $PATH | tr ':' '\n' | fgrep -v /R/R | tr '\n' ':')
-# unset R_LIBS
-# unset R_VERSION
-
-# #
-# # Now load R/3.x
-# #
-
-# module load R/R-3.6.1
-# MAJOROS=7
-# export R_VERSION=$(R --version | head -1 | awk '{print $3}')
-# export R_LIBS=/home/socci/lib/R/CentOS${MAJOROS}/$R_VERSION
-
-# R --version
-
-
 
 export SDIR="$( cd "$( dirname "$0" )" && pwd )"
 export SNAME=$(basename $0)
 
-if [ -e /etc/system-release ]; then
-    OSSTR=$(cat /etc/system-release)
-    OSVER=$(echo $OSSTR | perl -ne 'm/ ((\d+)\.(\d+)(|.\d+)) /; print $1')
-    OSMAJOR=$(echo $OSVER | perl -ne 'm/(\d+)\./; print $1')
-else
-    echo "MISSING /etc/system-release"
-    exit 1
-fi
-
-case $OSMAJOR in
-    6)
-    export R_LIBS=$SDIR/Rlib:/home/socci/lib/R/CentOS6/3.4.3
-    RSCRIPT=/ifs/work/socci/opt/R/3.4.3/bin/Rscript
-    ;;
-
-    7)
-    export R_LIBS=$SDIR/Rlib:$R_LIBS
-    RSCRIPT=$(which Rscript)
-    ;;
-
-    *)
-    echo "Unsupportted OS Version" $OSVER, $OSMAJOR
-    exit 1
-esac
-
-# echo $R_LIBS
-# echo $RSCRIPT
-# exit
-
-DOCFILE=$SDIR/docs/${SNAME}.doc
+DOCFILE=$SDIR/docs/usage/${SNAME}.doc
 if [ "$#" == "0" ] && [ -e $DOCFILE ]; then
     # If no args then just print usage
     # do not bother running R script
@@ -68,4 +25,4 @@ if [ "$#" == "0" ] && [ -e $DOCFILE ]; then
 
 fi
 
-exec $RSCRIPT --vanilla --no-save "$0.R" "$@"
+exec $SDIR/bin/rscript.sh "$0.R" "$@"

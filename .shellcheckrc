@@ -1,0 +1,6 @@
+#
+# File names in these pipelines never contain spaces or special
+# characters, so unquoted variables and $(...) are intended
+# (SC2086, SC2046). egrep and fgrep are used by choice (SC2196, SC2197).
+#
+disable=SC2086,SC2046,SC2196,SC2197

@@ -1,8 +1,22 @@
-library(readxl)
-library(readr)
-library(dplyr)
-library(tidyr)
-library(magrittr)
+#
+# selectBestMatch.R
+#
+# usage: selectBestMatch OUTDIR
+#
+# For each tumor keep the normal whose pair has the lowest rms.logr.
+# The tumor and normal of each pair come from OUTDIR/pipeline_info/pairs.tsv
+# (written by PIPE.sh), not from parsing the pair id; rms.logr comes from
+# each pair's _seqSeg.out. Writes, in the current directory:
+#
+#   bestMatches____<OUTDIR>  directory of each best pair, one per line
+#   pairing.tsv              TUMOR, NORMAL, PAIR, rms.logr; one row per
+#                            tumor. Internal: it names the normals.
+#
+
+suppressPackageStartupMessages({
+    library(readr)
+    library(dplyr)
+})
 
 SNAME=Sys.getenv("SNAME")
 SDIR=Sys.getenv("SDIR")
@@ -11,43 +25,47 @@ source(file.path(SDIR,"include/tools.R"))
 
 args=commandArgs(trailing=T)
 if(len(args)!=1) {
-    cat("usage: root of seqCNA output directories\n")
+    cat("usage: selectBestMatch OUTDIR (root of seqCNA output directories)\n")
     quit()
 }
+outRoot=args[1]
 
-pCon=pipe(paste("find",args[1],"|fgrep .out"))
+pairsFile=file.path(outRoot,"pipeline_info","pairs.tsv")
+if(!file.exists(pairsFile)) {
+    cat("\n\tFATAL ERROR no pairs file [",pairsFile,"] (written by PIPE.sh)\n\n")
+    quit(status=1)
+}
+pairs=read_tsv(pairsFile,col_types=cols(.default="c"))
+
+pCon=pipe(paste("find",outRoot,"|fgrep .out"))
 outFiles=scan(pCon,"")
 close(pCon)
 
-zz=list()
-ii=1
+tbl=outFiles |>
+    lapply(parseSeqCNAOutFile) |>
+    bind_rows() |>
+    select(sampleId,countFile,rms.logr) |>
+    mutate(rms.logr=as.numeric(rms.logr)) |>
+    left_join(pairs |> select(PAIR,TUMOR,NORMAL),by=c(sampleId="PAIR"))
 
-for(outfile in outFiles) {
-    yy=parseSeqCNAOutFile(outfile)
-    if(!is.null(yy)) {
-        zz[[ii]]=yy
-        ii=ii+1
-        print(c(ii,outfile))
-    }
+unknown=tbl |> filter(is.na(TUMOR)) |> pull(sampleId)
+if(len(unknown)>0) {
+    cat("\n\tFATAL ERROR pairs not in",pairsFile,":",unknown,"\n\n")
+    quit(status=1)
 }
 
-tbl=bind_rows(zz)
-tbl %<>% select(which(apply(tbl,2,function(x){len(unique(x))})>1))
-tbl %<>% type_convert
+#
+# One best normal per tumor; a tie in rms.logr goes to the first pair id
+#
+best=tbl |>
+    arrange(sampleId) |>
+    group_by(TUMOR) |>
+    slice_min(rms.logr,n=1,with_ties=FALSE) |>
+    ungroup() |>
+    arrange(TUMOR)
 
-bestPairs = tbl %>%
-    mutate(TumorId=gsub("__s_.*","",sampleId)) %>%
-    mutate(NormalId=gsub(".*__s_","s_",sampleId)) %>%
-    filter(TumorId!=NormalId) %>%
-    group_by(TumorId) %>%
-    top_n(1,desc(rms.logr)) %>%
-    ungroup %>%
-    select(sampleId)
+write(dirname(best$countFile),paste0("bestMatches____",gsub("/","___",outRoot)))
 
-bestMatchDirs = tbl %>%
-    filter(sampleId %in% bestPairs$sampleId) %>%
-    mutate(bestMatchDir=dirname(countFile)) %>%
-    select(bestMatchDir) %$%
-    as.vector(bestMatchDir)
-
-write(bestMatchDirs,paste0("bestMatches____",gsub("/","___",args[1])))
+pairing=best |> select(TUMOR,NORMAL,PAIR=sampleId,rms.logr)
+write_tsv(pairing,"pairing.tsv")
+print(as.data.frame(pairing))

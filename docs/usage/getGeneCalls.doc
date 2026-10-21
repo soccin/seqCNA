@@ -1,0 +1,19 @@
+
+USAGE: getGeneCalls [options] ASSAY=<assayType> INPUTS=FileOfSeqCNAOutputDirs
+
+Compute the gene level calls from a set of seg files. Autosomes only:
+segments and genes on X, Y and other contigs are dropped before
+calling.
+
+Options:
+
+ASSAY=String        ASSAY used for sequencing: a directory under
+                    resources/geneAnnotations/ (Exome, IMPACT410,
+                    IMPACT505, M-IMPACT_v1, M-IMPACT_v2, Mouse-Twist).
+                    Required.
+
+INPUTS=File         File containing the paths to the output directories of
+                    seqSegment. Required.
+
+ODIR=Directory      Directory to write output files.  Default: "."
+

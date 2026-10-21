@@ -1,10 +1,17 @@
 #!/bin/bash
+#
+# fixChromosomeNames.sh BAM
+#
+# Write bamRelabel/<base>/<base>__relabel.bam with "chr" stripped from
+# the contig names (b37 BAMs are symlinked with their index instead).
+# One job per BAM in the FIX stage of PIPE.sh; can be run by hand.
+#
 
 set -eu
 
 SDIR="$( cd "$( dirname "$0" )" && pwd )"
 
-module load samtools/1.19.2
+source $SDIR/bin/loadTools.sh
 
 IBAM=$1
 BASE=$(basename $IBAM | sed 's/.bam//')
@@ -18,7 +25,7 @@ if [ -e $ODIR/$OBAM ]; then
     exit
 fi
 
-GENOME=$(getGenomeBuildBAM.sh $IBAM)
+GENOME=$($SDIR/GenomeData/getGenomeBuildBAM.sh $IBAM)
 
 if [ "$GENOME" != "b37" ]; then
 
