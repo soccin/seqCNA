@@ -15,7 +15,7 @@
 #   - writes project.yaml for the bicdelivery permissions database,
 #     from the run and the first README.txt found going up from here
 #     to Proj_<no> (bin/readme2yaml.R);
-#   - copies the deliverables and METHODS.md of this checkout to
+#   - copies the deliverables and docs/methods.md of this checkout to
 #     DELIVERY/r_NNN/seqcna. The PNGs (titled with the pair ID) and
 #     pairing.tsv are not delivered;
 #   - writes the delivery email to deliveryEmail_<no>_r_NNN_<yymmdd>.txt,
@@ -192,14 +192,14 @@ if [[ "$USE_DEFAULT" -eq 1 ]]; then
 fi
 
 #
-# The email and the METHODS.md link name the release of VERSION.md of
+# The email and the methods.md link name the release of VERSION.md of
 # this checkout; it changes only when a release is made, never with git.
 #
 if ! VERSION=$("$SDIR/bin/getRelease.sh"); then
     fatal "no release in $SDIR/VERSION.md"
 fi
 
-METHODS=$SDIR/METHODS.md
+METHODS=$SDIR/docs/methods.md
 if [ ! -s "$METHODS" ]; then
     fatal "missing $METHODS"
 fi

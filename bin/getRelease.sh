@@ -7,7 +7,7 @@
 # The release is the client-facing version: it is set by hand in
 # VERSION.md when a release is made, with a git tag of the same name,
 # never derived from git. PIPE.sh records it as RELEASE= in
-# 00.RUNSTATUS.txt; delivery.sh puts it in the email and the METHODS.md
+# 00.RUNSTATUS.txt; delivery.sh puts it in the email and the methods.md
 # link. From ATAC-seq's bin/getRelease.sh.
 #
 

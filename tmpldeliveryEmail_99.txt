@@ -1,7 +1,7 @@
 
-- METHODS.md describes the methods. It is also online:
+- methods.md describes the methods. It is also online:
 
-    https://github.com/soccin/seqCNA/blob/{VERSION}/METHODS.md
+    https://github.com/soccin/seqCNA/blob/{VERSION}/docs/methods.md
 
 If you have any questions let me know.
 
