@@ -105,8 +105,8 @@ branch `juno` and tag `v5-juno` (3e6c18d).
   contains `__<normal>` for a normal in `pairing.tsv`. It delivers the
   same files as 5.x (the IGV `.seg`, the PDF, `GeneMatrix.csv`,
   `SegmentMatrix.csv`, the GeneTable xlsx, or `README.txt` when nothing
-  is significant) plus `docs/methods.md` and `docs/output.md`; not the
-  PNGs or `pairing.tsv`.
+  is significant) plus `docs/methods.md` and `docs/output.md` as PDF
+  and HTML; not the `.md`, the PNGs or `pairing.tsv`.
   The new `bin/readme2yaml.R` writes `project.yaml` (pipeline `seqcna`,
   the assembly from `GENOME_TAG`) from the first `README.txt` going up
   to `Proj_<no>`, and the run is registered with the bicdelivery
@@ -117,7 +117,14 @@ branch `juno` and tag `v5-juno` (3e6c18d).
   folder. The 5.x script copied to `/ifs/res` by hand-given path, with
   no checks. Tested with a delivery of the Proj_12257 run; the normal
   check also on unredacted copies of `GeneMatrix.csv` and the xlsx, and
-  the missing-`README.txt` stop on a test directory.
+  the missing-`README.txt` stop on a test directory. That delivery
+  copied the `.md` docs; the PDF and HTML were tested with a dry run
+  (`-n`) only.
+- `docs/MAKE_DOCS.sh` renders `docs/methods.md` and `docs/output.md`
+  to PDF (xelatex) and HTML with pandoc, as ATAC-seq does; the renders
+  are committed with the `.md`. The level 1 heading is the title, the
+  PDF page header gives the release of `VERSION.md`, and the HTML loads
+  nothing from the web.
 - **`VERSION.md`** holds the client-facing release (`v6.0.0`), set by
   hand when a release is made. `PIPE.sh` records it as `RELEASE=` in
   `00.RUNSTATUS.txt` and `cmd.sh.log` and stops if it is missing
@@ -188,7 +195,7 @@ branch `juno` and tag `v5-juno` (3e6c18d).
   estimated, so they are not copy numbers) and the calling rule. It is
   delivered with `docs/methods.md`, and the email refers to both.
 - `docs/` holds only user-facing docs: `METHODS.md` moved to
-  `docs/methods.md` (delivered and linked under that name), the tool
+  `docs/methods.md` (linked under that name), the tool
   usage files to `docs/usage/`, the FACETS comparison to
   `docs/facets/`, and the developer docs (`SLURM_PORT.md`,
   `IRIS_CLUSTER_INFO.md`) to `docs/dev/`.
