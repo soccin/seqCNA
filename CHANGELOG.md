@@ -93,6 +93,30 @@ and tag `v5-juno` (3e6c18d).
   (they lived under `/opt/common` on JUNO):
   `isoform_overrides_uniprot` (md5 537a33fd15869d1528531e6289f8493e),
   `isoform_overrides_at_mskcc` (md5 cff4b7fc3d1257ad8dd054e0e00101e3).
+- **`delivery.sh` delivers on IRIS** (`00.ISSUES.md` #4), as
+  ATAC-seq's `deliverResults.sh` does: to
+  `/data1/core002/res/bic/results/<pi>/<invest>/Proj_<no>/r_NNN/seqcna`
+  (`-d` takes the folder from the path of the analysis directory, the
+  run folder is the next `r_NNN`), writing as `svc_core001_bot01`, and
+  with `-n` for a dry run. It stops unless `bin/checkRun.sh` exits 0
+  and every deliverable is present, and if a delivered table still
+  contains `__<normal>` for a normal in `pairing.tsv`. It delivers the
+  same files as 5.x (the IGV `.seg`, the PDF, `GeneMatrix.csv`,
+  `SegmentMatrix.csv`, the GeneTable xlsx, or `README.txt` when nothing
+  is significant) plus `METHODS.md`; not the PNGs or `pairing.tsv`.
+  The new `bin/readme2yaml.R` writes `project.yaml` (pipeline `seqcna`,
+  the assembly from `GENOME_TAG`) from the first `README.txt` going up
+  to `Proj_<no>`, and the run is registered with the bicdelivery
+  permissions database. The email (`tmpldeliveryEmail_*.txt`, written
+  to `deliveryEmail_<no>_r_NNN_<yymmdd>.txt`) gives the release and run
+  folder, links to `METHODS.md` on GitHub at the release tag, and no
+  longer says the BAMs are in the alignment folder. The 5.x script
+  copied to `/ifs/res` by hand-given path, with no checks.
+- **`VERSION.md`** holds the client-facing release (`v6.0.0`), set by
+  hand when a release is made. `PIPE.sh` records it as `RELEASE=` in
+  `00.RUNSTATUS.txt` and `cmd.sh.log` and stops if it is missing
+  (`bin/getRelease.sh`); `VERSION=` stays the `git describe` of the
+  exact code.
 - `docs/SLURM_PORT.md`, `docs/IRIS_CLUSTER_INFO.md`, `00.ISSUES.md`,
   this file.
 
@@ -178,8 +202,19 @@ and tag `v5-juno` (3e6c18d).
   never sourced), to `attic/`.
 - `redactNormals.R`, to `attic/`: the pipeline writes redacted
   deliverables.
+- `DELIVERY.md`: the email is now built by `delivery.sh` from
+  `tmpldeliveryEmail_*.txt`. `DELIVERY_ZIP.md` stays, for a delivery by
+  email.
 
 ### Not tested
 - The mouse path (`mm10` relabel, `Mouse-Twist` assay) and sWGS
   (`BINSIZE=auto`) were not run on IRIS; no such project was at hand
   (`00.ISSUES.md`).
+- `delivery.sh` was run only with `-n`, on the Proj_12257 run of
+  2026-10-21; the copy as `svc_core001_bot01` and the permissions
+  database step have not been run. Its normal check was tested on
+  unredacted copies of `GeneMatrix.csv` and the xlsx, and the
+  missing-`README.txt` stop on a test directory. The no-calls email
+  (`README.txt` instead of the tables) has not been seen on a run.
+- `RELEASE=` in `00.RUNSTATUS.txt`: no run has been made with it; the
+  Proj_12257 run predates it.

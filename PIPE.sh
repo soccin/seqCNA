@@ -101,6 +101,17 @@ source $SDIR/bin/slurmTools.sh
 SCRIPT_VERSION=$(git --git-dir=$SDIR/.git --work-tree=$SDIR describe --always --long --tags --dirty)
 
 #
+# The client-facing release, set by hand in VERSION.md; VERSION (git)
+# is the exact code.
+#
+if ! SCRIPT_RELEASE=$($SDIR/bin/getRelease.sh); then
+    echo
+    echo "    FATAL ERROR: no release in $SDIR/VERSION.md"
+    echo
+    exit 1
+fi
+
+#
 # Tool versions, recorded in the run status. R and the locked packages are
 # checked against Rlib.lock.tsv in CHECK (bin/rscript.sh --check);
 # samtools and ImageMagick are only recorded.
@@ -248,6 +259,7 @@ TAG=q$PIPENAME
 
 echo SDIR=$SDIR
 echo VERSION=$SCRIPT_VERSION
+echo RELEASE=$SCRIPT_RELEASE
 echo ASSAY_TYPE=$ASSAY_TYPE BINSIZE=$BINSIZE
 
 #
@@ -321,6 +333,7 @@ MESSAGE=$RUN_MESSAGE
 STARTED=$RUN_STARTED
 FINISHED=$RUN_FINISHED
 VERSION=$SCRIPT_VERSION
+RELEASE=$SCRIPT_RELEASE
 R_VERSION=$R_VERSION
 RLIB_LOCK_MD5=$RLIB_LOCK_MD5
 SAMTOOLS_VERSION=$SAMTOOLS_VERSION
@@ -584,6 +597,7 @@ writeCmdLog() {
 	SDIR: $SDIR
 	GURL: $GURL
 	GTAG: $SCRIPT_VERSION
+	RELEASE: $SCRIPT_RELEASE
 	PWD: $PWD
 	RUN_MODE: $RUN_MODE
 	CTRL_JOBID: $CTRL_JOBID

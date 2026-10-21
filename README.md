@@ -59,6 +59,40 @@ for checking, not for delivery. The normal chosen for each tumor is in
 `pairing.tsv` in the run directory. The best tumor-normal pairs are in
 `out/`, all pairs in `outAll/`.
 
+### Delivery
+
+From the analysis directory, after `bin/checkRun.sh` exits 0:
+
+```bash
+seqCNA/delivery.sh -n -d     # dry run: print, write nothing
+seqCNA/delivery.sh -d
+```
+
+`-d` delivers to `/data1/core002/res/bic/results/<pi>/<invest>/Proj_<no>`,
+taken from the path `.../Users/<Pi>/<Invest>/Proj_<no>/...`; any other
+delivery folder can be given instead. The run folder is the next
+`r_NNN` there, unless the path ends in one. The script stops unless
+the run `COMPLETED`, the deliverables are present, no table names a
+normal of `pairing.tsv`, and you can read the delivery folder. Then it:
+
+- writes `project.yaml` (`bin/readme2yaml.R`) from the run's genome
+  and the PI and investigator emails of the first `README.txt` found
+  going up from the analysis directory to `Proj_<no>`;
+- copies, as `svc_core001_bot01`, the deliverables of `<Proj_No>/`
+  (not the PNGs) and `METHODS.md` to `r_NNN/seqcna`;
+- writes the email, from `tmpldeliveryEmail_*.txt`, to
+  `deliveryEmail_<no>_r_NNN_<yymmdd>.txt`;
+- registers the run with the bicdelivery permissions database
+  (`~/Code/BIC/Delivery/Version2j`) as pipeline `seqcna`. If this
+  fails, the files are already delivered; the script prints the
+  command to rerun this step alone.
+
+The email gives the release in `VERSION.md` of the checkout the script
+is run from and links to `METHODS.md` on GitHub at that tag. A
+delivery folder other than `<pi>/<invest>/Proj_<no>` for the PI and
+investigator of `README.txt` gives a `WARNING`. For a delivery by
+email instead, zip `seqcna/` and use `DELIVERY_ZIP.md`.
+
 ### Normals
 
 - `IDT_Exome_v2_Normal`: was `~/Work/Pipelines/SeqCNV` on JUNO; not yet

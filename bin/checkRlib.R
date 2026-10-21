@@ -23,7 +23,8 @@
 # Loaded by the scripts, recorded in Rlib/VERSIONS.txt, not checked
 #
 RECORD=c("IRanges", "Rcpp", "RJSONIO", "stringr", "data.table", "dtplyr",
-         "dplyr", "tidyr", "tibble", "readr", "openxlsx", "readxl", "rlang", "fs")
+         "dplyr", "tidyr", "tibble", "readr", "openxlsx", "readxl", "rlang", "fs",
+         "purrr", "yaml")
 
 fatal <- function(...) {
     cat("\n    FATAL ERROR: ",...,"\n\n",sep="",file=stderr())
