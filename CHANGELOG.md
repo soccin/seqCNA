@@ -138,6 +138,10 @@ branch `juno` and tag `v5-juno` (3e6c18d).
   Counts, GC correction and `getGeneCalls` match JUNO. Rerun a 5.x
   project before comparing or merging its calls with 6.x calls. Report:
   `../test20/seqCNA_JUNO_vs_IRIS_concordance.html`.
+- `VERSION` in `getPairedCounts.R`, `seqSegment.R` and
+  `getGeneCalls.R`, and `Version:` in `DESCRIPTION`, are 6.0.0 (were
+  5.dev). `VERSION` is written to the counts `.rda` and the `.out`
+  file.
 - `PIPE.sh` keeps the LSF first step: run directly with no `tumors`
   or `normals`, it writes `samples` (one line per BAM) and exits 0.
   It now stops before any run record is written, so the run can be

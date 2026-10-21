@@ -32,7 +32,7 @@ Open issues, including the ones not required for the release, are in
       `docs/methods-output` and `docs/cleanup-01`, stacked in that
       order.
 - [x] Merge `devs` into `rel/v6.0.0` (a2f5cc7).
-- [ ] Bump `VERSION` from `5.dev` to `6.0.0` in `getPairedCounts.R`,
+- [x] Bump `VERSION` from `5.dev` to `6.0.0` in `getPairedCounts.R`,
       `seqSegment.R`, `getGeneCalls.R` and `Version:` in `DESCRIPTION`
       (D15).
 - [x] CHANGELOG: add the release date to the `[6.0.0]` heading; move
