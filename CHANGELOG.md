@@ -176,7 +176,8 @@ and tag `v5-juno` (3e6c18d).
   clustering, the gene annotations and the versions of R, DNAcopy,
   seqDNAcopy, pctGCdata, Rsamtools and data.table.
 - New `docs/output.md`: each deliverable, its columns, how to read the
-  plot, and what a log2 ratio and the calling threshold mean. It is
+  plot, what the log2 ratios are relative to (no purity or ploidy is
+  estimated, so they are not copy numbers) and the calling rule. It is
   delivered with `docs/methods.md`, and the email refers to both.
 - `docs/` holds only user-facing docs: `METHODS.md` moved to
   `docs/methods.md` (delivered and linked under that name), the tool

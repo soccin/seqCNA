@@ -60,22 +60,23 @@ two standard deviations. CBS computes its p-values by permutation; the
 random seed is fixed (42), so the same counts always give the same
 segments.
 
-### Segment clustering and the diploid level
+### Segment clustering and the baseline
 
 Segments at nearly the same level are merged into clusters, which
-removes the small differences between segments that are at the same
-copy number (adapted from FACETS [Shen 2016]). The segment means are
-sorted, and the two adjacent levels that are closest are merged as
-long as they differ by less than 0.04; the level of a merged cluster
-is the weighted mean of the log2 ratios of its bins. Each segment then
+removes small differences in level between segments (adapted from
+FACETS [Shen 2016]). The segment means are sorted, and the two
+adjacent levels that are closest are merged as long as they differ by
+less than 0.04; the level of a merged cluster is the mean of the log2
+ratios of its bins, weighted as in the segmentation. Each segment then
 takes the level of its cluster. The cluster with the smallest
-abs(level)/sqrt(number of bins) is the diploid level and is set to 0;
-all levels are shifted by the same amount, and the log2 ratios of the
-bins move with their segment.
+abs(level)/sqrt(number of bins), a level near 0 with many bins, is the
+baseline (the "diploid" cluster in the code) and is set to 0; all
+levels are shifted by the same amount, and the log2 ratios of the bins
+move with their segment.
 
-The diploid level is the level of a large part of the genome. In a
-tumor with a genome doubling or many arm-level changes it may not be
-two copies.
+seqCNA does not estimate purity or ploidy. The log2 ratios are
+relative to the baseline and are not converted to numbers of copies;
+the baseline is not known to be two copies.
 
 ### Choice of the normal
 
@@ -90,29 +91,35 @@ to that of the tumor. Only that pair is reported.
 ### Significant segments
 
 As in [Cheng 2015], the mean and standard deviation of the bin log2
-ratios in the diploid cluster are computed. For each segment a
-two-sided normal test compares its level with the diploid mean, using
-the diploid standard deviation as the scale. The p-values of the
-segments of a tumor are adjusted for multiple testing by the
-Benjamini-Hochberg false discovery rate (FDR) [Benjamini 1995]. A
-segment is significant if FDR < 0.05 and the absolute log2 ratio is
-greater than 1 (more than a two-fold change).
+ratios in the baseline cluster are computed. For each segment a
+two-sided normal test compares its level with that mean, using the
+standard deviation of the bins (not divided by the number of bins of
+the segment) as the scale, so the p-value does not depend on the
+length of the segment. The p-values of all the segments of a tumor,
+chromosome X included, are adjusted for multiple testing by the
+Benjamini-Hochberg false discovery rate (FDR) [Benjamini 1995].
 
 ### Gene-level calls
 
 Genes are represented by the exons of one canonical transcript per
 gene. For the human exome (GRCh37/b37) these are Ensembl release 75
 transcripts, with the canonical transcript of each gene from the
-isoform lists of vcf2maf v1.6.12 (the MSKCC and UniProt overrides).
+isoform lists of vcf2maf v1.6.12 (the MSKCC and UniProt overrides);
+nine genes have two transcripts in these lists, and both are used.
 For the Twist mouse exome (GRCm38/mm10) they are Ensembl release 83
 transcripts, with the transcript that overlaps the most capture
 targets as the canonical one.
 
-A gene is in a segment if one of its exons overlaps the segment. If a
-gene overlaps more than one segment, the segment with the lowest log2
-ratio is used: a deletion of part of a gene is called, and a gain of
-part of a gene usually is not. A gene is called if that segment is
-significant.
+A gene is in a segment if one of its exons overlaps the segment. In
+each tumor a gene is given one segment: of the segments it overlaps,
+the one with the lowest log2 ratio, whether significant or not. The
+gene is called if that segment has FDR < 0.05 and an absolute log2
+ratio greater than 1, a coverage ratio more than twice or less than
+half that of the baseline. This threshold is on the log2 ratio only;
+smaller changes are not called. Because the lowest segment is chosen
+first, a gene partly in a deletion is called as a deletion, and a gene
+partly in a gain is not called if the rest of it is in a segment with
+a lower log2 ratio.
 
 Calls are made on the autosomes only. A call on chromosome X would
 need a sex-matched normal and the known sex of the sample, which are

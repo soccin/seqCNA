@@ -1,6 +1,6 @@
 
 - README.txt: no gene was called (no gene is in a segment with
   FDR < 0.05 and abs(log2R) > 1 on the autosomes), so there are no
-  gene-level or segment-level call tables for this project. Gains and
-  losses below this threshold can be seen in the PDF and the IGV file
-  (see output.md).
+  gene-level or segment-level call tables for this project. Changes
+  below this threshold are not called; they can be seen in the PDF
+  and the IGV file (see output.md).
