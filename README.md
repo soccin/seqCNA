@@ -52,9 +52,10 @@ whole run (an interactive job, tmux, nohup):
 Deliverables land in `<Proj_No>/`: `<Proj_No>___IGV.seg`,
 `GeneMatrix.csv`, `SegmentMatrix.csv`, `<Proj_No>___GeneTable.xlsx`
 (or `README.txt` when no gene is significant) and
-`<Proj_No>___seqSeg.pdf`. They name each sample by its tumor ID only,
-so they do not show which normal was used. `<Proj_No>/` also holds the
-per-pair PNGs, titled with the pair ID `<tumor>__<normal>`; they are
+`<Proj_No>___seqSeg.pdf`; `docs/output.md` describes each one, and
+`docs/methods.md` the method. They name each sample by its tumor ID
+only, so they do not show which normal was used. `<Proj_No>/` also
+holds the per-pair PNGs, titled with the pair ID `<tumor>__<normal>`; they are
 for checking, not for delivery. The normal chosen for each tumor is in
 `pairing.tsv` in the run directory. The best tumor-normal pairs are in
 `out/`, all pairs in `outAll/`.
@@ -79,7 +80,8 @@ normal of `pairing.tsv`, and you can read the delivery folder. Then it:
   and the PI and investigator emails of the first `README.txt` found
   going up from the analysis directory to `Proj_<no>`;
 - copies, as `svc_core001_bot01`, the deliverables of `<Proj_No>/`
-  (not the PNGs) and `docs/methods.md` to `r_NNN/seqcna`;
+  (not the PNGs), `docs/methods.md` and `docs/output.md` to
+  `r_NNN/seqcna`;
 - writes the email, from `tmpldeliveryEmail_*.txt`, to
   `deliveryEmail_<no>_r_NNN_<yymmdd>.txt`;
 - registers the run with the bicdelivery permissions database
@@ -88,10 +90,11 @@ normal of `pairing.tsv`, and you can read the delivery folder. Then it:
   command to rerun this step alone.
 
 The email gives the release in `VERSION.md` of the checkout the script
-is run from and links to `docs/methods.md` on GitHub at that tag. A
-delivery folder other than `<pi>/<invest>/Proj_<no>` for the PI and
-investigator of `README.txt` gives a `WARNING`. For a delivery by
-email instead, zip `seqcna/` and use `DELIVERY_ZIP.md`.
+is run from and links to `docs/output.md` and `docs/methods.md` on
+GitHub at that tag. A delivery folder other than
+`<pi>/<invest>/Proj_<no>` for the PI and investigator of `README.txt`
+gives a `WARNING`. For a delivery by email instead, zip `seqcna/` and
+use `DELIVERY_ZIP.md`.
 
 ### Normals
 

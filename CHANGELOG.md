@@ -103,15 +103,17 @@ and tag `v5-juno` (3e6c18d).
   contains `__<normal>` for a normal in `pairing.tsv`. It delivers the
   same files as 5.x (the IGV `.seg`, the PDF, `GeneMatrix.csv`,
   `SegmentMatrix.csv`, the GeneTable xlsx, or `README.txt` when nothing
-  is significant) plus `docs/methods.md`; not the PNGs or `pairing.tsv`.
+  is significant) plus `docs/methods.md` and `docs/output.md`; not the
+  PNGs or `pairing.tsv`.
   The new `bin/readme2yaml.R` writes `project.yaml` (pipeline `seqcna`,
   the assembly from `GENOME_TAG`) from the first `README.txt` going up
   to `Proj_<no>`, and the run is registered with the bicdelivery
   permissions database. The email (`tmpldeliveryEmail_*.txt`, written
   to `deliveryEmail_<no>_r_NNN_<yymmdd>.txt`) gives the release and run
-  folder, links to `docs/methods.md` on GitHub at the release tag, and
-  no longer says the BAMs are in the alignment folder. The 5.x script
-  copied to `/ifs/res` by hand-given path, with no checks.
+  folder, links to `docs/output.md` and `docs/methods.md` on GitHub at
+  the release tag, and no longer says the BAMs are in the alignment
+  folder. The 5.x script copied to `/ifs/res` by hand-given path, with
+  no checks.
 - **`VERSION.md`** holds the client-facing release (`v6.0.0`), set by
   hand when a release is made. `PIPE.sh` records it as `RELEASE=` in
   `00.RUNSTATUS.txt` and `cmd.sh.log` and stops if it is missing
@@ -168,8 +170,14 @@ and tag `v5-juno` (3e6c18d).
   `redactDeliverables.R` load the packages they use instead of
   `tidyverse`, which keeps the pinned set small.
 - `README.md`, `CLAUDE.md` describe the Slurm pipeline.
-- `docs/methods.md` states the software versions (R 4.5.1, DNAcopy
-  1.84.0, seqDNAcopy 0.0.4).
+- `docs/methods.md` rewritten against the code. It said 10 normals
+  were first chosen by insert size; every normal is run. It now
+  states the read filters, the GC correction, the sWGS bin size, the
+  clustering, the gene annotations and the versions of R, DNAcopy,
+  seqDNAcopy, pctGCdata, Rsamtools and data.table.
+- New `docs/output.md`: each deliverable, its columns, how to read the
+  plot, and what a log2 ratio and the calling threshold mean. It is
+  delivered with `docs/methods.md`, and the email refers to both.
 - `docs/` holds only user-facing docs: `METHODS.md` moved to
   `docs/methods.md` (delivered and linked under that name), the tool
   usage files to `docs/usage/`, and the developer docs

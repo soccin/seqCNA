@@ -12,7 +12,8 @@ Steps: binned read counts, GC correction, CBS segmentation, segment
 clustering, FDR-based significance, gene-level calls.
 
 `docs/` holds the user-facing docs only: `methods.md` (the method text
-used in reports, delivered with the results),
+used in reports) and `output.md` (each deliverable, its columns, how to
+read the plots), both delivered with the results;
 `seqCNA-vs-FACETS*.md` (when to use this instead of FACETS) and
 `usage/<tool>.doc` (the usage text of the wrapped tools). Docs for
 developers go in `docs/dev/`.
@@ -167,7 +168,7 @@ with a git tag of the same name (`v6.0.0`). Never derive it from git.
 in `00.RUNSTATUS.txt` and `cmd.sh.log`, and stops if it is missing;
 `VERSION=` there is `git describe --tags --always --long --dirty`, the
 exact code. `delivery.sh` puts the release of its own checkout in the
-email and the `docs/methods.md` link.
+email and the `docs/output.md` and `docs/methods.md` links.
 
 After the pipeline:
 - `seqCNA/delivery.sh [-n] -d|DELIVERY_DIR[/r_NNN]`, run from the
@@ -179,8 +180,8 @@ After the pipeline:
   `.../Users/<Pi>/<Invest>/Proj_<no>` path, the run folder is the next
   `r_NNN`, and `-n` prints those writes and the permissions-database
   call instead of running them. It copies the IGV `.seg`, the PDF and
-  the three call tables (or `README.txt`), plus `docs/methods.md`, to
-  `r_NNN/seqcna/`; never the PNGs or `pairing.tsv`. Before copying it
+  the three call tables (or `README.txt`), plus `docs/methods.md` and
+  `docs/output.md`, to `r_NNN/seqcna/`; never the PNGs or `pairing.tsv`. Before copying it
   stops if a table still contains `__<normal>` for a normal in
   `pairing.tsv` (the xlsx is read with `unzip -p`). `PROJNO` and
   `GENOME_TAG` come from `00.RUNSTATUS.txt`; the tag is mapped to the
@@ -345,6 +346,8 @@ tree is dirty).
   the canonical isoforms come from `resources/vcf2maf/v1.6.12/`.
   Autosomes only (see chrX above).
 - `docs/methods.md` states these values; update it if they change.
+  `docs/output.md` describes every deliverable, its columns, the plot
+  and the thresholds; update it if any of them change.
 
 ## Environment dependencies
 
