@@ -1,0 +1,7 @@
+package	version	role
+R	4.5.1	stats::loess (GC correction); the RNG behind set.seed
+DNAcopy	1.84.0	CBS segmentation and its permutation p-values
+pctGCdata	0.3.0	GC content per bin
+Rsamtools	2.26.0	scanBam: which reads are counted
+data.table	1.18.6.1	foverlaps: which segment each gene falls in (getGeneCalls)
+seqDNAcopy	0.0.4	counting, GC correction, seqsegment; built into Rlib/ from the submodule

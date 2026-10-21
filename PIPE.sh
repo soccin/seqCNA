@@ -59,7 +59,8 @@
 #           (deliverables name samples by tumor id only)
 #   STAGING control job: sweep of every job, deliverables, COMPLETED
 #
-# Ported from the ChIP-seq control job (v1.0.0); see docs/SLURM_PORT.md.
+# Ported from the ChIP-seq control job (v1.0.0); see
+# docs/dev/SLURM_PORT.md.
 #
 #SBATCH -p cmobic_cpu
 #SBATCH --qos=priority
@@ -98,15 +99,28 @@ fi
 source $SDIR/bin/loadTools.sh
 source $SDIR/bin/slurmTools.sh
 
-if [ ! -e "$SDIR/Rlib/seqDNAcopy/DESCRIPTION" ]; then
+SCRIPT_VERSION=$(git --git-dir=$SDIR/.git --work-tree=$SDIR describe --always --long --tags --dirty)
+
+#
+# The client-facing release, set by hand in VERSION.md; VERSION (git)
+# is the exact code.
+#
+if ! SCRIPT_RELEASE=$($SDIR/bin/getRelease.sh); then
     echo
-    echo "    FATAL ERROR: $SDIR/Rlib/seqDNAcopy is missing"
-    echo "    run $SDIR/00.SETUP.sh once per checkout (see README.md)"
+    echo "    FATAL ERROR: no release in $SDIR/VERSION.md"
     echo
     exit 1
 fi
 
-SCRIPT_VERSION=$(git --git-dir=$SDIR/.git --work-tree=$SDIR describe --always --long --tags --dirty)
+#
+# Tool versions, recorded in the run status. R and the locked packages are
+# checked against Rlib.lock.tsv in CHECK (bin/rscript.sh --check);
+# samtools and ImageMagick are only recorded.
+#
+R_VERSION=$(Rscript --vanilla -e 'cat(as.character(getRversion()))')
+RLIB_LOCK_MD5=$(md5sum <$SDIR/Rlib.lock.tsv | cut -d' ' -f1)
+SAMTOOLS_VERSION=$(samtools --version | sed -n '1s/^samtools //p')
+MAGICK_VERSION=$(magick -version | sed -n '1s/^Version: ImageMagick \([^ ]*\).*/\1/p')
 PIPENAME="seqCNA"
 
 ORIG_CMD="$SDIR/PIPE.sh $(printf '%q ' "$@")"
@@ -246,6 +260,7 @@ TAG=q$PIPENAME
 
 echo SDIR=$SDIR
 echo VERSION=$SCRIPT_VERSION
+echo RELEASE=$SCRIPT_RELEASE
 echo ASSAY_TYPE=$ASSAY_TYPE BINSIZE=$BINSIZE
 
 #
@@ -319,6 +334,11 @@ MESSAGE=$RUN_MESSAGE
 STARTED=$RUN_STARTED
 FINISHED=$RUN_FINISHED
 VERSION=$SCRIPT_VERSION
+RELEASE=$SCRIPT_RELEASE
+R_VERSION=$R_VERSION
+RLIB_LOCK_MD5=$RLIB_LOCK_MD5
+SAMTOOLS_VERSION=$SAMTOOLS_VERSION
+MAGICK_VERSION=$MAGICK_VERSION
 RUN_MODE=$RUN_MODE
 CTRL_JOBID=$CTRL_JOBID
 CTRL_LOG=$CTRL_LOG
@@ -482,6 +502,13 @@ trap onExit EXIT
 setStage CHECK
 
 #
+# R and the packages in Rlib.lock.tsv must be at the locked versions.
+# Every R script checks again when it starts (bin/rscript.sh).
+#
+$SDIR/bin/rscript.sh --check \
+    || fatal "R or a package does not match Rlib.lock.tsv (details above)"
+
+#
 # BAMs: pipeline/<alignments|bam>/*.bam, each with an index.
 #
 findBams
@@ -571,6 +598,7 @@ writeCmdLog() {
 	SDIR: $SDIR
 	GURL: $GURL
 	GTAG: $SCRIPT_VERSION
+	RELEASE: $SCRIPT_RELEASE
 	PWD: $PWD
 	RUN_MODE: $RUN_MODE
 	CTRL_JOBID: $CTRL_JOBID
@@ -590,6 +618,7 @@ writeCmdLog() {
 	  $(R --version | head -1 || true)
 	  $(magick -version | head -1 || true)
 	  $(sed -n 's/^seqDNAcopy /seqDNAcopy /p' $SDIR/Rlib/VERSIONS.txt | head -1 || true)
+	  Rlib.lock.tsv md5 $RLIB_LOCK_MD5
 
 	Script: $ORIG_CMD
 	END_VERSION
@@ -639,7 +668,7 @@ LONG_W=12:00:00
 # Minutes per GB of input (tumor + normal BAM). Measured 2026-10-20 in
 # the foreground on an IRIS login node: 176 s for 9.0 GB of exome BAMs
 # (0.33 min/GB, peak 2.0 GB RSS); 1 min/GB is a 3x margin. See
-# docs/SLURM_PORT.md.
+# docs/dev/SLURM_PORT.md.
 #
 RATE_COUNT=1
 

@@ -9,9 +9,14 @@ seqCNA calls copy number changes from sequencing data (shallow WGS or
 targeted/exome) by comparing tumor BAMs to normal BAMs. It uses
 `seqDNAcopy`, a fork of V. Seshan's package with mouse support added.
 Steps: binned read counts, GC correction, CBS segmentation, segment
-clustering, FDR-based significance, gene-level calls. `METHODS.md` has
-the method text used in reports; `docs/seqCNA-vs-FACETS*.md` explains
-when to use this instead of FACETS.
+clustering, FDR-based significance, gene-level calls.
+
+`docs/` holds the user-facing docs only: `methods.md` (the method text
+used in reports) and `output.md` (each deliverable, its columns, how to
+read the plots), both delivered with the results;
+`facets/seqCNA-vs-FACETS*.md` (when to use this instead of FACETS) and
+`usage/<tool>.doc` (the usage text of the wrapped tools). Docs for
+developers go in `docs/dev/`.
 
 The code is bash and R scripts for the IRIS cluster (RHEL 8, Slurm).
 There is no build step, test suite, or linter. `attic/` holds retired
@@ -20,8 +25,9 @@ scripts, including the LSF-era `seqCNA.sh`.
 Other files to read first:
 - `CHANGELOG.md`: what changed per release
 - `00.ISSUES.md`: open issues
-- `docs/SLURM_PORT.md`: how the port from JUNO/LSF was done and validated
-- `docs/IRIS_CLUSTER_INFO.md`: cluster facts with job ids
+- `docs/dev/SLURM_PORT.md`: how the port from JUNO/LSF was done and
+  validated
+- `docs/dev/IRIS_CLUSTER_INFO.md`: cluster facts with job ids
 - `attic/docs/00.SPEC_IRIS_PORT.md`: the port specification and
   decisions D1-D16
 
@@ -29,12 +35,14 @@ Other files to read first:
 
 ```bash
 git submodule update --init     # seqDNAcopy source
-seqCNA/00.SETUP.sh              # builds Rlib/seqDNAcopy (gitignored)
+seqCNA/00.SETUP.sh              # builds seqDNAcopy into Rlib/ (gitignored)
 ```
 
-R 4.5.x must be on PATH (`module load R/4.5.1_nds`). `00.SETUP.sh`
-checks that DNAcopy, pctGCdata and RJSONIO load from the user's R
-library and stops with install hints otherwise.
+R 4.5.1 must be on PATH (`module load R/4.5.1_nds`). `00.SETUP.sh`
+builds seqDNAcopy from the submodule into `Rlib/`; every other package
+comes from the shared or personal library. The packages that set the
+output must be at the versions in `Rlib.lock.tsv` (see "Pinned
+versions").
 
 ## Running
 
@@ -48,7 +56,8 @@ Required inputs in the project directory:
 - `pipeline/` containing a subdirectory matching `alignments|bam` with
   the BAMs, each with a `.bai`
 - `tumors`, `normals`: one pattern per line, matched with `fgrep -f`
-  against the relabeled BAM paths `bamRelabel/<base>/<base>__relabel.bam`
+  against the relabeled BAM paths
+  `bamRelabel/<base>/<base>__relabel.bam`
 
 Without `tumors` or `normals`, `PIPE.sh` writes `samples` (one line per
 BAM, the base name minus any `Proj_..._s_` prefix plus `__`) and exits
@@ -77,7 +86,7 @@ checks that `PID` on `HOST` is still `PIPE.sh` (run it on that host).
 job it names the session.
 
 Single steps can be run by hand. `getPairedCounts`, `seqSegment` and
-`getGeneCalls` run with no arguments print `docs/<name>.doc`;
+`getGeneCalls` run with no arguments print `docs/usage/<name>.doc`;
 `selectBestMatch` has no doc file and prints a one-line usage.
 
 ```bash
@@ -104,8 +113,9 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
 0. First step, before any run record: write `samples` if absent; stop
    with exit 0 if `tumors` or `normals` is missing or empty.
 1. CHECK (control job): BAM directory, BAMs and indexes, `tumors` and
-   `normals` each match a relabeled BAM path, one genome across BAMs via `GenomeData/getGenomeBuildBAM.sh`
-   and the assay from it, project id from `pipeline/*request.txt` or
+   `normals` each match a relabeled BAM path, one genome across BAMs
+   via `GenomeData/getGenomeBuildBAM.sh` and the assay from it,
+   project id from `pipeline/*request.txt` or
    `extractProjectIDFromPath.py`. Nothing is submitted until all pass.
 2. FIX, one job per BAM: `fixChromosomeNames.sh` writes
    `bamRelabel/<base>/<base>__relabel.bam` with `chr` stripped from
@@ -133,7 +143,8 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
    `bestMatches____out`).
 7. POST, one job: `postProcess.sh <Assay> <ProjNo>` copies the PNGs
    (pair IDs, for checking; not delivered) to `<ProjNo>/`, concatenates
-   the `.seg` files into `<ProjNo>___IGV.seg`, runs `fixXChrom.R`
+   the `.seg` files into `<ProjNo>___IGV.seg` (in `find` order, not
+   sorted: `00.ISSUES.md` #12), runs `fixXChrom.R`
    (renames the highest numeric chromosome to X), `getGeneCalls`
    (`GeneMatrix.csv`, `SegmentMatrix.csv`, `<ProjNo>___GeneTable.xlsx`,
    or `README.txt` when nothing is significant), then
@@ -153,11 +164,39 @@ stage, sample, log), `#SEQCNA_EXIT=<rc>` as the last line of every
 stage log. Any exit before COMPLETED marks the run FAILED and cancels
 its queued jobs (EXIT trap; also on SIGTERM, SIGINT, SIGHUP).
 
+The client-facing version is static: the `- **Version:** vX.Y.Z`
+line of `VERSION.md`, changed by hand only when a release is made,
+with a git tag of the same name (`v6.0.0`). Never derive it from git.
+`PIPE.sh` reads it with `bin/getRelease.sh`, records it as `RELEASE=`
+in `00.RUNSTATUS.txt` and `cmd.sh.log`, and stops if it is missing;
+`VERSION=` there is `git describe --tags --always --long --dirty`, the
+exact code. `delivery.sh` puts the release of its own checkout in the
+email and the `docs/output.md` and `docs/methods.md` links.
+
 After the pipeline:
-- `delivery.sh /path/Proj_X/r_00N` copies deliverables into `seqcna/`
-  there (not ported; JUNO paths). `DELIVERY.md` and `DELIVERY_ZIP.md`
-  are the email templates.
-- `Rscript --no-init-file seqCNA/plotSeg.R [-r] SEG.rda` re-plots a
+- `seqCNA/delivery.sh [-n] -d|DELIVERY_DIR[/r_NNN]`, run from the
+  analysis directory, delivers a run whose `bin/checkRun.sh` exits 0
+  (README.md, "Delivery"). It is ATAC-seq's `deliverResults.sh`: every
+  write to the delivery area goes through `asbot` (`dzdo -u
+  svc_core001_bot01`), `-d` derives the folder
+  `/data1/core002/res/bic/results/<pi>/<invest>/Proj_<no>` from the
+  `.../Users/<Pi>/<Invest>/Proj_<no>` path, the run folder is the next
+  `r_NNN`, and `-n` prints those writes and the permissions-database
+  call instead of running them. It copies the IGV `.seg`, the PDF and
+  the three call tables (or `README.txt`), plus `docs/methods.md` and
+  `docs/output.md`, to `r_NNN/seqcna/`; never the PNGs or
+  `pairing.tsv`. Before copying it stops if a table still contains
+  `__<normal>` for a normal in `pairing.tsv` (the xlsx is read with
+  `unzip -p`). `PROJNO` and `GENOME_TAG` come from `00.RUNSTATUS.txt`; the tag is mapped to the
+  assemblies the database accepts (b37, hg19, hybrid, mm10).
+  `bin/readme2yaml.R` writes `project.yaml` (pipeline `seqcna`) from
+  the first `README.txt` going up to `Proj_<no>`; there is no fallback
+  to `README.md`. The email is built from `tmpldeliveryEmail_01.txt`,
+  then `_02` (call tables) or `_03` (no significant calls), then `_99`,
+  with `{PROJNO}`, `{RUNDIR}` and `{VERSION}` filled in.
+  `DELIVERY_ZIP.md` is the email to use, by hand, when the results go
+  out as a ZIP attachment.
+- `seqCNA/bin/rscript.sh seqCNA/plotSeg.R [-r] SEG.rda` re-plots a
   `_seqSeg.rda`; `-r` removes the normal ID from the title.
 
 ## Architecture
@@ -166,25 +205,32 @@ After the pipeline:
 
 `getPairedCounts`, `seqSegment`, `getGeneCalls`, and `selectBestMatch`
 are symlinks to `execWrapper.sh`. The wrapper exports `SDIR` (repo
-directory) and `SNAME` (invoked name), requires R 4.5.x on PATH and
-`Rlib/seqDNAcopy`, prepends `$SDIR/Rlib` to `R_LIBS`, and runs
-`Rscript --vanilla $0.R "$@"`. To add a tool: write `foo.R`, symlink
-`foo -> execWrapper.sh`, add `docs/foo.doc`.
+directory) and `SNAME` (invoked name) and runs
+`bin/rscript.sh $0.R "$@"`. To add a tool: write `foo.R`, symlink
+`foo -> execWrapper.sh`, add `docs/usage/foo.doc`.
 
-- `--vanilla` skips `~/.Rprofile` and `~/.Renviron` but still honors
-  the `R_LIBS` and `R_LIBS_USER` environment variables, which is how
-  the user's library is found. Wrapped scripts cannot use `~/.Rprofile`
-  helpers; `include/tools.R` redefines `cc()` and `len()`.
+- `bin/rscript.sh` runs every R script: the wrapped tools, the
+  standalone scripts (`fixXChrom.R`, `redactDeliverables.R` from
+  `postProcess.sh`; `plotSeg.R` by hand). It puts `Rlib/` first on
+  `R_LIBS`, runs `bin/checkRlib.R` against `Rlib.lock.tsv` (exit 1 on
+  any mismatch), then `Rscript --vanilla`. Scripts cannot use
+  `~/.Rprofile` helpers; `include/tools.R` redefines `cc()` and
+  `len()`.
 - Wrapped scripts source `include/*.R` via `Sys.getenv("SDIR")`, which
   falls back to the relative path `seqCNA`.
-- Standalone scripts (`plotSeg.R`, `redactDeliverables.R`, `fixXChrom.R`)
-  run with `Rscript --no-init-file` and must not depend on `~/.Rprofile`.
+- A new package a script loads goes into `RECORD` in
+  `bin/checkRlib.R`, or into `Rlib.lock.tsv` if it computes part of
+  the output (see "Pinned versions").
 
 ### Shell helpers (bin/)
 
 - `loadTools.sh`: sourced by `PIPE.sh`, `fixChromosomeNames.sh`,
   `postProcess.sh`. Loads `samtools/1.20`, prepends ImageMagick 7,
   checks R 4.5.x, sets `TMPDIR` under `/localscratch/$USER`.
+- `rscript.sh`, `checkRlib.R`: the version check (see "Pinned
+  versions").
+- `getRelease.sh`: prints the release from `VERSION.md`.
+  `readme2yaml.R`: `project.yaml` for `delivery.sh`.
 - `slurmTools.sh`: `bSync`, `bCheck`, `bCheckAll`, `bKill`,
   `failedJobsMessage`. ChIP-seq's file with `CHIP_` -> `SEQCNA_`; keep
   them in step.
@@ -201,13 +247,37 @@ file.
 
 ### R and seqDNAcopy
 
-- One R, 4.5.x, for every script. `seqDNAcopy/` is a git submodule with
+- One R, 4.5.1, for every script. `seqDNAcopy/` is a git submodule with
   the fork's source (`git submodule update --init`). `00.SETUP.sh`
-  builds it into `Rlib/` (gitignored) and records versions in
-  `Rlib/VERSIONS.txt`. The fork's NAMESPACE imports `IRangesList`
-  (0.0.4); `RangesList` is gone from IRanges 2.x.
-- DNAcopy, pctGCdata and RJSONIO are not in the shared R install; they
-  live in the user's library.
+  builds it into `Rlib/` (gitignored), which holds nothing else, and
+  records versions in `Rlib/VERSIONS.txt`. The fork's NAMESPACE imports
+  `IRangesList` (0.0.4); `RangesList` is gone from IRanges 2.x.
+- pctGCdata 0.3.0 is not on CRAN; the installed copy came from GitHub
+  (`veseshan/pctGCdata`, tag v0.3.0, commit d2d4faf).
+
+### Pinned versions
+
+A library update must never change seqCNA output silently.
+`Rlib.lock.tsv` (package, version, role) lists only R and the packages
+that compute what ends up in the output; the role column says what:
+R (`loess` in GC correction, the RNG behind `set.seed`), DNAcopy
+(segmentation), pctGCdata (GC content), Rsamtools (`scanBam`, which
+reads are counted), data.table (`foverlaps` in getGeneCalls) and
+seqDNAcopy. The other packages (dplyr, readr, openxlsx, ...) can make
+a run fail but not change its numbers; they are not checked, only
+recorded in `Rlib/VERSIONS.txt` (`RECORD` in `bin/checkRlib.R`).
+Nothing is installed by the pipeline except seqDNAcopy: the locked
+packages come from the shared or personal library.
+`bin/rscript.sh` checks the lock before every R script, and `PIPE.sh`
+CHECK does once (`rscript.sh --check`); a mismatch stops the run, and
+the fix is to reinstall the locked version. `00.RUNSTATUS.txt` records
+`R_VERSION`, `RLIB_LOCK_MD5`, `SAMTOOLS_VERSION` and `MAGICK_VERSION`;
+samtools and ImageMagick are recorded, not checked.
+
+Versions change only at a planned version scan: install the new
+versions, edit `Rlib.lock.tsv` by hand, rerun a reference project,
+compare with the previous run, record it in `CHANGELOG.md` and
+`docs/methods.md`.
 
 ### Genome handling
 
@@ -223,6 +293,18 @@ mapped in `PIPE.sh` in two places that must stay consistent with it:
 `getGeneCalls.R` maps hg19 to b37 (`normalizeGenomeTag`) when choosing
 `resources/geneAnnotations/<ASSAY>/<genome>/gene_annotations.txt.gz`.
 Chromosome X is numeric in segment output (23 human, 20 mouse).
+
+### chrX
+
+No chrX copy-number event may be called: that needs a sex-matched
+normal and the known sex of the sample, which we almost never have.
+`getGeneCalls.R` keeps the autosomes only (1-22 for b37, 1-19 for
+mm10), by number, in both the segments and the annotation, so the
+rule does not depend on how an annotation names X (Exome `X`,
+IMPACT410/505 `23`). X is still counted and segmented: it is in
+`rms.logr` (which favors a sex-matched normal in `selectBestMatch`),
+the `X.seg.mean.*` QC values, the IGV `.seg` (renamed to X by
+`fixXChrom.R`) and the plots. Do not add X to the gene calls.
 
 ### Sample ID conventions
 
@@ -257,17 +339,24 @@ tree is dirty).
 
 - seqSegment.R: `MINBINCOUNT=35`, `undo.SD=2`, cluster merge threshold
   0.04 (`include/clusterSegs.R`, adapted from FACETS). The cluster with
-  the smallest `abs(logR)/sqrt(nProbes)` is set to logR 0.
+  the smallest `abs(logR)/sqrt(nProbes)` is set to logR 0. `SEED=42`:
+  `set.seed()` before `seqsegment()`, because DNAcopy's p-values are
+  by permutation; unseeded, a rerun on the same counts can move
+  breakpoints and change gene calls. The seed is in the `.out` file.
 - getGeneCalls.R: significant if `FDR < 0.05` and `|seg.mean| > 1`.
   When a gene overlaps several segments, the lowest `seg.mean` is used,
   so deletions take priority over amplifications. For the Exome assay
   the canonical isoforms come from `resources/vcf2maf/v1.6.12/`.
-- `METHODS.md` states these values; update it if they change.
+  Autosomes only (see chrX above).
+- `docs/methods.md` states these values; update it if they change.
+  `docs/output.md` describes every deliverable, its columns, the plot
+  and the thresholds; update it if any of them change.
 
 ## Environment dependencies
 
 - `~/bin/sbatch`, `~/bin/bsub`, `~/bin/bSync.sh`: the personal Slurm
-  wrappers, as in ATAC-seq and ChIP-seq. `docs/IRIS_CLUSTER_INFO.md`.
+  wrappers, as in ATAC-seq and ChIP-seq.
+  `docs/dev/IRIS_CLUSTER_INFO.md`.
 - `module load R/4.5.1_nds` (personal module in `~/.modules`) before
   submitting; batch jobs inherit the environment (`--export=ALL`).
 - `samtools/1.20` module; ImageMagick at

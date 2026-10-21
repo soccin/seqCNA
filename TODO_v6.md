@@ -4,29 +4,44 @@ Open items before `rel/v6.0.0` is merged to `master` and tagged 6.0.0.
 Open issues, including the ones not required for the release, are in
 `00.ISSUES.md`.
 
-## 1. Validation
+## 1. From the JUNO comparison
 
-- [ ] Compare with a JUNO run of a previous seqCNA project
-      (`00.ISSUES.md` #1, spec D12 and section 4 step 5). Diff
-      `_seqSeg.seg`, `_seqSeg.out`, `bestMatches____out`,
-      `GeneMatrix.csv`. Differences must be explained by package
-      versions and stay below the calling thresholds. In progress in
-      `../test20`; record its job ids and sacct Elapsed and MaxRSS in
-      `docs/SLURM_PORT.md` and `docs/IRIS_CLUSTER_INFO.md`.
+`00.ISSUES.md` #1 is closed (DNAcopy weights fix). Notes in
+`../test20/NOTES_JUNO_IRIS_COMP.md`.
+
+- [x] chrX: no chrX gene calls in any assay. `getGeneCalls.R` keeps
+      the autosomes only, by genome, for segments and annotation. X
+      stays in segmentation, `rms.logr`, the IGV `.seg` and the plots.
+- [x] Seed: `seqSegment SEED=` with a fixed default, `set.seed()`
+      before `seqsegment()`, written to the `.out` file.
+- [x] Pin versions under R 4.5.1: a lock file of R and the packages
+      that set the output (DNAcopy, pctGCdata, Rsamtools, data.table,
+      seqDNAcopy); one launcher stops on a version mismatch; samtools
+      and ImageMagick versions recorded.
+- [x] Small functional test, run twice (identical output with the
+      seed): test31, test32 (`docs/dev/SLURM_PORT.md`).
+- [x] The Proj_12257 rerun in `../../CNA` (user), `COMPLETED`
+      2026-10-21, at e19e87b.
 
 ## 2. Release
 
-- [ ] Merge `feat/delivery` (worktree `../seqCNA-delivery`) into
-      `rel/v6.0.0` (`00.ISSUES.md` #4).
+- [x] Merge `feat/delivery` into `devs` (ec6a5bc). `delivery.sh` is
+      ported (`00.ISSUES.md` #4); a real delivery of Proj_12257 is
+      still to be run.
+- [ ] Merge the docs branches into `devs`: `docs/reorg`,
+      `docs/methods-output` and `docs/cleanup-01`, stacked in that
+      order.
+- [ ] Merge `devs` into `rel/v6.0.0`, which is behind it.
 - [ ] Bump `VERSION` from `5.dev` to `6.0.0` in `getPairedCounts.R`,
       `seqSegment.R`, `getGeneCalls.R` and `Version:` in `DESCRIPTION`
       (D15).
 - [ ] CHANGELOG: add the release date to the `[6.0.0]` heading; move
       items under "Not tested" as validation closes them.
-- [ ] Merge `rel/v6.0.0` -> `master`; tag the release (existing
-      release tags use `ver_X.Y.Z`; choose `ver_6.0.0` or `v6.0.0`).
-      `PIPE.sh` and `getGITTag` use `git describe --tags`, so the tag
-      is what the run records show.
+- [ ] Merge `rel/v6.0.0` -> `master`; tag the release `v6.0.0`
+      (decided 2026-10-21), the same name as `VERSION.md`: the delivery
+      email links to `docs/output.md` and `docs/methods.md` at that
+      tag. `PIPE.sh` and `getGITTag` use `git describe --tags`, so the
+      tag is what the run records show.
 - [ ] Push `devs`, `master`, the release tag and `v5-juno` to origin.
       Delete `feat/iris` once merged.
 - [ ] Remove this file, or move it to `attic/docs/`.

@@ -39,7 +39,7 @@ args=parseArgs(args)
 
 if(is.null(args)) {
 
-    cat(readLines(file.path(SDIR,"docs",paste0(SNAME,".doc"))),sep="\n")
+    cat(readLines(file.path(SDIR,"docs","usage",paste0(SNAME,".doc"))),sep="\n")
     cat("\n\n")
     quit()
 
@@ -59,15 +59,34 @@ outDirs=scan(args$INPUTS,"")
 out1file=dir(outDirs[1],pattern="_seqSeg.out",full.names=T)
 out1=parseSeqCNAOutFile(out1file)
 
+genome=normalizeGenomeTag(out1$genome)
+
+#
+# Gene calls are made on the autosomes only. A call on X or Y needs a
+# sex-matched normal and the known sex of the sample, which we do not
+# have. The segments name X by number (23 human, 20 mouse) and the
+# annotations name it X, 23 or not at all, so keep the autosomes by
+# number in both rather than rely on the names not matching.
+#
+
+autosomes=switch(genome,
+    b37=as.character(1:22),
+    mm10=as.character(1:19),
+    {
+        cat("\n\n    FATAL ERROR: getGeneCalls: unknown genome [",genome,"]\n\n",sep="")
+        quit(status=1)
+    })
+
 geneAnnoteFile=file.path(
     SDIR,
     glb$geneAnnotationsDir,
     args$ASSAY,
-    normalizeGenomeTag(out1$genome),
+    genome,
     "gene_annotations.txt.gz")
 
 geneDb=fread(cmd=paste0("zcat ", geneAnnoteFile))
 geneDb$chrom=as.character(geneDb$chrom)
+geneDb=geneDb[chrom %in% autosomes]
 
 setkey(geneDb,chrom,start,stop)
 
@@ -77,6 +96,7 @@ getSegFileFromOutDir <- function(odir) {
 
 segs=rbindlist(lapply(lapply(outDirs,getSegFileFromOutDir),fread))
 segs$chrom=as.character(segs$chrom)
+segs=segs[chrom %in% autosomes]
 setkey(segs,chrom,loc.start,loc.end)
 
 

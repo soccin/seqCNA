@@ -5,12 +5,12 @@
 # Usage, from anywhere:
 #    seqCNA/00.SETUP.sh
 #
-# R 4.5.x is taken from PATH (on IRIS: module load R/4.5.1_nds). The
-# common packages DNAcopy (Bioconductor), pctGCdata (CRAN) and RJSONIO
-# (CRAN) must already be in R's library path, shared install or your
-# personal library; this script checks and stops with install hints if
-# any is missing. Only seqDNAcopy, the fork in the submodule, is built
-# here, into Rlib/ (gitignored). Safe to rerun; it rebuilds.
+# Builds seqDNAcopy, the fork in the submodule, into Rlib/ (gitignored),
+# replacing whatever Rlib/ held. Every other package comes from the
+# shared or personal library. R and the packages in Rlib.lock.tsv must
+# be at the locked versions; bin/checkRlib.R checks them at the end and
+# every R script checks them again (bin/rscript.sh). R itself comes from
+# PATH (on IRIS: module load R/4.5.1_nds). Safe to rerun; it rebuilds.
 #
 
 set -eu
@@ -27,11 +27,14 @@ fatal() {
 
 command -v Rscript >/dev/null 2>&1 || fatal "Rscript not on PATH (module load R/4.5.1_nds)"
 
+LOCK=$SDIR/Rlib.lock.tsv
+[ -s "$LOCK" ] || fatal "no $LOCK"
+
+RWANT=$(awk -F'\t' '$1=="R"{print $2}' $LOCK)
 RVERSION=$(Rscript --vanilla -e 'cat(as.character(getRversion()))')
-case $RVERSION in
-    4.5.*) ;;
-    *) fatal "R $RVERSION on PATH; need 4.5.x (module load R/4.5.1_nds)" ;;
-esac
+if [ "$RVERSION" != "$RWANT" ]; then
+    fatal "R $RVERSION on PATH; Rlib.lock.tsv needs R $RWANT (module load R/4.5.1_nds)"
+fi
 echo "R $RVERSION: $(command -v Rscript)"
 
 if [ ! -e seqDNAcopy/DESCRIPTION ]; then
@@ -39,53 +42,31 @@ if [ ! -e seqDNAcopy/DESCRIPTION ]; then
 fi
 
 #
-# Common packages: present already?
+# Compiling goes to node-local scratch, not /tmp (see bin/loadTools.sh)
 #
+export TMPDIR=/localscratch/$USER/seqCNA_setup.$$
+mkdir -p $TMPDIR
+trap 'rm -rf $TMPDIR' EXIT
 
-Rscript --vanilla -e '
-pkgs <- c("DNAcopy", "pctGCdata", "RJSONIO")
-missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly=TRUE)]
-if (length(missing) > 0) {
-    cat("\n    FATAL ERROR: R packages not installed:", missing, "\n\n")
-    cat("    Install into your personal library with:\n")
-    if ("DNAcopy" %in% missing)
-        cat("        BiocManager::install(\"DNAcopy\")\n")
-    if ("pctGCdata" %in% missing)
-        cat("        install.packages(\"pctGCdata\")\n")
-    if ("RJSONIO" %in% missing)
-        cat("        install.packages(\"RJSONIO\")\n")
-    cat("\n")
-    quit(status=1)
-}
-for (p in pkgs) cat(sprintf("%-10s %s\n", p, as.character(packageVersion(p))))
-'
-
-#
-# seqDNAcopy from the submodule into Rlib/
-#
-
-mkdir -p Rlib
+rm -rf Rlib
+mkdir Rlib
 R CMD INSTALL --clean --preclean -l Rlib seqDNAcopy
 
-Rscript --vanilla -e '
-library(seqDNAcopy, lib.loc="Rlib")
-cat("seqDNAcopy", as.character(packageVersion("seqDNAcopy", lib.loc="Rlib")), "loads\n")
-'
-
 #
-# Record what was built against
+# Check, and record what was built against
 #
 
-Rscript --vanilla -e '
-.libPaths(c("Rlib", .libPaths()))
-pkgs <- c("seqDNAcopy", "DNAcopy", "pctGCdata", "RJSONIO", "Rsamtools", "IRanges", "Rcpp")
-cat("R", as.character(getRversion()), R.home(), "\n")
-for (p in pkgs)
-    cat(p, as.character(packageVersion(p)), dirname(system.file(package=p)), "\n")
-cat("seqDNAcopy git:", system("git -C seqDNAcopy describe --always --dirty", intern=TRUE), "\n")
-cat("built:", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), "\n")
-' > Rlib/VERSIONS.txt
+export R_LIBS=$SDIR/Rlib${R_LIBS:+:$R_LIBS}
 
-cat Rlib/VERSIONS.txt
+Rscript --vanilla bin/checkRlib.R $LOCK $SDIR/Rlib
+
+{
+    Rscript --vanilla bin/checkRlib.R --list $LOCK $SDIR/Rlib
+    echo "seqDNAcopy git: $(git -C seqDNAcopy describe --always --dirty)"
+    echo "lock md5: $(md5sum <$LOCK | cut -d' ' -f1)"
+    echo "built: $(date '+%Y-%m-%d %H:%M:%S %Z') on $(hostname)"
+} >$SDIR/Rlib/VERSIONS.txt
+
+cat $SDIR/Rlib/VERSIONS.txt
 echo
 echo "Rlib/ ready"

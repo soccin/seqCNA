@@ -15,8 +15,8 @@
 # (seqSegment TUMORID=). The PNGs copied to <ProjectName>/ keep the pair
 # id; they are for checking, not for delivery.
 #
-# Every R script runs under the one R 4.5.x on PATH; bin/loadTools.sh
-# provides samtools and ImageMagick (magick).
+# Every R script runs through bin/rscript.sh, which checks the locked
+# versions; bin/loadTools.sh provides samtools and ImageMagick (magick).
 #
 
 set -eu
@@ -71,7 +71,7 @@ echo
 echo "fixXChrom"
 echo
 
-Rscript --no-init-file $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
+$SDIR/bin/rscript.sh $SDIR/fixXChrom.R $projectName/${projectName}___IGV.seg
 
 echo
 echo "getGeneCalls"
@@ -85,7 +85,7 @@ echo
 echo "redactDeliverables"
 echo
 
-Rscript --no-init-file $SDIR/redactDeliverables.R $PAIRING $projectName
+$SDIR/bin/rscript.sh $SDIR/redactDeliverables.R $PAIRING $projectName
 
 echo
 echo "seqSeg.pdf"
