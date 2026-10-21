@@ -2,18 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on
+[Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this
+project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [6.0.0]
 
-The port from JUNO/LSF (CentOS 6/7, R 3.6 and
-R 4.2) to IRIS/Slurm (RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R.
-The specification and its decisions (D1 to D16) are in
+The port from JUNO/LSF (CentOS 6/7, R 3.6 and R 4.2) to IRIS/Slurm
+(RHEL 8.10, R 4.5.1). Breaking: Slurm only, one R. The specification
+and its decisions (D1 to D16) are in
 `attic/docs/00.SPEC_IRIS_PORT.md`; how the port was done and validated
 is in `docs/dev/SLURM_PORT.md`, with the Proj_12257 run (b37 exome,
-6 tumors x 5 normals) it was validated on. The last LSF version is on branch `juno`
-and tag `v5-juno` (3e6c18d).
+6 tumors x 5 normals) it was validated on. The last LSF version is on
+branch `juno` and tag `v5-juno` (3e6c18d).
 
 ### Breaking
 - IRIS/Slurm only. Submit with `sbatch seqCNA/PIPE.sh TARGETTED|sWGS`
@@ -149,8 +151,8 @@ and tag `v5-juno` (3e6c18d).
   directory; a new run replaces its records. The early port refused
   any rerun, so a typo in `tumors` needed a new directory.
 - `fixChromosomeNames.sh`: samtools from `bin/loadTools.sh` instead of
-  `module load samtools/1.19.2`; calls `$SDIR/GenomeData/getGenomeBuildBAM.sh`
-  instead of relying on PATH.
+  `module load samtools/1.19.2`; calls
+  `$SDIR/GenomeData/getGenomeBuildBAM.sh` instead of relying on PATH.
 - `GenomeData/getGenomeBuildBAM.sh`: samtools from PATH; exits 1 when
   the header cannot be read instead of printing `unknown` for the md5
   of empty input.
@@ -181,8 +183,19 @@ and tag `v5-juno` (3e6c18d).
   delivered with `docs/methods.md`, and the email refers to both.
 - `docs/` holds only user-facing docs: `METHODS.md` moved to
   `docs/methods.md` (delivered and linked under that name), the tool
-  usage files to `docs/usage/`, and the developer docs
-  (`SLURM_PORT.md`, `IRIS_CLUSTER_INFO.md`) to `docs/dev/`.
+  usage files to `docs/usage/`, the FACETS comparison to
+  `docs/facets/`, and the developer docs (`SLURM_PORT.md`,
+  `IRIS_CLUSTER_INFO.md`) to `docs/dev/`.
+- The FACETS comparison corrected against the code: seqCNA reports log2
+  ratios relative to a baseline level of the tumor, with a p-value and
+  FDR per segment and no gain or deletion categories; the methods text
+  there is replaced by a pointer to `docs/methods.md`; FACETS is cited
+  as Shen and Seshan 2016.
+- `DELIVERY_ZIP.md` follows the email templates (file names, output.md
+  and methods.md, autosomes only).
+- Usage text: `seqSegment` `MINBINCOUNT=` says that bins with that many
+  normal counts or fewer are removed; `getGeneCalls` `ASSAY=` lists the
+  assays. `README.md` copies all three usage texts.
 
 ### Fixed
 - No gene calls on chrX in any assay. `getGeneCalls.R` keeps the

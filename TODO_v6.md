@@ -28,6 +28,9 @@ Open issues, including the ones not required for the release, are in
 - [x] Merge `feat/delivery` into `devs` (ec6a5bc). `delivery.sh` is
       ported (`00.ISSUES.md` #4); a real delivery of Proj_12257 is
       still to be run.
+- [ ] Merge the docs branches into `devs`: `docs/reorg`,
+      `docs/methods-output` and `docs/cleanup-01`, stacked in that
+      order.
 - [ ] Merge `devs` into `rel/v6.0.0`, which is behind it.
 - [ ] Bump `VERSION` from `5.dev` to `6.0.0` in `getPairedCounts.R`,
       `seqSegment.R`, `getGeneCalls.R` and `Version:` in `DESCRIPTION`
@@ -37,9 +40,8 @@ Open issues, including the ones not required for the release, are in
 - [ ] Merge `rel/v6.0.0` -> `master`; tag the release `v6.0.0`
       (decided 2026-10-21), the same name as `VERSION.md`: the delivery
       email links to `docs/output.md` and `docs/methods.md` at that
-      tag. `PIPE.sh` and
-      `getGITTag` use `git describe --tags`, so the tag is what the run
-      records show.
+      tag. `PIPE.sh` and `getGITTag` use `git describe --tags`, so the
+      tag is what the run records show.
 - [ ] Push `devs`, `master`, the release tag and `v5-juno` to origin.
       Delete `feat/iris` once merged.
 - [ ] Remove this file, or move it to `attic/docs/`.
