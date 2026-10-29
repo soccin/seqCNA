@@ -96,6 +96,17 @@ out=seqsegment(bb,sampleid=sampleId,
                 binSize=binSize,minBinCount=args$MINBINCOUNT,
                 undo.splits="sdundo",undo.SD=undo.SD)
 
+#
+# DNAcopy::CNA puts the sample id through make.names (data.frame
+# check.names), so s_A-1__s_N becomes s_A.1__s_N in out$data and
+# out$output$ID. Restore the pair id: the .seg, getGeneCalls and
+# redactDeliverables.R (pairing.tsv) must all use the same id.
+# plot.DNAcopy needs the two to match.
+#
+
+colnames(out$data)[3]=sampleId
+out$output$ID=sampleId
+
 clusterThreshold=0.04
 out.seqseg=out
 out=clustersegs(out,threshold=clusterThreshold)
