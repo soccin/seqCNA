@@ -149,14 +149,17 @@ function usage {
 	    TARGETTED   Targeted assays, IMPACT/EXOME/... (BINSIZE=100)
 
 	    BAM ...     the BAMs, given on the command line
-	    -i FILE     the BAMs, one path per line in FILE; blank lines
-	                and text after # are ignored
+	    -i FILE     the BAMs and their types, one per line in FILE:
+	                path,type or path<TAB>type, no header; type is
+	                T or TUMOR, N or NORMAL (any case). A BAM can be
+	                on two lines, once as tumor and once as normal.
+	                Blank lines and text after # are ignored.
 
 	With neither, the BAMs are pipeline/<alignments|bam>/*.bam. Each
 	BAM needs its index (.bai) and a base name of its own. Relative
 	paths are taken from the current directory.
 
-	Run from the project directory, which must also hold:
+	Without -i, run from the project directory, which must also hold:
 
 	    tumors, normals                   one pattern per line, matched
 	                                      (fgrep -f) against the relabeled
@@ -164,7 +167,9 @@ function usage {
 	                                      <base>__relabel.bam
 
 	Without tumors or normals it writes samples, one line per BAM, and
-	stops; copy those lines into tumors and normals.
+	stops; copy those lines into tumors and normals. With -i, PIPE.sh
+	writes tumors and normals from FILE (and stops if either already
+	exists with other content).
 
 	The genome is read from the BAM headers (b37 or mm10 families) and
 	picks the gene annotation assay: Exome or Mouse-Twist. For other
@@ -179,7 +184,8 @@ function usage {
 #
 #   pipeline  pipeline/<alignments|bam>/*.bam, when no BAM is given
 #   args      the arguments after the assay type
-#   file      the paths listed in the -i|--inputs file (INPUT_FILE)
+#   file      the paths listed in the -i|--inputs file (INPUT_FILE), with
+#             their types (tumor or normal)
 #
 INPUT_FILE=""
 POSARGS=()
@@ -250,12 +256,102 @@ case $ASSAY_TYPE in
 esac
 
 #
+# trim STRING
+#
+# Print STRING without leading and trailing whitespace.
+#
+trim() {
+    local s=$1
+    s=${s#"${s%%[![:space:]]*}"}
+    s=${s%"${s##*[![:space:]]}"}
+    echo "$s"
+}
+
+#
+# parseInputFile
+#
+# Read INPUT_FILE: one BAM per line, path and type separated by a tab or
+# a comma (the last one on the line, so a path may hold commas), no
+# header. Text after # and blank lines are ignored. Set BAMS (each path
+# once, in file order) and FILE_TUMORS, FILE_NORMALS: the relabeled BAM
+# paths of each type, written to tumors and normals in CHECK. On a bad
+# line, set INPUT_ERROR and return 1.
+#
+parseInputFile() {
+    local line path type n=0
+
+    BAMS=""
+    FILE_TUMORS=""
+    FILE_NORMALS=""
+    INPUT_ERROR=""
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        n=$((n + 1))
+        line=$(trim "${line%%#*}")
+        if [ -z "$line" ]; then
+            continue
+        fi
+
+        if [[ $line == *$'\t'* ]]; then
+            path=${line%$'\t'*}
+            type=${line##*$'\t'}
+        elif [[ $line == *,* ]]; then
+            path=${line%,*}
+            type=${line##*,}
+        else
+            INPUT_ERROR="$INPUT_FILE line $n: need path and type, separated by a comma or a tab"
+            return 1
+        fi
+        path=$(trim "$path")
+        type=$(trim "$type")
+
+        if [ -z "$path" ]; then
+            INPUT_ERROR="$INPUT_FILE line $n: no BAM path"
+            return 1
+        fi
+        path=$(realpath -ms -- "$path")
+
+        case ${type^^} in
+            T|TUMOR)
+                FILE_TUMORS="$FILE_TUMORS$(relabeledBam "$path")"$'\n'
+                ;;
+            N|NORMAL)
+                FILE_NORMALS="$FILE_NORMALS$(relabeledBam "$path")"$'\n'
+                ;;
+            *)
+                INPUT_ERROR="$INPUT_FILE line $n: type [$type] is not T, TUMOR, N or NORMAL"
+                return 1
+                ;;
+        esac
+        BAMS="$BAMS$path"$'\n'
+    done <"$INPUT_FILE"
+
+    BAMS=$(echo -n "$BAMS" | awk '!seen[$0]++')
+    FILE_TUMORS=$(echo -n "$FILE_TUMORS" | awk '!seen[$0]++')
+    FILE_NORMALS=$(echo -n "$FILE_NORMALS" | awk '!seen[$0]++')
+
+    if [ -z "$BAMS" ]; then
+        INPUT_ERROR="no BAMs listed in $INPUT_FILE"
+        return 1
+    fi
+    if [ -z "$FILE_TUMORS" ]; then
+        INPUT_ERROR="no tumor (T) BAM in $INPUT_FILE"
+        return 1
+    fi
+    if [ -z "$FILE_NORMALS" ]; then
+        INPUT_ERROR="no normal (N) BAM in $INPUT_FILE"
+        return 1
+    fi
+}
+
+#
 # findBams
 #
 # Set BAMS to the input BAMs, one path per line, and INPUT_DESC to where
 # they came from. With INPUTS=pipeline, BAMDIR is pipeline/<alignments|
 # bam>; either is empty if not found. Paths given as arguments or in the
-# inputs file are made absolute (symlinks are not resolved).
+# inputs file are made absolute (symlinks are not resolved). With
+# INPUTS=file, INPUT_ERROR is set if the file cannot be used.
 #
 findBams() {
     BAMDIR=""
@@ -273,9 +369,7 @@ findBams() {
             INPUT_DESC="given on the command line"
             ;;
         file)
-            BAMS=$(sed -e 's/#.*//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$INPUT_FILE" \
-                       | grep -v '^$' \
-                       | xargs -r -d '\n' realpath -ms --) || true
+            parseInputFile || BAMS=""
             INPUT_DESC="listed in $INPUT_FILE"
             ;;
     esac
