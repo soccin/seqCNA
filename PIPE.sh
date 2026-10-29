@@ -20,7 +20,10 @@
 #    ./seqCNA/PIPE.sh TARGETTED /path/to/*.bam
 #    ./seqCNA/PIPE.sh -i bams.txt TARGETTED
 #
-# Give the same BAMs again when the run is submitted.
+# Give the same BAMs again when the run is submitted. The -i file also
+# gives each BAM's type (path,type or path<TAB>type, T or N), so there
+# is no first step: PIPE.sh writes tumors and normals from it and the
+# run can be submitted at once.
 #
 # It writes samples, one line per BAM, and stops (see "First step"
 # below). Make tumors and normals from those lines, then:
@@ -429,7 +432,18 @@ relabeledBam() {
 
 findBams
 
-if [ -n "$BAMS" ] && [ ! -e samples ]; then
+#
+# With -i the file gives the types: no samples, and tumors and normals
+# are written from it in CHECK.
+#
+if [ "$INPUTS" == "file" ] && [ -n "$INPUT_ERROR" ]; then
+    echo
+    echo "    FATAL ERROR: $INPUT_ERROR"
+    echo
+    exit 1
+fi
+
+if [ "$INPUTS" != "file" ] && [ -n "$BAMS" ] && [ ! -e samples ]; then
     echo "$BAMS" \
         | xargs -n 1 basename \
         | sed 's/.*_recal_s_/s_/' \
@@ -439,36 +453,22 @@ if [ -n "$BAMS" ] && [ ! -e samples ]; then
     echo "Wrote samples ($(wc -l <samples) BAMs $INPUT_DESC)"
 fi
 
-if [ ! -s tumors ] || [ ! -s normals ]; then
+if [ "$INPUTS" != "file" ] && { [ ! -s tumors ] || [ ! -s normals ]; }; then
     if [ -z "$BAMS" ]; then
-        if [ "$INPUTS" == "file" ]; then
-            cat <<-END_NOBAMS
+        cat <<-END_NOBAMS
 
-			    FATAL ERROR: no BAMs listed in $INPUT_FILE
+		    FATAL ERROR: no BAMs found: need pipeline/<alignments|bam>/*.bam
+		    Link the pipeline output directory as pipeline/, or give
+		    the BAMs as arguments or with -i (see --help)
 
-			END_NOBAMS
-        else
-            cat <<-END_NOBAMS
-
-			    FATAL ERROR: no BAMs found: need pipeline/<alignments|bam>/*.bam
-			    Link the pipeline output directory as pipeline/, or give
-			    the BAMs as arguments or with -i (see --help)
-
-			END_NOBAMS
-        fi
+		END_NOBAMS
         exit 1
     fi
-    case $INPUTS in
-        pipeline)
-            SUBMIT_HINT="sbatch seqCNA/PIPE.sh $ASSAY_ARG"
-            ;;
-        args)
-            SUBMIT_HINT="sbatch seqCNA/PIPE.sh $ASSAY_ARG <the same BAMs>"
-            ;;
-        file)
-            SUBMIT_HINT="sbatch seqCNA/PIPE.sh -i $INPUT_FILE $ASSAY_ARG"
-            ;;
-    esac
+    if [ "$INPUTS" == "pipeline" ]; then
+        SUBMIT_HINT="sbatch seqCNA/PIPE.sh $ASSAY_ARG"
+    else
+        SUBMIT_HINT="sbatch seqCNA/PIPE.sh $ASSAY_ARG <the same BAMs>"
+    fi
     cat <<-END_SAMPLES
 
 	    Need to define the tumor and normal samples.
@@ -743,6 +743,9 @@ $SDIR/bin/rscript.sh --check \
 # each with an index.
 #
 findBams
+if [ "$INPUTS" == "file" ] && [ -n "$INPUT_ERROR" ]; then
+    fatal "$INPUT_ERROR"
+fi
 if [ "$INPUTS" == "pipeline" ] && { [ -z "$BAMDIR" ] || [ ! -d "$BAMDIR" ]; }; then
     fatal "no pipeline/alignments or pipeline/bam directory; link the pipeline output as pipeline/, or give the BAMs"
 fi
@@ -763,7 +766,32 @@ for BAM in $BAMS; do
 done
 
 #
-# tumors and normals (present, see First step): one pattern per line,
+# writeTypeFile FILE LIST
+#
+# With -i, write LIST (relabeled BAM paths) to FILE (tumors or normals).
+# An existing FILE with the same content is kept, so a run that failed in
+# CHECK can be submitted again; one with other content is not
+# overwritten and the run stops.
+#
+writeTypeFile() {
+    if [ -e "$1" ]; then
+        if [ "$(cat "$1")" != "$2" ]; then
+            fatal "$1 exists and differs from the types in $INPUT_FILE; remove it or drop -i"
+        fi
+        return
+    fi
+    echo "$2" >"$1"
+    echo "Wrote $1 ($(wc -l <"$1") BAMs) from $INPUT_FILE"
+}
+
+if [ "$INPUTS" == "file" ]; then
+    writeTypeFile tumors "$FILE_TUMORS"
+    writeTypeFile normals "$FILE_NORMALS"
+fi
+
+#
+# tumors and normals (present, see First step, or written from the -i
+# file above): one pattern per line,
 # matched against the relabeled BAM paths, as tumorBams and normalBams
 # are chosen after FIX. Lines copied from samples end in __ and match
 # only those paths, not the original BAM paths.
