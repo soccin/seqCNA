@@ -310,7 +310,13 @@ the `X.seg.mean.*` QC values, the IGV `.seg` (renamed to X by
 ### Sample ID conventions
 
 `getSampleTag.sh` reads `SM:` from the BAM `@RG` lines and adds an `s_`
-prefix if missing. A pair ID is `<tumor>__<normal>`. Internal files
+prefix if missing. Sample IDs are used as they are, `-` included; they
+are not flattened. `DNAcopy::CNA` puts the ID through `make.names`
+(`s_A-1` becomes `s_A.1`), so `seqSegment.R` sets `out$output$ID` and
+`colnames(out$data)[3]` back to the pair ID right after
+`seqsegment()`. Do not read a sample-named table with `data.frame`,
+`read.table` or `read.csv` without `check.names=FALSE`. A pair ID is
+`<tumor>__<normal>`. Internal files
 (everything under `out/` and `outAll/`, `bestMatches____out`, `lodir`)
 use the pair ID; the deliverables in `<ProjNo>/` other than the PNGs
 use the tumor ID. The tumor and normal of a pair are never parsed from

@@ -7,6 +7,21 @@ The format is based on
 project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Sample IDs with `-` (or any other character `make.names` changes)
+  failed in POST: `redactDeliverables.R` stopped with "not in
+  pairing.tsv". `DNAcopy::CNA` builds a data frame with
+  `check.names=TRUE`, so `seqsegment()` returned `s_A.1__s_N` for the
+  pair ID `s_A-1__s_N`, and that ID went into the `.seg`, the plot
+  title, `GeneMatrix.csv`, `SegmentMatrix.csv` and the GeneTable.
+  `seqSegment.R` now sets `out$output$ID` and `colnames(out$data)[3]`
+  back to the pair ID. The `.out` file, `pairs.tsv` and `pairing.tsv`
+  always had the pair ID. Segments and calls are unchanged. Found on
+  Proj_19034, the first project whose `SM:` tags were not flattened
+  upstream.
+
 ## [6.0.0] - 2026-10-21
 
 The port from JUNO/LSF (CentOS 6/7, R 3.6 and R 4.2) to IRIS/Slurm
