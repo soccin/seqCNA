@@ -54,13 +54,30 @@ failed in CHECK (nothing submitted) can be fixed and submitted again
 there.
 
 Required inputs in the project directory:
-- `pipeline/` containing a subdirectory matching `alignments|bam` with
-  the BAMs, each with a `.bai`
-- `tumors`, `normals`: one pattern per line, matched with `fgrep -f`
-  against the relabeled BAM paths
+- the BAMs, each with a `.bai`, from one of (`INPUTS=` in
+  `00.RUNSTATUS.txt`):
+  - `pipeline`: `pipeline/` containing a subdirectory matching
+    `alignments|bam` (`seqCNA/PIPE.sh <ASSAY>`)
+  - `args`: the arguments after the assay type
+    (`seqCNA/PIPE.sh <ASSAY> *.bam`)
+  - `file`: a headerless file, one BAM per line, path and type
+    separated by a tab or the last comma (`T`/`TUMOR`, `N`/`NORMAL`,
+    any case), `#` comments and blank lines ignored
+    (`seqCNA/PIPE.sh -i|--inputs FILE <ASSAY>`). Parsed by
+    `parseInputFile`. CHECK writes `tumors` and `normals` from it as
+    relabeled BAM paths (`writeTypeFile`); an existing file with the
+    same content is kept, one with other content stops the run. A BAM
+    can be listed as both types. There is no `samples` step.
+
+  Given paths are made absolute (`realpath -ms`, symlinks kept). CHECK
+  rejects paths with whitespace, names not ending in `.bam`, and two
+  BAMs with the same base name (both would write `bamRelabel/<base>/`).
+  The list is written to `out/pipeline_info/inputBams.txt`.
+- `tumors`, `normals` (written by `PIPE.sh` with `-i`): one pattern per
+  line, matched with `fgrep -f` against the relabeled BAM paths
   `bamRelabel/<base>/<base>__relabel.bam`
 
-Without `tumors` or `normals`, `PIPE.sh` writes `samples` (one line per
+Without `-i` and without `tumors` or `normals`, `PIPE.sh` writes `samples` (one line per
 BAM, the base name minus any `Proj_..._s_` prefix plus `__`) and exits
 0 before any run record is written. That is the first step of a new
 project: run `seqCNA/PIPE.sh TARGETTED` directly, copy the lines of
@@ -113,8 +130,9 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
 
 0. First step, before any run record: write `samples` if absent; stop
    with exit 0 if `tumors` or `normals` is missing or empty.
-1. CHECK (control job): BAM directory, BAMs and indexes, `tumors` and
-   `normals` each match a relabeled BAM path, one genome across BAMs
+1. CHECK (control job): the input BAMs (see "Required inputs") and
+   their indexes, `tumors` and `normals` each match a relabeled BAM
+   path, one genome across BAMs
    via `GenomeData/getGenomeBuildBAM.sh` and the assay from it,
    project id from `pipeline/*request.txt` or
    `extractProjectIDFromPath.py`. Nothing is submitted until all pass.

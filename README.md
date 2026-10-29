@@ -41,6 +41,31 @@ From a project directory holding `pipeline/<alignments|bam>/*.bam`
 seqCNA/PIPE.sh TARGETTED           # writes samples and stops
 ```
 
+The BAMs can also be given as arguments after the assay type; then
+`pipeline/` is not needed. Give the same BAMs again when you submit:
+
+```bash
+seqCNA/PIPE.sh TARGETTED /path/to/*.bam
+```
+
+Or list them in a file with their type, one BAM per line, no header:
+the path and `T` (tumor) or `N` (normal), separated by a comma or a
+tab. `TUMOR` and `NORMAL` work too, in any case; blank lines and text
+after `#` are ignored. A BAM can be on two lines, once as `T` and once
+as `N`. `PIPE.sh` writes `tumors` and `normals` from the file, so
+there is no first step; submit at once:
+
+```bash
+cat bams.txt
+../Map/s_N1.bam,N
+../Map/s_T1.bam,T
+sbatch seqCNA/PIPE.sh -i bams.txt TARGETTED
+```
+
+It stops if `tumors` or `normals` already exists with other content.
+Each BAM needs a `.bai` and a base name of its own. Relative paths are
+taken from the directory you run in.
+
 `samples` has one line per BAM (`s_<id>__`). Put the tumor lines in
 `tumors` and the normal lines in `normals` (one pattern per line,
 matched against the relabeled BAM paths

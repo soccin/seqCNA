@@ -13,6 +13,18 @@
 #
 #    ./seqCNA/PIPE.sh TARGETTED
 #
+# The BAMs are pipeline/<alignments|bam>/*.bam, unless they are given as
+# arguments after the assay type or listed in a file with -i (see
+# usage):
+#
+#    ./seqCNA/PIPE.sh TARGETTED /path/to/*.bam
+#    ./seqCNA/PIPE.sh -i bams.txt TARGETTED
+#
+# Give the same BAMs again when the run is submitted. The -i file also
+# gives each BAM's type (path,type or path<TAB>type, T or N), so there
+# is no first step: PIPE.sh writes tumors and normals from it and the
+# run can be submitted at once.
+#
 # It writes samples, one line per BAM, and stops (see "First step"
 # below). Make tumors and normals from those lines, then:
 #
@@ -131,22 +143,36 @@ ORIG_CMD="$SDIR/PIPE.sh $(printf '%q ' "$@")"
 function usage {
     cat <<-END_USAGE
 
-	usage: sbatch seqCNA/PIPE.sh [sWGS|TARGETTED]
+	usage: sbatch seqCNA/PIPE.sh <sWGS|TARGETTED>
+	       sbatch seqCNA/PIPE.sh <sWGS|TARGETTED> BAM [BAM ...]
+	       sbatch seqCNA/PIPE.sh -i|--inputs FILE <sWGS|TARGETTED>
 	version=$SCRIPT_VERSION
 
 	    sWGS        Shallow Whole Genome Seq (BINSIZE=auto)
 	    TARGETTED   Targeted assays, IMPACT/EXOME/... (BINSIZE=100)
 
-	Run from the project directory, which must hold:
+	    BAM ...     the BAMs, given on the command line
+	    -i FILE     the BAMs and their types, one per line in FILE:
+	                path,type or path<TAB>type, no header; type is
+	                T or TUMOR, N or NORMAL (any case). A BAM can be
+	                on two lines, once as tumor and once as normal.
+	                Blank lines and text after # are ignored.
 
-	    pipeline/<alignments|bam>/*.bam   the BAMs, each with its index
+	With neither, the BAMs are pipeline/<alignments|bam>/*.bam. Each
+	BAM needs its index (.bai) and a base name of its own. Relative
+	paths are taken from the current directory.
+
+	Without -i, run from the project directory, which must also hold:
+
 	    tumors, normals                   one pattern per line, matched
 	                                      (fgrep -f) against the relabeled
 	                                      BAM paths, bamRelabel/<base>/
 	                                      <base>__relabel.bam
 
 	Without tumors or normals it writes samples, one line per BAM, and
-	stops; copy those lines into tumors and normals.
+	stops; copy those lines into tumors and normals. With -i, PIPE.sh
+	writes tumors and normals from FILE (and stops if either already
+	exists with other content).
 
 	The genome is read from the BAM headers (b37 or mm10 families) and
 	picks the gene annotation assay: Exome or Mouse-Twist. For other
@@ -156,17 +182,68 @@ function usage {
     exit 1
 }
 
-if [ "$#" -ne 1 ]; then
+#
+# Where the BAMs come from (INPUTS):
+#
+#   pipeline  pipeline/<alignments|bam>/*.bam, when no BAM is given
+#   args      the arguments after the assay type
+#   file      the paths listed in the -i|--inputs file (INPUT_FILE), with
+#             their types (tumor or normal)
+#
+INPUT_FILE=""
+POSARGS=()
+while [ "$#" -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            usage
+            ;;
+        -i|--inputs)
+            if [ "$#" -lt 2 ] || [ -n "$INPUT_FILE" ]; then
+                usage
+            fi
+            INPUT_FILE=$2
+            shift 2
+            ;;
+        -*)
+            echo
+            echo "    FATAL ERROR: unknown option [$1]"
+            usage
+            ;;
+        *)
+            POSARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [ "${#POSARGS[@]}" -lt 1 ]; then
+    usage
+fi
+ASSAY_ARG=${POSARGS[0]}
+ARG_BAMS=("${POSARGS[@]:1}")
+
+if [ -n "$INPUT_FILE" ] && [ "${#ARG_BAMS[@]}" -gt 0 ]; then
+    echo
+    echo "    FATAL ERROR: give the BAMs either with -i or as arguments, not both"
     usage
 fi
 
-case $1 in
-    -h|--help)
-        usage
-        ;;
-esac
+if [ -n "$INPUT_FILE" ]; then
+    INPUTS=file
+    if [ ! -f "$INPUT_FILE" ] || [ ! -r "$INPUT_FILE" ]; then
+        echo
+        echo "    FATAL ERROR: cannot read the inputs file [$INPUT_FILE]"
+        echo
+        exit 1
+    fi
+    INPUT_FILE=$(realpath -s "$INPUT_FILE")
+elif [ "${#ARG_BAMS[@]}" -gt 0 ]; then
+    INPUTS=args
+else
+    INPUTS=pipeline
+fi
 
-ASSAY_TYPE=$(echo $1 | tr '[a-z]' '[A-Z]')
+ASSAY_TYPE=$(echo $ASSAY_ARG | tr '[a-z]' '[A-Z]')
 case $ASSAY_TYPE in
     SWGS)
         BINSIZE=auto
@@ -176,22 +253,155 @@ case $ASSAY_TYPE in
         ;;
     *)
         echo
-        echo "    FATAL ERROR: unknown assay type [$1]"
+        echo "    FATAL ERROR: unknown assay type [$ASSAY_ARG]"
         usage
         ;;
 esac
 
 #
+# trim STRING
+#
+# Print STRING without leading and trailing whitespace.
+#
+trim() {
+    local s=$1
+    s=${s#"${s%%[![:space:]]*}"}
+    s=${s%"${s##*[![:space:]]}"}
+    echo "$s"
+}
+
+#
+# parseInputFile
+#
+# Read INPUT_FILE: one BAM per line, path and type separated by a tab or
+# a comma (the last one on the line, so a path may hold commas), no
+# header. Text after # and blank lines are ignored. Set BAMS (each path
+# once, in file order) and FILE_TUMORS, FILE_NORMALS: the relabeled BAM
+# paths of each type, written to tumors and normals in CHECK. On a bad
+# line, set INPUT_ERROR and return 1.
+#
+parseInputFile() {
+    local line path type n=0
+
+    BAMS=""
+    FILE_TUMORS=""
+    FILE_NORMALS=""
+    INPUT_ERROR=""
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        n=$((n + 1))
+        line=$(trim "${line%%#*}")
+        if [ -z "$line" ]; then
+            continue
+        fi
+
+        if [[ $line == *$'\t'* ]]; then
+            path=${line%$'\t'*}
+            type=${line##*$'\t'}
+        elif [[ $line == *,* ]]; then
+            path=${line%,*}
+            type=${line##*,}
+        else
+            INPUT_ERROR="$INPUT_FILE line $n: need path and type, separated by a comma or a tab"
+            return 1
+        fi
+        path=$(trim "$path")
+        type=$(trim "$type")
+
+        if [ -z "$path" ]; then
+            INPUT_ERROR="$INPUT_FILE line $n: no BAM path"
+            return 1
+        fi
+        path=$(realpath -ms -- "$path")
+
+        case ${type^^} in
+            T|TUMOR)
+                FILE_TUMORS="$FILE_TUMORS$(relabeledBam "$path")"$'\n'
+                ;;
+            N|NORMAL)
+                FILE_NORMALS="$FILE_NORMALS$(relabeledBam "$path")"$'\n'
+                ;;
+            *)
+                INPUT_ERROR="$INPUT_FILE line $n: type [$type] is not T, TUMOR, N or NORMAL"
+                return 1
+                ;;
+        esac
+        BAMS="$BAMS$path"$'\n'
+    done <"$INPUT_FILE"
+
+    BAMS=$(echo -n "$BAMS" | awk '!seen[$0]++')
+    FILE_TUMORS=$(echo -n "$FILE_TUMORS" | awk '!seen[$0]++')
+    FILE_NORMALS=$(echo -n "$FILE_NORMALS" | awk '!seen[$0]++')
+
+    if [ -z "$BAMS" ]; then
+        INPUT_ERROR="no BAMs listed in $INPUT_FILE"
+        return 1
+    fi
+    if [ -z "$FILE_TUMORS" ]; then
+        INPUT_ERROR="no tumor (T) BAM in $INPUT_FILE"
+        return 1
+    fi
+    if [ -z "$FILE_NORMALS" ]; then
+        INPUT_ERROR="no normal (N) BAM in $INPUT_FILE"
+        return 1
+    fi
+}
+
+#
 # findBams
 #
-# Set BAMDIR to pipeline/<alignments|bam> and BAMS to its BAMs; either is
-# empty if not found.
+# Set BAMS to the input BAMs, one path per line, and INPUT_DESC to where
+# they came from. With INPUTS=pipeline, BAMDIR is pipeline/<alignments|
+# bam>; either is empty if not found. Paths given as arguments or in the
+# inputs file are made absolute (symlinks are not resolved). With
+# INPUTS=file, INPUT_ERROR is set if the file cannot be used.
 #
 findBams() {
-    BAMDIR=$(ls -d pipeline/* 2>/dev/null | egrep "alignments|bam" | head -1) || true
+    BAMDIR=""
     BAMS=""
-    if [ -n "$BAMDIR" ] && [ -d "$BAMDIR" ]; then
-        BAMS=$(ls $BAMDIR/*.bam 2>/dev/null) || true
+    case $INPUTS in
+        pipeline)
+            BAMDIR=$(ls -d pipeline/* 2>/dev/null | egrep "alignments|bam" | head -1) || true
+            if [ -n "$BAMDIR" ] && [ -d "$BAMDIR" ]; then
+                BAMS=$(ls $BAMDIR/*.bam 2>/dev/null) || true
+            fi
+            INPUT_DESC="in $BAMDIR"
+            ;;
+        args)
+            BAMS=$(realpath -ms -- "${ARG_BAMS[@]}")
+            INPUT_DESC="given on the command line"
+            ;;
+        file)
+            parseInputFile || BAMS=""
+            INPUT_DESC="listed in $INPUT_FILE"
+            ;;
+    esac
+}
+
+#
+# checkBamList
+#
+# Print a reason and return 1 if BAMS cannot be used: a path with
+# whitespace (BAMS is split on it), a name not ending in .bam, or two BAMs
+# with the same base name (both would write bamRelabel/<base>/).
+#
+checkBamList() {
+    local dup
+
+    if echo "$BAMS" | grep -q '[[:space:]]'; then
+        echo "BAM paths cannot contain whitespace: $(echo "$BAMS" | grep '[[:space:]]' | head -1)"
+        return 1
+    fi
+
+    if echo "$BAMS" | grep -qv '\.bam$'; then
+        echo "not a .bam file: $(echo "$BAMS" | grep -v '\.bam$' | head -1)"
+        return 1
+    fi
+
+    dup=$(echo "$BAMS" | xargs -n 1 basename | sort | uniq -d | head -1)
+    if [ -n "$dup" ]; then
+        echo "two or more BAMs named $dup; each BAM needs a base name of its own"
+        return 1
     fi
 }
 
@@ -222,35 +432,52 @@ relabeledBam() {
 
 findBams
 
-if [ -n "$BAMS" ] && [ ! -e samples ]; then
+#
+# With -i the file gives the types: no samples, and tumors and normals
+# are written from it in CHECK.
+#
+if [ "$INPUTS" == "file" ] && [ -n "$INPUT_ERROR" ]; then
+    echo
+    echo "    FATAL ERROR: $INPUT_ERROR"
+    echo
+    exit 1
+fi
+
+if [ "$INPUTS" != "file" ] && [ -n "$BAMS" ] && [ ! -e samples ]; then
     echo "$BAMS" \
         | xargs -n 1 basename \
         | sed 's/.*_recal_s_/s_/' \
         | sed 's/^Proj_.*s_/s_/' \
         | sed 's/.bam/__/' \
         >samples
-    echo "Wrote samples ($(wc -l <samples) BAMs in $BAMDIR)"
+    echo "Wrote samples ($(wc -l <samples) BAMs $INPUT_DESC)"
 fi
 
-if [ ! -s tumors ] || [ ! -s normals ]; then
+if [ "$INPUTS" != "file" ] && { [ ! -s tumors ] || [ ! -s normals ]; }; then
     if [ -z "$BAMS" ]; then
         cat <<-END_NOBAMS
 
 		    FATAL ERROR: no BAMs found: need pipeline/<alignments|bam>/*.bam
-		    Link the pipeline output directory as pipeline/
+		    Link the pipeline output directory as pipeline/, or give
+		    the BAMs as arguments or with -i (see --help)
 
 		END_NOBAMS
         exit 1
+    fi
+    if [ "$INPUTS" == "pipeline" ]; then
+        SUBMIT_HINT="sbatch seqCNA/PIPE.sh $ASSAY_ARG"
+    else
+        SUBMIT_HINT="sbatch seqCNA/PIPE.sh $ASSAY_ARG <the same BAMs>"
     fi
     cat <<-END_SAMPLES
 
 	    Need to define the tumor and normal samples.
 
-	    samples lists the BAMs in $BAMDIR, one per line. Put the
+	    samples has one line per BAM $INPUT_DESC. Put the
 	    tumor lines in tumors and the normal lines in normals, then
 	    submit the run:
 
-	        sbatch seqCNA/PIPE.sh $1
+	        $SUBMIT_HINT
 
 	END_SAMPLES
     exit 0
@@ -289,7 +516,8 @@ RUNRE="^${TAG}_.*_$$\$"
 #   out/pipeline_info/   pairs.tsv (PAIR, TUMOR_BAM, NORMAL_BAM, ODIR,
 #                        TUMOR, NORMAL), read by the COUNT and SEG stages
 #                        and by selectBestMatch; cmd.sh.log, the
-#                        provenance record.
+#                        provenance record; inputBams.txt, the input
+#                        BAMs, one path per line.
 #
 #   pairing.tsv          the best normal of each tumor (TUMOR, NORMAL,
 #                        PAIR, rms.logr), written by selectBestMatch. It
@@ -347,6 +575,8 @@ PID=$$
 SEQCNA_START=$SEQCNA_START
 ASSAY_TYPE=$ASSAY_TYPE
 BINSIZE=$BINSIZE
+INPUTS=$INPUTS
+INPUT_FILE=$INPUT_FILE
 BAMDIR=$BAMDIR
 GENOME_TAG=$GENOME_TAG
 GENOME=$GENOME
@@ -509,16 +739,22 @@ $SDIR/bin/rscript.sh --check \
     || fatal "R or a package does not match Rlib.lock.tsv (details above)"
 
 #
-# BAMs: pipeline/<alignments|bam>/*.bam, each with an index.
+# BAMs: given (INPUTS=args or file) or pipeline/<alignments|bam>/*.bam,
+# each with an index.
 #
 findBams
-if [ -z "$BAMDIR" ] || [ ! -d "$BAMDIR" ]; then
-    fatal "no pipeline/alignments or pipeline/bam directory; link the pipeline output as pipeline/"
+if [ "$INPUTS" == "file" ] && [ -n "$INPUT_ERROR" ]; then
+    fatal "$INPUT_ERROR"
+fi
+if [ "$INPUTS" == "pipeline" ] && { [ -z "$BAMDIR" ] || [ ! -d "$BAMDIR" ]; }; then
+    fatal "no pipeline/alignments or pipeline/bam directory; link the pipeline output as pipeline/, or give the BAMs"
 fi
 
 if [ -z "$BAMS" ]; then
-    fatal "no BAM files in $BAMDIR"
+    fatal "no BAM files $INPUT_DESC"
 fi
+
+BAMLIST_ERROR=$(checkBamList) || fatal "$BAMLIST_ERROR"
 
 for BAM in $BAMS; do
     if [ ! -r "$BAM" ]; then
@@ -530,7 +766,32 @@ for BAM in $BAMS; do
 done
 
 #
-# tumors and normals (present, see First step): one pattern per line,
+# writeTypeFile FILE LIST
+#
+# With -i, write LIST (relabeled BAM paths) to FILE (tumors or normals).
+# An existing FILE with the same content is kept, so a run that failed in
+# CHECK can be submitted again; one with other content is not
+# overwritten and the run stops.
+#
+writeTypeFile() {
+    if [ -e "$1" ]; then
+        if [ "$(cat "$1")" != "$2" ]; then
+            fatal "$1 exists and differs from the types in $INPUT_FILE; remove it or drop -i"
+        fi
+        return
+    fi
+    echo "$2" >"$1"
+    echo "Wrote $1 ($(wc -l <"$1") BAMs) from $INPUT_FILE"
+}
+
+if [ "$INPUTS" == "file" ]; then
+    writeTypeFile tumors "$FILE_TUMORS"
+    writeTypeFile normals "$FILE_NORMALS"
+fi
+
+#
+# tumors and normals (present, see First step, or written from the -i
+# file above): one pattern per line,
 # matched against the relabeled BAM paths, as tumorBams and normalBams
 # are chosen after FIX. Lines copied from samples end in __ and match
 # only those paths, not the original BAM paths.
@@ -538,7 +799,7 @@ done
 RELABELED=$(for BAM in $BAMS; do relabeledBam $BAM; done)
 for F in tumors normals; do
     if [ -z "$(echo "$RELABELED" | fgrep -f $F)" ]; then
-        fatal "no BAM in $BAMDIR matches any pattern in $F"
+        fatal "no BAM $INPUT_DESC matches any pattern in $F"
     fi
 done
 
@@ -609,6 +870,8 @@ writeCmdLog() {
 	GENOME: $GENOME
 	ASSAY: $ASSAY
 	PROJNO: $PROJNO
+	INPUTS: $INPUTS
+	INPUT_FILE: $INPUT_FILE
 	BAMDIR: $BAMDIR
 	SAMPLES: $SAMPLES
 	NPAIRS: $NPAIRS
@@ -821,6 +1084,7 @@ finishRun() {
 
 setStage SUBMIT
 mkdir -p out $INFODIR
+echo "$BAMS" >$INFODIR/inputBams.txt
 
 #
 # Stage 1: FIX, one job per BAM. Writes bamRelabel/<base>/<base>__relabel.bam.
