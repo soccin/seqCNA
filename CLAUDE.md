@@ -60,18 +60,24 @@ Required inputs in the project directory:
     `alignments|bam` (`seqCNA/PIPE.sh <ASSAY>`)
   - `args`: the arguments after the assay type
     (`seqCNA/PIPE.sh <ASSAY> *.bam`)
-  - `file`: one path per line in a file, `#` comments and blank lines
-    ignored (`seqCNA/PIPE.sh -i|--inputs FILE <ASSAY>`)
+  - `file`: a headerless file, one BAM per line, path and type
+    separated by a tab or the last comma (`T`/`TUMOR`, `N`/`NORMAL`,
+    any case), `#` comments and blank lines ignored
+    (`seqCNA/PIPE.sh -i|--inputs FILE <ASSAY>`). Parsed by
+    `parseInputFile`. CHECK writes `tumors` and `normals` from it as
+    relabeled BAM paths (`writeTypeFile`); an existing file with the
+    same content is kept, one with other content stops the run. A BAM
+    can be listed as both types. There is no `samples` step.
 
   Given paths are made absolute (`realpath -ms`, symlinks kept). CHECK
   rejects paths with whitespace, names not ending in `.bam`, and two
   BAMs with the same base name (both would write `bamRelabel/<base>/`).
   The list is written to `out/pipeline_info/inputBams.txt`.
-- `tumors`, `normals`: one pattern per line, matched with `fgrep -f`
-  against the relabeled BAM paths
+- `tumors`, `normals` (written by `PIPE.sh` with `-i`): one pattern per
+  line, matched with `fgrep -f` against the relabeled BAM paths
   `bamRelabel/<base>/<base>__relabel.bam`
 
-Without `tumors` or `normals`, `PIPE.sh` writes `samples` (one line per
+Without `-i` and without `tumors` or `normals`, `PIPE.sh` writes `samples` (one line per
 BAM, the base name minus any `Proj_..._s_` prefix plus `__`) and exits
 0 before any run record is written. That is the first step of a new
 project: run `seqCNA/PIPE.sh TARGETTED` directly, copy the lines of
