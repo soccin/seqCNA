@@ -54,8 +54,19 @@ failed in CHECK (nothing submitted) can be fixed and submitted again
 there.
 
 Required inputs in the project directory:
-- `pipeline/` containing a subdirectory matching `alignments|bam` with
-  the BAMs, each with a `.bai`
+- the BAMs, each with a `.bai`, from one of (`INPUTS=` in
+  `00.RUNSTATUS.txt`):
+  - `pipeline`: `pipeline/` containing a subdirectory matching
+    `alignments|bam` (`seqCNA/PIPE.sh <ASSAY>`)
+  - `args`: the arguments after the assay type
+    (`seqCNA/PIPE.sh <ASSAY> *.bam`)
+  - `file`: one path per line in a file, `#` comments and blank lines
+    ignored (`seqCNA/PIPE.sh -i|--inputs FILE <ASSAY>`)
+
+  Given paths are made absolute (`realpath -ms`, symlinks kept). CHECK
+  rejects paths with whitespace, names not ending in `.bam`, and two
+  BAMs with the same base name (both would write `bamRelabel/<base>/`).
+  The list is written to `out/pipeline_info/inputBams.txt`.
 - `tumors`, `normals`: one pattern per line, matched with `fgrep -f`
   against the relabeled BAM paths
   `bamRelabel/<base>/<base>__relabel.bam`
@@ -113,8 +124,9 @@ be `COMPLETED`). Job names are `qseqCNA_<STAGE>_<pid>`.
 
 0. First step, before any run record: write `samples` if absent; stop
    with exit 0 if `tumors` or `normals` is missing or empty.
-1. CHECK (control job): BAM directory, BAMs and indexes, `tumors` and
-   `normals` each match a relabeled BAM path, one genome across BAMs
+1. CHECK (control job): the input BAMs (see "Required inputs") and
+   their indexes, `tumors` and `normals` each match a relabeled BAM
+   path, one genome across BAMs
    via `GenomeData/getGenomeBuildBAM.sh` and the assay from it,
    project id from `pipeline/*request.txt` or
    `extractProjectIDFromPath.py`. Nothing is submitted until all pass.
