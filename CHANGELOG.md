@@ -11,9 +11,13 @@ project adheres to
 
 ### Added
 - `PIPE.sh` takes the BAMs as arguments (`PIPE.sh <ASSAY> *.bam`) or
-  from a file of paths (`PIPE.sh -i|--inputs FILE <ASSAY>`), so
+  from a file (`PIPE.sh -i|--inputs FILE <ASSAY>`), so
   `pipeline/<alignments|bam>/` is no longer required; without either
-  it is still used. CHECK rejects paths with whitespace, names not
+  it is still used. The file has no header and one BAM per line: path
+  and type (`T`/`TUMOR`, `N`/`NORMAL`, any case), separated by a comma
+  or a tab. `PIPE.sh` writes `tumors` and `normals` from it in CHECK,
+  so there is no `samples` step; it stops if either exists with other
+  content. CHECK rejects paths with whitespace, names not
   ending in `.bam` and repeated base names. `00.RUNSTATUS.txt` and
   `cmd.sh.log` record `INPUTS` (pipeline, args, file) and
   `INPUT_FILE`; the BAM list is in `out/pipeline_info/inputBams.txt`.
